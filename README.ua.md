@@ -5,7 +5,13 @@
 # 🚀 P.O.W.E.R. Framework — Гібридна система управління знаннями
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Format: GFM](https://img.shields.io/badge/Format-GFM-blue.svg)](https://github.github.com/gfm/)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Pydantic v2](https://img.shields.io/badge/Pydantic-v2-E74C3C?logo=pydantic&logoColor=white)](https://docs.pydantic.dev/)
+[![MCP Compatible](https://img.shields.io/badge/MCP-Compatible-00C853?logo=modelcontextprotocol&logoColor=white)](https://modelcontextprotocol.io/)
+[![Obsidian](https://img.shields.io/badge/Obsidian-Compatible-7C3AED?logo=obsidian&logoColor=white)](https://obsidian.md/)
+[![CI](https://github.com/weby-homelab/P.O.W.E.R/actions/workflows/ci.yml/badge.svg)](https://github.com/weby-homelab/P.O.W.E.R/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/weby-homelab/P.O.W.E.R?logo=github)](https://github.com/weby-homelab/P.O.W.E.R/releases)
+[![Tests: 79](https://img.shields.io/badge/Tests-79_passed-2ECC71?logo=pytest)](https://github.com/weby-homelab/P.O.W.E.R/tree/main/tests)
 
 Гібридна система управління знаннями (Obsidian Second Brain), що поєднує зручність структури для людини та строгу машиночитаність для ШІ-агентів. 
 
