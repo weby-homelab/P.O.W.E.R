@@ -23,18 +23,18 @@ description: Maintains and validates the P.O.W.E.R. knowledge base (P.A.R.A. + O
 
 1.  **`lint_brain.py`** — скрипт лінтера зв'язків та метаданих:
     ```bash
-    python3 /root/geminicli/.agents/skills/power/scripts/lint_brain.py
+    python3 .agents/skills/power/scripts/lint_brain.py
     ```
 2.  **`generate_index.py`** — скрипт автоматичної побудови індексу:
     ```bash
-    python3 /root/geminicli/.agents/skills/power/scripts/generate_index.py
+    python3 .agents/skills/power/scripts/generate_index.py
     ```
 
 ---
 
 ## 📋 Інструкції для ШІ-агента (Step-by-Step Rules)
 
-Коли ви працюєте з базою знань у просторі `/root/geminicli/brain/`, ЗАВЖДИ дотримуйтеся наступного ланцюжка дій (PAV + P.O.W.E.R.):
+Коли ви працюєте з базою знань у просторі ваулта (Workspace/Vault Root), ЗАВЖДИ дотримуйтеся наступного ланцюжка дій (PAV + P.O.W.E.R.):
 
 ### Крок 1. Перевірка метаданих (OKF Frontmatter)
 При створенні або редагуванні файлів упевнитись, що файл починається з правильної плашки:
@@ -50,7 +50,7 @@ timestamp: YYYY-MM-DDTHH:MM:SS+TZ
 ### Крок 2. Автоматична генерація каталогу (Index)
 Після додавання/зміни файлу виконайте скрипт генерації індексу. Він автоматично оновить реєстр у `index.md`:
 ```bash
-python3 /root/geminicli/.agents/skills/power/scripts/generate_index.py
+python3 .agents/skills/power/scripts/generate_index.py
 ```
 
 ### Крок 3. Додавання запису у Change Log
@@ -64,12 +64,12 @@ python3 /root/geminicli/.agents/skills/power/scripts/generate_index.py
 ### Крок 4. Валідація лінтером (Lint check)
 Запустіть скрипт лінтера, щоб перевірити, чи не з'явилися нові биті посилання чи сторінки-сироти:
 ```bash
-python3 /root/geminicli/.agents/skills/power/scripts/lint_brain.py
+python3 .agents/skills/power/scripts/lint_brain.py
 ```
 *Якщо лінтер звітує про помилки (наприклад, broken links у Home.md), негайно виправте їх.*
 
 ### Крок 5. Git Commit & Push (Execution Rules)
-*   Коміти виконуються **лише в окремі гілки** `feature/*` або `fix/*`.
+*   Коміти виконуються **лише в окремі гілки** `feature/*` or `fix/*`.
 *   Git налаштовується на GPG-підпис комітів за допомогою ключів розробника з `.env` файлу.
 *   Після пушу відкривається Pull Request та здійснюється злиття.
 *   Обов'язково запускається скілл `cleanup-branches` для прибирання злитих гілок.

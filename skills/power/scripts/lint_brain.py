@@ -3,7 +3,27 @@ import os
 import re
 from pathlib import Path
 
-VAULT_DIR = Path("/root/geminicli/brain").resolve()
+import sys
+
+# Determine vault directory dynamically
+VAULT_DIR = Path(os.getcwd()).resolve()
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Resolve path if script is inside standard structure
+if ".agents" in script_dir:
+    idx = script_dir.find(".agents")
+    workspace_root = script_dir[:idx].rstrip("/")
+    if os.path.isdir(os.path.join(workspace_root, "brain")):
+        VAULT_DIR = Path(os.path.join(workspace_root, "brain")).resolve()
+    else:
+        VAULT_DIR = Path(workspace_root).resolve()
+elif "03_Resources" in script_dir:
+    idx = script_dir.find("03_Resources")
+    VAULT_DIR = Path(script_dir[:idx].rstrip("/")).resolve()
+
+# Allow explicit override via argument
+if len(sys.argv) > 1 and os.path.isdir(sys.argv[1]):
+    VAULT_DIR = Path(sys.argv[1]).resolve()
 EXCLUDE_DIRS = [".git", "05_Templates", "scratch", ".system_generated"]
 EXCLUDE_ORPHAN_FILES = [
     "README.md", "Home.md", "index.md", "log.md", 

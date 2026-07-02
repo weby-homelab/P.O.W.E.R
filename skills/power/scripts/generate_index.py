@@ -3,7 +3,29 @@ import os
 import re
 from datetime import datetime
 
-VAULT_DIR = "/root/geminicli/brain"
+import sys
+
+# Determine vault directory dynamically
+VAULT_DIR = os.getcwd()
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Resolve path if script is inside standard structure
+if ".agents" in script_dir:
+    idx = script_dir.find(".agents")
+    workspace_root = script_dir[:idx].rstrip("/")
+    if os.path.isdir(os.path.join(workspace_root, "brain")):
+        VAULT_DIR = os.path.join(workspace_root, "brain")
+    else:
+        VAULT_DIR = workspace_root
+elif "03_Resources" in script_dir:
+    idx = script_dir.find("03_Resources")
+    VAULT_DIR = script_dir[:idx].rstrip("/")
+
+# Allow explicit override via argument
+if len(sys.argv) > 1 and os.path.isdir(sys.argv[1]):
+    VAULT_DIR = sys.argv[1]
+
+VAULT_DIR = os.path.abspath(VAULT_DIR)
 INDEX_PATH = os.path.join(VAULT_DIR, "index.md")
 LOG_PATH = os.path.join(VAULT_DIR, "log.md")
 
