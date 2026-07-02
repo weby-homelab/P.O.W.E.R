@@ -145,12 +145,14 @@ The `lint_brain.py` script is used to perform on-demand or automated vault check
 ## ⚡ P.O.W.E.R. Agent Skill & MCP Server Installation
 
 We have packaged the entire P.O.W.E.R. framework rules and indexing/linting tools into two reusable components:
-1. **AI Agent Custom Skill**: A folder of instructions (`SKILL.md`) and scripts (`scripts/`) that works out-of-the-box with Antigravity CLI and OpenCode.
+1. **AI Agent Custom Skill**: A folder of instructions (`SKILL.md`) and scripts (`scripts/`) that can be loaded into any agentic platform supporting custom prompt or skill injection.
 2. **Model Context Protocol (MCP) Server**: A self-contained, portable python server (`mcp_servers/power_server.py`) that exposes three MCP tools (`lint_vault`, `generate_index`, and `ingest_note`) to any compatible LLM client (Claude Desktop, Cursor, OpenCode, etc.).
+
+These components work universally with any AI agent, whether running locally or in the cloud.
 
 ### ⚙️ One-Command Installation
 
-To install the P.O.W.E.R. skill and the MCP server automatically into your active workspace and link them to your local agents (Antigravity and OpenCode) with a single command, run:
+To install the P.O.W.E.R. skill and the MCP server automatically into your active workspace, making them ready to use with any AI agent (local or cloud) with a single command, run:
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/weby-homelab/P.O.W.E.R/main/install.sh | bash
