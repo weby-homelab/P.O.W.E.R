@@ -142,13 +142,15 @@ The `lint_brain.py` script is used to perform on-demand or automated vault check
 
 ---
 
-## ⚡ P.O.W.E.R. Agent Skill & Installation
+## ⚡ P.O.W.E.R. Agent Skill & MCP Server Installation
 
-We have packaged the entire P.O.W.E.R. framework rules and indexing/linting tools into a reusable AI Agent Custom Skill. This skill works out-of-the-box with Antigravity CLI and OpenCode.
+We have packaged the entire P.O.W.E.R. framework rules and indexing/linting tools into two reusable components:
+1. **AI Agent Custom Skill**: A folder of instructions (`SKILL.md`) and scripts (`scripts/`) that works out-of-the-box with Antigravity CLI and OpenCode.
+2. **Model Context Protocol (MCP) Server**: A self-contained, portable python server (`mcp_servers/power_server.py`) that exposes three MCP tools (`lint_vault`, `generate_index`, and `ingest_note`) to any compatible LLM client (Claude Desktop, Cursor, OpenCode, etc.).
 
 ### ⚙️ One-Command Installation
 
-To install the P.O.W.E.R. skill automatically into your active workspace and configure your local agents (Antigravity and OpenCode) with a single command, run:
+To install the P.O.W.E.R. skill and the MCP server automatically into your active workspace and link them to your local agents (Antigravity and OpenCode) with a single command, run:
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/weby-homelab/P.O.W.E.R/main/install.sh | bash
@@ -159,8 +161,44 @@ Alternatively, you can specify a custom target workspace path:
 curl -sSL https://raw.githubusercontent.com/weby-homelab/P.O.W.E.R/main/install.sh | bash -s -- /path/to/your/workspace
 ```
 
-### 🔌 Manual Configuration (Optional)
-If you prefer to configure it manually:
+### 🔌 MCP Server Configuration
+
+After running the installer:
+1. Install the required Python dependencies in your target execution environment:
+   ```bash
+   pip install mcp
+   ```
+2. Configure your favorite AI client to load the MCP server:
+   * **Claude Desktop** (`~/.config/Claude/claude_desktop_config.json`):
+     ```json
+     {
+       "mcpServers": {
+         "power": {
+           "command": "python3",
+           "args": ["/path/to/your/workspace/.agents/mcp_servers/power_server.py"],
+           "env": {
+             "POWER_VAULT_DIR": "/path/to/your/obsidian/vault"
+           }
+         }
+       }
+     }
+     ```
+   * **OpenCode** (`~/.config/opencode/opencode.jsonc`):
+     ```json
+     "mcp": {
+       "power": {
+         "type": "local",
+         "command": [
+           "/root/.config/opencode/venv/bin/python",
+           "/path/to/your/workspace/.agents/mcp_servers/power_server.py"
+         ],
+         "enabled": true
+       }
+     }
+     ```
+
+### 🔌 Manual Skill Configuration (Optional)
+If you prefer to configure the skill manually:
 1. Copy the contents of the `skills/power` directory to your workspace's `.agents/skills/power` folder.
 2. Make the scripts inside `scripts/` executable: `chmod +x .agents/skills/power/scripts/*.py`
 3. Add the skill to your OpenCode system configuration in `~/.config/opencode/opencode.jsonc`:
