@@ -32,6 +32,11 @@ nav:
   - Getting Started: getting-started.md
   - CLI Reference: cli.md
   - MCP Server: mcp-server.md
+  - Migration Guides:
+      - AI Agent Migration (EN): migration-guide.md
+      - AI Agent Migration (UA): migration-guide.ua.md
+      - Hierarchical Index (EN): hierarchical-index-migration.md
+      - Hierarchical Index (UA): hierarchical-index-migration.ua.md
   - API Reference:
       - Models: api/models.md
       - Parser: api/parser.md
