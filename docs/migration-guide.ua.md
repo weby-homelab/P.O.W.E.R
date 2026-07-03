@@ -199,7 +199,7 @@ PROTOCOLS/
 Для автономної роботи агента на цільовому хості встановіть інструментарій P.O.W.E.R. глобально або у віртуальне середовище проєкту:
 
 ```bash
-pip install git+https://github.com/weby-homelab/P.O.W.E.R.git
+pip install git+https://github.com/weby-homelab/power-framework.git
 ```
 
 Налаштуйте інтеграцію MCP-сервера у вашому клієнті AI-агента або конфігураційному файлі IDE (наприклад, `cline_config.json`, `opencode.jsonc`, налаштуваннях Cursor/Windsurf тощо):

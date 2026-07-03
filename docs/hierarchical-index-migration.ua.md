@@ -36,7 +36,7 @@ timestamp: 2026-07-03T02:20:00
 
 **Масштаб:** 324 нотатки в production vault
 **Ефект:** ~75-94% економії токенів при читанні індексу
-**PR:** [#13](https://github.com/weby-homelab/P.O.W.E.R/pull/13) — злито в `main`
+**PR:** [#13](https://github.com/weby-homelab/power-framework/pull/13) — злито в `main`
 
 ---
 
@@ -477,9 +477,9 @@ run_generate_hierarchical_index(Path('/path/to/vault'))
 
 ### C. Посилання
 
-- **Репозиторій:** https://github.com/weby-homelab/P.O.W.E.R
-- **PR #13:** https://github.com/weby-homelab/P.O.W.E.R/pull/13 (реалізація hierarchical index)
-- **PR #14:** https://github.com/weby-homelab/P.O.W.E.R/pull/14 (цей звіт)
+- **Репозиторій:** https://github.com/weby-homelab/power-framework
+- **PR #13:** https://github.com/weby-homelab/power-framework/pull/13 (реалізація hierarchical index)
+- **PR #14:** https://github.com/weby-homelab/power-framework/pull/14 (цей звіт)
 
 ---
 

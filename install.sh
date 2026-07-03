@@ -1,8 +1,8 @@
 #!/bin/bash
 # P.O.W.E.R. Skill & MCP Server Installer for AI Agents
 # Usage:
-#   curl -sSL https://raw.githubusercontent.com/weby-homelab/P.O.W.E.R/main/install.sh | bash
-#   curl -sSL https://raw.githubusercontent.com/weby-homelab/P.O.W.E.R/main/install.sh | bash -s -- /path/to/workspace
+#   curl -sSL https://raw.githubusercontent.com/weby-homelab/power-framework/main/install.sh | bash
+#   curl -sSL https://raw.githubusercontent.com/weby-homelab/power-framework/main/install.sh | bash -s -- /path/to/workspace
 
 set -euo pipefail
 
@@ -13,7 +13,7 @@ else
     VERSION="1.4.0"
 fi
 TARGET_DIR="${1:-$PWD}"
-REPO_URL="https://raw.githubusercontent.com/weby-homelab/P.O.W.E.R/main"
+REPO_URL="https://raw.githubusercontent.com/weby-homelab/power-framework/main"
 
 echo "--------------------------------------------------------"
 echo "P.O.W.E.R. Framework Installer v${VERSION}"

@@ -3,8 +3,8 @@
 ## Setup
 
 ```bash
-git clone https://github.com/weby-homelab/P.O.W.E.R.git
-cd P.O.W.E.R
+git clone https://github.com/weby-homelab/power-framework.git
+cd power-framework
 pip install -e ".[dev]"
 ```
 

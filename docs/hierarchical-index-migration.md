@@ -36,7 +36,7 @@ This report documents the full development, testing, and deployment cycle of the
 
 **Scale:** 324 notes in production vault
 **Effect:** ~75-94% token savings when reading the index
-**PR:** [#13](https://github.com/weby-homelab/P.O.W.E.R/pull/13) — merged into `main`
+**PR:** [#13](https://github.com/weby-homelab/power-framework/pull/13) — merged into `main`
 
 ---
 
@@ -477,9 +477,9 @@ run_generate_hierarchical_index(Path('/path/to/vault'))
 
 ### C. Links
 
-- **Repository:** https://github.com/weby-homelab/P.O.W.E.R
-- **PR #13:** https://github.com/weby-homelab/P.O.W.E.R/pull/13
-- **PR #14:** https://github.com/weby-homelab/P.O.W.E.R/pull/14 (this report)
+- **Repository:** https://github.com/weby-homelab/power-framework
+- **PR #13:** https://github.com/weby-homelab/power-framework/pull/13
+- **PR #14:** https://github.com/weby-homelab/power-framework/pull/14 (this report)
 
 ---
 

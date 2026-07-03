@@ -6,8 +6,8 @@ Thank you for your interest in contributing to the P.O.W.E.R. Framework!
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/weby-homelab/P.O.W.E.R.git
-   cd P.O.W.E.R
+   git clone https://github.com/weby-homelab/power-framework.git
+   cd power-framework
    ```
 
 2. Create a virtual environment and install dependencies:
