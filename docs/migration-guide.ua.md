@@ -22,7 +22,7 @@ timestamp: 2026-07-03T12:30:00
 - **Доступ до файлової системи** — читання `.md` файлів, переміщення старих файлів
 - **Інтелект LLM** — класифікація нотаток за категоріями P.A.R.A., визначення тайтлів, генерація описів
 
-Агент виконує 5 фаз. Кожна фаза має чіткі критерії успіху.
+Агент виконує 6 фаз. Кожна фаза має чіткі критерії успіху.
 
 ---
 
@@ -173,7 +173,7 @@ PROTOCOLS/
 
 ## Фаза 5: Прибирання (Опціонально)
 
-**Мета:** Видалити старі, неструктуровані файли після верифікації міграції.
+**Мета:** Видалити старий, неструктурований файли після верифікації міграції.
 
 ### Кроки
 
@@ -185,6 +185,174 @@ PROTOCOLS/
 4. Виконайте фінальний `lint_vault(vault_path)`
 
 **⚠️ Увага:** Видаляйте файли тільки після **повної верифікації**. Для безпеки краще переміщувати в `04_Archive/`, ніж видаляти.
+
+---
+
+## Фаза 6: Післяміграційне самопідтримання
+
+**Мета:** Гарантувати, що Vault залишається здоровим між сесіями AI-агентів без ручного втручання.
+
+Ця фаза описує обов'язкові дії після міграції для 100% автономної роботи.
+
+### Крок 6a: Встановіть офіційний P.O.W.E.R. Framework
+
+Не використовуйте кастомну копію `power_core.py`. Встановіть офіційний пакет:
+
+```bash
+pip install git+https://github.com/weby-homelab/P.O.W.E.R.git
+# Або через venv проекту:
+/шлях/до/venv/bin/pip install git+https://github.com/weby-homelab/P.O.W.E.R.git
+```
+
+Налаштуйте MCP-сервер у `opencode.jsonc` (або аналогічному конфігу агента):
+
+```jsonc
+"power": {
+  "type": "local",
+  "command": [
+    "/шлях/до/venv/bin/python",
+    "-m",
+    "power_framework.mcp"
+  ],
+  "enabled": true
+}
+```
+
+Це надає 5 MCP-інструментів: `lint_vault`, `generate_index`, `read_sub_index`, `ingest_note`, `search_vault_tool`.
+
+### Крок 6b: Створіть `.geminiignore` (Оптимізація токенів)
+
+Без файлу ігнорування контекст агента заповнюється об'єктами `.git/`, `node_modules/`, `__pycache__/`, `*.db`, `*.key`, `.env` — все це непотрібно. Створіть у корені робочого простору:
+
+```
+.git/
+.gitignore
+.gitattributes
+.geminiignore
+__pycache__/
+*.pyc
+node_modules/
+.venv/
+venv/
+*.db
+*.key
+*.pem
+*.crt
+*.log
+dist/
+build/
+.env
+*.bak
+*.swp
+.sass-cache/
+.vite/
+```
+
+**Орієнтовна економія:** 30-50% токенів контексту агента в мультипроектних робочих просторах.
+
+### Крок 6c: Налаштуйте масив інструкцій агента
+
+Завантажуйте критичні файли на старті сесії через масив `instructions` у `opencode.jsonc`:
+
+```jsonc
+"instructions": [
+  "/шлях/до/AGENTS.md",
+  "/шлях/до/brain/README.md",
+  "/шлях/до/brain/PROTOCOLS/LLM_WIKI_SCHEMA.md",
+  "/шлях/до/brain/06_Daily_Logs/MASTER-LESSONS-LEARNED.md",
+  "/шлях/до/.agents/skills/power/SKILL.md"
+]
+```
+
+### Крок 6d: Виправте мігровані вікіпосилання
+
+Після переміщення файлів у папки P.A.R.A. старі вікіпосилання `[[Home]]`, `[[Security]]`, `[[Servers]]` стають битими. Запустіть скрипт авто-ремонту:
+
+```python
+import os, re
+
+VAULT = "/шлях/до/vault"
+
+name_to_path = {}
+for root, dirs, files in os.walk(VAULT):
+    dirs[:] = [d for d in dirs if not d.startswith(".")]
+    for f in files:
+        if f.endswith(".md"):
+            rel = os.path.relpath(os.path.join(root, f), VAULT)
+            name_to_path[f[:-3].lower()] = rel
+
+for root, dirs, files in os.walk(VAULT):
+    dirs[:] = [d for d in dirs if not d.startswith(".")]
+    for fname in files:
+        if not fname.endswith(".md"):
+            continue
+        fpath = os.path.join(root, fname)
+        with open(fpath) as fh:
+            content = fh.read()
+        new_content = content
+        for m in re.finditer(r"\[\[([^\]]+?)(?:\|([^\]]*))?\]\]", content):
+            target = m.group(1)
+            alias = m.group(2)
+            original = m.group(0)
+            if os.path.exists(os.path.join(VAULT, f"{target}.md")):
+                continue
+            key = target.lower().rsplit("/", 1)[-1]
+            if key in name_to_path:
+                new_target = name_to_path[key][:-3]
+                display = alias or target
+                replacement = f"[[{new_target}|{display}]]"
+                new_content = new_content.replace(original, replacement, 1)
+        if new_content != content:
+            with open(fpath, "w") as fh:
+                fh.write(new_content)
+```
+
+**Важливо:** Регулярний вираз лінтера ПОВИНЕН обробляти синтаксис `[[path|alias]]` — P.O.W.E.R. v1.5.0+ це робить.
+
+### Крок 6e: Розуміння поведінки `_index.md`
+
+Файли `_index.md` **авто-генеруються** командою `generate_index`. Вони отримують OKF frontmatter автоматично в P.O.W.E.R. v1.5.0+.
+
+**Важливе зауваження:** Якщо папка не має жодного `.md` файлу безпосередньо (наприклад, `02_Areas/` коли всі нотатки в `02_Areas/Infrastructure/` та `02_Areas/Deployments/`), індексатор раніше пропускав її. Починаючи з v1.5.0, генератор примусово індексує всі папки P.A.R.A. верхнього рівня + виявлені підпапки. Запускайте `generate_index` після кожної зміни.
+
+### Крок 6f: Виключіть `.git/` з усіх операцій
+
+Лінтер та генератор індексу **повинні** пропускати `.git/`. У P.O.W.E.R. v1.5.0+ це автоматично:
+
+```python
+dirs[:] = [d for d in dirs if not d.startswith(".")]
+```
+
+Без цього лінтер знайде 200+ `.md` файлів всередині `.git/` (об'єкти комітів, ref logs) і повідомить про них як про нотатки, завищуючи загальну кількість та потенційно записуючи `_index.md` у піддиректорії `.git/`.
+
+### Крок 6g: Щоденний протокол обслуговування
+
+Кожна сесія AI-агента повинна завершуватися:
+
+1. **Збереження підсумку сесії** — створіть `06_Daily_Logs/YYYY-MM-DD_session-name.md` з `type: Daily Log`
+2. **Перебудова індексу** — викличте `generate_index(vault_path)`
+3. **Логування зміни** — додайте запис у `log.md` в тому самому форматі
+4. **Запуск lint** — викличте `lint_vault(vault_path)` для виявлення регресій
+
+```yaml
+# Приклад frontmatter Daily Log
+---
+type: Daily Log
+title: "YYYY-MM-DD Що було зроблено"
+description: "Підсумок сесії в один рядок"
+timestamp: 2026-07-03T18:55:00
+---
+```
+
+### Крок 6h: Чек-лист безперервності між сесіями
+
+Перед початком роботи агент повинен:
+
+1. Прочитати `AGENTS.md` (авто-завантажується через `instructions`)
+2. Прочитати `MASTER-LESSONS-LEARNED.md` (авто-завантажується)
+3. Запустити `lint_vault(vault_path)` для перевірки регресій з останньої сесії
+4. Прочитати `index.md` для розуміння поточного стану Vault
+5. Прочитати хвіст `log.md` щоб побачити, що відбулося в останній сесії
 
 ---
 
@@ -229,9 +397,12 @@ Agent: Міграцію завершено. Vault сумісний з P.O.W.E.R.
 |----------|---------|-------------|
 | `ingest_note` повертає "Note already exists" | Нотатку вже мігровано | Пропустіть і йдіть далі |
 | Lint повідомляє про відсутній `type` | Нотатка не має frontmatter | Переінгестіть з явним `note_type` |
-| Бите посилання після міграції | `[[посилання]]` змінили імена файлів | Оновіть цілі посилань, потім перезапустіть lint |
+| Бите посилання після міграції | `[[посилання]]` змінили імена файлів | Запустіть скрипт авто-ремонту з Кроку 6d |
 | `read_sub_index` повертає "No notes found" | Папка категорії порожня або не проіндексована | Спочатку запустіть `generate_index(vault_path)` |
 | Забагато orphans в `04_Archive/` | Архівні нотатки за визначенням мають мало посилань | Це очікувано — orphans в архіві нормальні |
+| Lint повідомляє 200+ зайвих нотаток | Директорію `.git/` не виключено | Оновіть лінтер для пропуску прихованих папок (v1.5.0+ робить це) |
+| `_index.md` не має frontmatter | Використовується стара версія фреймворку | Оновіться до v1.5.0+ або перезапустіть `generate_index` |
+| `pip install` падає з PEP 668 | Системний Python блокує пряме встановлення | Використовуйте venv: `/шлях/до/venv/bin/pip install ...` |
 
 ---
 
@@ -254,10 +425,10 @@ Agent: Міграцію завершено. Vault сумісний з P.O.W.E.R.
 | Інструмент | Використовується у фазі |
 |------|--------------|
 | `ingest_note(name, note_type, title, description, content, tags?, resource?)` | Фаза 3 |
-| `lint_vault(vault_path?)` | Фаза 1, 4, 5 |
-| `generate_index(vault_path?)` | Фаза 5 |
-| `read_sub_index(category, vault_path?)` | Фаза 4 |
-| `search_vault_tool(query, vault_path?)` | Фаза 4 |
+| `lint_vault(vault_path?)` | Фаза 1, 4, 5, 6 |
+| `generate_index(vault_path?)` | Фаза 5, 6 |
+| `read_sub_index(category, vault_path?)` | Фаза 4, 6 |
+| `search_vault_tool(query, vault_path?)` | Фаза 4, 6 |
 
 ### C. Швидка довідка: поля OKF Frontmatter
 
