@@ -22,7 +22,7 @@ This protocol enables any LLM-based AI agent to migrate an existing Obsidian vau
 - **Filesystem access** — reading existing `.md` files, moving/cleaning up old files
 - **LLM intelligence** — classifying notes into P.A.R.A. categories, extracting titles, generating descriptions
 
-The agent follows 5 phases. Each phase has clear success criteria.
+The agent follows 6 phases. Each phase has clear success criteria.
 
 ---
 
@@ -188,6 +188,49 @@ For large vaults (>50 notes), group ingests by category. Ingest all `Resource` n
 
 ---
 
+## Phase 6: Sync & Publish
+
+**Goal:** Commit the migrated state of the knowledge base to Git with a GPG signature, push the changes, and publish the updated vault.
+
+### Steps
+
+1. **Git Identity & Configuration**:
+   - Check the Git repository status (`git status`). If the repository is not initialized, run `git init`.
+   - Configure the Git user name and email. **Important:** ALWAYS source `GITHUB_USER_NAME` and `GITHUB_USER_EMAIL` from your `.env` file to prevent committing as `root` or local hostnames.
+   - For signed commits, import the private GPG key using `gpg --import key.asc`. Immediately delete the `.asc` file after import for security.
+   - Enable GPG signing by default: `git config commit.gpgsign true`.
+
+2. **Setup and Verify `.gitignore`**:
+   - Ensure that `.gitignore` contains exclusions for system and temporal files:
+     ```
+     .obsidian/workspace.json
+     .obsidian/workspace-mobile.json
+     result-*.json
+     .venv/
+     __pycache__/
+     .mypy_cache/
+     .pytest_cache/
+     ```
+   - Never commit `result-*.json` files (Telegram chat exports) to avoid leaking personal data.
+
+3. **Branching & GPG-Signed Commit**:
+   - Create a new branch for the migration: `git checkout -b feature/power-migration`.
+   - Add all migrated and updated files: `git add .`.
+   - Record the changes with a signed commit: `git commit -S -m "docs: migrate vault to P.O.W.E.R. structure"`.
+
+4. **Publishing via Pull Request**:
+   - Push the branch to the remote repository: `git push origin feature/power-migration`.
+   - Open a Pull Request on GitHub using `gh` CLI or the GitHub API.
+   - Merge the Pull Request after all validation checks have passed.
+
+5. **Publish Verification**:
+   - Check the status of the CI/CD build workflow (e.g., GitHub Actions building MkDocs).
+   - Verify that the knowledge base has compiled successfully and is accessible at the target URL (e.g., GitHub Pages).
+
+**Success criteria:** Changes are committed to Git with a GPG signature, pushed successfully, the PR is merged, and the CI/CD build completes without errors.
+
+---
+
 ## Example: Full Migration Transcript
 
 Here is what a complete migration looks like from the agent's perspective:
@@ -218,7 +261,14 @@ Agent: Running lint...
   ✅ Internal Links: 0 broken  
   ✅ Orphans: 3 notes (all in 06_Daily_Logs — exempt)
 
-Agent: Migration complete. Vault is P.O.W.E.R.-compliant.
+Agent: Initiating Phase 6: Sync & Publish...
+Agent: Importing GPG key and configuring Git identity
+Agent: Creating signed commit on branch feature/power-migration
+Agent: Pushing changes to GitHub and opening Pull Request
+Agent: Verifying CI/CD build workflow status...
+  ✅ MkDocs build success: https://weby-homelab.github.io/P.O.W.E.R/
+
+Agent: Migration and publication completed successfully. Vault is P.O.W.E.R.-compliant.
 ```
 
 ---
@@ -258,6 +308,7 @@ Agent: Migration complete. Vault is P.O.W.E.R.-compliant.
 | `generate_index(vault_path?)` | Phase 5 |
 | `read_sub_index(category, vault_path?)` | Phase 4 |
 | `search_vault_tool(query, vault_path?)` | Phase 4 |
+| Git & GPG CLI (or corresponding MCP tools) | Phase 6 |
 
 ### C. Quick-Reference: OKF Frontmatter Fields
 
