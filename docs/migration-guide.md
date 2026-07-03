@@ -188,6 +188,192 @@ For large vaults (>50 notes), group ingests by category. Ingest all `Resource` n
 
 ---
 
+## Phase 6: Post-Migration Self-Maintenance
+
+**Goal:** Ensure the vault stays healthy across AI agent sessions without manual intervention.
+
+This phase covers what the agent MUST do after migration to guarantee 100% self-sustaining operation.
+
+### Step 6a: Install the Official P.O.W.E.R. Framework
+
+Do **not** rely on a custom `power_core.py` copy. Install the official package:
+
+```bash
+pip install git+https://github.com/weby-homelab/P.O.W.E.R.git
+# Or from the project's venv:
+/path/to/venv/bin/pip install git+https://github.com/weby-homelab/P.O.W.E.R.git
+```
+
+Configure the MCP server in `opencode.jsonc` (or equivalent agent config):
+
+```jsonc
+"power": {
+  "type": "local",
+  "command": [
+    "/path/to/venv/bin/python",
+    "-m",
+    "power_framework.mcp"
+  ],
+  "enabled": true
+}
+```
+
+This exposes 5 MCP tools: `lint_vault`, `generate_index`, `read_sub_index`, `ingest_note`, `search_vault_tool`.
+
+### Step 6b: Create `.geminiignore` (Token Optimization)
+
+Without an ignore file, the agent's context fills with `.git/` objects, `node_modules/`, `__pycache__/`, `*.db`, `*.key`, and `.env` files — all unnecessary. Create this at the workspace root:
+
+```
+# Context optimization: exclude heavy/unnecessary files
+.git/
+.gitignore
+.gitattributes
+.geminiignore
+__pycache__/
+*.pyc
+node_modules/
+.venv/
+venv/
+*.db
+*.key
+*.pem
+*.crt
+*.log
+dist/
+build/
+.env
+*.bak
+*.swp
+.sass-cache/
+.vite/
+```
+
+**Estimated savings:** 30-50% of agent context tokens in multi-project workspaces.
+
+### Step 6c: Configure Agent Instructions Array
+
+Ensure the agent loads critical files at session start via the `instructions` array in `opencode.jsonc`:
+
+```jsonc
+"instructions": [
+  "/path/to/AGENTS.md",              // Startup protocol + P.A.R.A. rules
+  "/path/to/brain/README.md",        // Vault overview
+  "/path/to/brain/PROTOCOLS/LLM_WIKI_SCHEMA.md",  // OKF frontmatter spec
+  "/path/to/brain/06_Daily_Logs/MASTER-LESSONS-LEARNED.md",  // Safety
+  "/path/to/.agents/skills/power/SKILL.md"  // P.O.W.E.R. skill
+]
+```
+
+### Step 6d: Fix `[[Home]]` and Other Migrated Wikilinks
+
+After moving files to P.A.R.A. folders, old wikilinks like `[[Home]]`, `[[Security]]`, `[[Servers]]` break because the target files no longer exist at root level. Run an auto-repair script:
+
+```python
+import os, re
+
+VAULT = "/path/to/vault"
+
+# Build basename-to-path mapping
+name_to_path = {}
+for root, dirs, files in os.walk(VAULT):
+    dirs[:] = [d for d in dirs if not d.startswith(".")]
+    for f in files:
+        if f.endswith(".md"):
+            rel = os.path.relpath(os.path.join(root, f), VAULT)
+            name_to_path[f[:-3].lower()] = rel
+
+# Iterate all .md files and fix broken [[links]]
+for root, dirs, files in os.walk(VAULT):
+    dirs[:] = [d for d in dirs if not d.startswith(".")]
+    for fname in files:
+        if not fname.endswith(".md"):
+            continue
+        fpath = os.path.join(root, fname)
+        with open(fpath) as fh:
+            content = fh.read()
+        new_content = content
+        for m in re.finditer(r"\[\[([^\]]+?)(?:\|([^\]]*))?\]\]", content):
+            target = m.group(1)
+            alias = m.group(2)
+            original = m.group(0)
+            # Skip if file already resolves
+            if os.path.exists(os.path.join(VAULT, f"{target}.md")):
+                continue
+            # Look up by basename
+            key = target.lower().rsplit("/", 1)[-1]
+            if key in name_to_path:
+                new_target = name_to_path[key][:-3]
+                display = alias or target
+                replacement = f"[[{new_target}|{display}]]"
+                new_content = new_content.replace(original, replacement, 1)
+        if new_content != content:
+            with open(fpath, "w") as fh:
+                fh.write(new_content)
+```
+
+**Critical:** The linter's regex MUST handle `[[path|alias]]` syntax — P.O.W.E.R. v1.5.0+ does. If using an older version, update `power_core.py` line:
+
+```python
+# Before (broken for aliases):
+wiki_links = re.findall(r"\[\[([^\]]+)\]\]", body)
+
+# After (handles [[path|alias]]):
+wiki_links = re.findall(r"\[\[([^\]]+?)(?:\|[^\]]*)?\]\]", body)
+```
+
+### Step 6e: Understand `_index.md` Behavior
+
+`_index.md` files are **auto-generated** by `generate_index`. They receive OKF frontmatter automatically in P.O.W.E.R. v1.5.0+.
+
+**Important caveat:** If a folder has zero direct `.md` files (e.g., `02_Areas/` when all notes are in `02_Areas/Infrastructure/` and `02_Areas/Deployments/`), the indexer previously skipped it. Since v1.5.0, the generator forces all top-level P.A.R.A. folders + any detected subfolders. Run `generate_index` after every change.
+
+### Step 6f: Exclude `.git/` from All Operations
+
+Both the linter and index generator **must** skip `.git/`. In P.O.W.E.R. v1.5.0+ this is automatic via:
+
+```python
+dirs[:] = [d for d in dirs if not d.startswith(".")]
+```
+
+Without this, the linter will find 200+ `.md` files inside `.git/` (commit objects, ref logs) and report them as notes, inflating the total count and potentially writing `_index.md` files into `.git/` subdirectories.
+
+### Step 6g: Daily Maintenance Protocol
+
+Every AI agent session should end with:
+
+1. **Save session summary** — create a `06_Daily_Logs/YYYY-MM-DD_session-name.md` with `type: Daily Log`
+2. **Regenerate index** — call `generate_index(vault_path)`
+3. **Log the change** — append to `log.md` in the same format
+4. **Run lint** — call `lint_vault(vault_path)` to catch any regressions
+
+```yaml
+# Example Daily Log frontmatter
+---
+type: Daily Log
+title: "YYYY-MM-DD What was done"
+description: "One-line summary of the session"
+timestamp: 2026-07-03T18:55:00
+---
+
+# YYYY-MM-DD Session: What was done
+
+## Summary
+...
+```
+
+### Step 6h: Cross-Session Continuity Checklist
+
+Before starting work, the agent should:
+
+1. Read `AGENTS.md` (auto-loaded via `instructions` array)
+2. Read `MASTER-LESSONS-LEARNED.md` (auto-loaded)
+3. Run `lint_vault(vault_path)` to check for regressions since last session
+4. Read `index.md` to understand current vault state
+5. Read `log.md` tail to see what happened in the last session
+
+---
+
 ## Example: Full Migration Transcript
 
 Here is what a complete migration looks like from the agent's perspective:
@@ -229,9 +415,12 @@ Agent: Migration complete. Vault is P.O.W.E.R.-compliant.
 |-------|-------|-----|
 | `ingest_note` returns "Note already exists" | Note was already migrated | Skip and move to next |
 | Lint reports missing `type` | Note lacks frontmatter | Re-ingest with explicit `note_type` |
-| Broken links after migration | Internal `[[links]]` target filenames changed | Update link targets to match new filenames, then re-run lint |
+| Broken links after migration | Internal `[[links]]` target filenames changed | Run the auto-repair script from Step 6d |
 | `read_sub_index` returns "No notes found" | Category folder is empty or not indexed | Run `generate_index(vault_path)` first |
 | Too many orphans in `04_Archive/` | Archived notes by definition have few links | This is expected — archive orphans are normal |
+| Lint reports 200+ extra notes | `.git/` directory is not excluded | Update linter to skip hidden dirs (v1.5.0+ does) |
+| `_index.md` has no frontmatter | Using an older version of the framework | Upgrade to v1.5.0+ or re-run `generate_index` |
+| `pip install` fails with PEP 668 | System Python blocks direct install | Use a venv: `/path/to/venv/bin/pip install ...` |
 
 ---
 
@@ -254,10 +443,10 @@ Agent: Migration complete. Vault is P.O.W.E.R.-compliant.
 | Tool | Used in Phase |
 |------|--------------|
 | `ingest_note(name, note_type, title, description, content, tags?, resource?)` | Phase 3 |
-| `lint_vault(vault_path?)` | Phase 1, 4, 5 |
-| `generate_index(vault_path?)` | Phase 5 |
-| `read_sub_index(category, vault_path?)` | Phase 4 |
-| `search_vault_tool(query, vault_path?)` | Phase 4 |
+| `lint_vault(vault_path?)` | Phase 1, 4, 5, 6 |
+| `generate_index(vault_path?)` | Phase 5, 6 |
+| `read_sub_index(category, vault_path?)` | Phase 4, 6 |
+| `search_vault_tool(query, vault_path?)` | Phase 4, 6 |
 
 ### C. Quick-Reference: OKF Frontmatter Fields
 
