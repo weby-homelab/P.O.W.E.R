@@ -47,10 +47,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/weby-homelab/P.O.W.E.R"
-Documentation = "https://github.com/weby-homelab/P.O.W.E.R#readme"
-Repository = "https://github.com/weby-homelab/P.O.W.E.R"
-Issues = "https://github.com/weby-homelab/P.O.W.E.R/issues"
+Homepage = "https://github.com/weby-homelab/power-framework"
+Documentation = "https://github.com/weby-homelab/power-framework#readme"
+Repository = "https://github.com/weby-homelab/power-framework"
+Issues = "https://github.com/weby-homelab/power-framework/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/power_framework"]

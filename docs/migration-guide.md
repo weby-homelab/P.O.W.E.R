@@ -199,7 +199,7 @@ For large vaults (>50 notes), group ingests by category. Ingest all `Resource` n
 For autonomous operation on the target host, install the P.O.W.E.R. toolkit globally or in the project's virtual environment:
 
 ```bash
-pip install git+https://github.com/weby-homelab/P.O.W.E.R.git
+pip install git+https://github.com/weby-homelab/power-framework.git
 ```
 
 Configure the MCP server integration in your AI agent client or IDE configuration file (e.g., `cline_config.json`, `opencode.jsonc`, Cursor/Windsurf settings, etc.):

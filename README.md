@@ -6,13 +6,13 @@
 
 Validate, index, search, and manage your Obsidian vault from the command line — or let AI agents do it through MCP. Built for knowledge workers who want machine-readable notes, automated quality checks, and token-efficient AI access to their Second Brain.
 
-[![CI](https://github.com/weby-homelab/P.O.W.E.R/actions/workflows/ci.yml/badge.svg)](https://github.com/weby-homelab/P.O.W.E.R/actions/workflows/ci.yml)
-[![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen?logo=pytest)](https://github.com/weby-homelab/P.O.W.E.R/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/weby-homelab/P%2EO%2EW%2EE%2ER?logo=github)](https://github.com/weby-homelab/P.O.W.E.R/releases)
+[![CI](https://github.com/weby-homelab/power-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/weby-homelab/power-framework/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen?logo=pytest)](https://github.com/weby-homelab/power-framework/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/weby-homelab/power-framework?logo=github)](https://github.com/weby-homelab/power-framework/releases)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![CodeQL](https://github.com/weby-homelab/P.O.W.E.R/actions/workflows/codeql.yml/badge.svg)](https://github.com/weby-homelab/P.O.W.E.R/actions/workflows/codeql.yml)
-[![Docs](https://img.shields.io/badge/docs-mkdocs--material-8A2BE2?logo=materialformkdocs)](https://weby-homelab.github.io/P.O.W.E.R/)
+[![CodeQL](https://github.com/weby-homelab/power-framework/actions/workflows/codeql.yml/badge.svg)](https://github.com/weby-homelab/power-framework/actions/workflows/codeql.yml)
+[![Docs](https://img.shields.io/badge/docs-mkdocs--material-8A2BE2?logo=materialformkdocs)](https://weby-homelab.github.io/power-framework/)
 
 ## Why P.O.W.E.R.?
 
@@ -244,8 +244,8 @@ All components share `power_framework.core` as the single source of truth.
 ## Development
 
 ```bash
-git clone https://github.com/weby-homelab/P.O.W.E.R.git
-cd P.O.W.E.R
+git clone https://github.com/weby-homelab/power-framework.git
+cd power-framework
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 

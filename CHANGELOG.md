@@ -98,8 +98,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Initial public release with basic MCP server and skill scripts
 
-[1.5.1]: https://github.com/weby-homelab/P.O.W.E.R/compare/v1.5.0...v1.5.1
-[1.5.0]: https://github.com/weby-homelab/P.O.W.E.R/compare/v1.4.0...v1.5.0
-[1.4.0]: https://github.com/weby-homelab/P.O.W.E.R/compare/v1.3.0...v1.4.0
-[1.3.0]: https://github.com/weby-homelab/P.O.W.E.R/compare/v1.2.2...v1.3.0
-[1.2.2]: https://github.com/weby-homelab/P.O.W.E.R/releases/tag/v1.2.2
+[1.5.1]: https://github.com/weby-homelab/power-framework/compare/v1.5.0...v1.5.1
+[1.5.0]: https://github.com/weby-homelab/power-framework/compare/v1.4.0...v1.5.0
+[1.4.0]: https://github.com/weby-homelab/power-framework/compare/v1.3.0...v1.4.0
+[1.3.0]: https://github.com/weby-homelab/power-framework/compare/v1.2.2...v1.3.0
+[1.2.2]: https://github.com/weby-homelab/power-framework/releases/tag/v1.2.2

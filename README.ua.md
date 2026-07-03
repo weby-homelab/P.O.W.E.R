@@ -6,13 +6,13 @@
 
 Валідуйте, індексуйте, шукайте та керуйте вашим vault Obsidian з терміналу — або дозвольте AI-агентам робити це через MCP. Створено для людей, які хочуть машиночитабельні нотатки, автоматичну перевірку якості та токен-ефективний AI-доступ до свого Second Brain.
 
-[![CI](https://github.com/weby-homelab/P.O.W.E.R/actions/workflows/ci.yml/badge.svg)](https://github.com/weby-homelab/P.O.W.E.R/actions/workflows/ci.yml)
-[![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen?logo=pytest)](https://github.com/weby-homelab/P.O.W.E.R/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/weby-homelab/P%2EO%2EW%2EE%2ER?logo=github)](https://github.com/weby-homelab/P.O.W.E.R/releases)
+[![CI](https://github.com/weby-homelab/power-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/weby-homelab/power-framework/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen?logo=pytest)](https://github.com/weby-homelab/power-framework/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/weby-homelab/power-framework?logo=github)](https://github.com/weby-homelab/power-framework/releases)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![CodeQL](https://github.com/weby-homelab/P.O.W.E.R/actions/workflows/codeql.yml/badge.svg)](https://github.com/weby-homelab/P.O.W.E.R/actions/workflows/codeql.yml)
-[![Docs](https://img.shields.io/badge/docs-mkdocs--material-8A2BE2?logo=materialformkdocs)](https://weby-homelab.github.io/P.O.W.E.R/)
+[![CodeQL](https://github.com/weby-homelab/power-framework/actions/workflows/codeql.yml/badge.svg)](https://github.com/weby-homelab/power-framework/actions/workflows/codeql.yml)
+[![Docs](https://img.shields.io/badge/docs-mkdocs--material-8A2BE2?logo=materialformkdocs)](https://weby-homelab.github.io/power-framework/)
 
 ## Чому P.O.W.E.R.?
 
@@ -224,8 +224,8 @@ graph TB
 ## Розробка
 
 ```bash
-git clone https://github.com/weby-homelab/P.O.W.E.R.git
-cd P.O.W.E.R
+git clone https://github.com/weby-homelab/power-framework.git
+cd power-framework
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 
