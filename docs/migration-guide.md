@@ -352,7 +352,7 @@ Agent: Importing GPG key and configuring Git identity
 Agent: Creating signed commit on branch feature/power-migration
 Agent: Pushing changes to GitHub and opening Pull Request
 Agent: Verifying CI/CD build workflow status...
-  ✅ MkDocs build success: https://weby-homelab.github.io/P.O.W.E.R/
+  ✅ MkDocs build success: https://weby-homelab.github.io/power-framework/
 
 Agent: Migration and publication completed successfully. Vault is P.O.W.E.R.-compliant.
 ```
