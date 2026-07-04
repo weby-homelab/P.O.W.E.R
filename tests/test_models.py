@@ -192,4 +192,3 @@ class TestNoteFile:
         )
         assert note.has_valid_metadata is False
         assert note.note_type is None
-

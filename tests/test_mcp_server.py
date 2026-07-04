@@ -93,4 +93,3 @@ def test_ingest_note_tool(sample_vault: Path) -> None:
         vault_path=str(sample_vault),
     )
     assert "Error: Note already exists" in result_fail
-
