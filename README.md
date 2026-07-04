@@ -193,46 +193,58 @@ The framework combines four complementary methodologies:
 ### Visual Framework Diagram
 
 ```mermaid
-graph TB
+flowchart TD
+    %% Modern 2026 Styling
+    classDef human fill:#6366f1,stroke:#4338ca,stroke-width:2px,color:#fff,rx:8
+    classDef data fill:#0ea5e9,stroke:#0369a1,stroke-width:2px,color:#fff,rx:8
+    classDef wiki fill:#10b981,stroke:#047857,stroke-width:2px,color:#fff,rx:8
+    classDef agent fill:#f59e0b,stroke:#b45309,stroke-width:2px,color:#fff,rx:8
+    classDef security fill:#ef4444,stroke:#b91c1c,stroke-width:2px,color:#fff,rx:8
+    
     subgraph Human ["👤 Human (Markdown UI)"]
-        PARA["P.A.R.A. Directory Structure"]
+        PARA[["📁 P.A.R.A. Directory Structure"]]:::human
     end
 
     subgraph OKF ["📄 OKF Overlay (Metadata Schema)"]
-        YAML["YAML Frontmatter"]
+        YAML[/"📝 YAML Frontmatter"\]:::data
     end
 
     subgraph Wiki ["📖 LLM-Wiki (Karpathy's Philosophy)"]
-        IndexMD["index.md (Navigation Map)"]
-        SubIndex["_index.md (Per-Folder Details)"]
-        LogMD["log.md (Change Log)"]
-        Lint["Link Linting"]
+        IndexMD[("🗂️ index.md (Navigation Map)")]:::wiki
+        SubIndex[("📂 _index.md (Per-Folder Details)")]:::wiki
+        LogMD[("📜 log.md (Change Log)")]:::wiki
+        Lint{{"🛠️ Link Linting"}}:::wiki
     end
 
     subgraph AI ["🤖 AI Agent (Local / Cloud)"]
-        Ingest["Ingest Note"]
-        Index["Rebuild Hierarchical Index"]
-        ReadSub["Read Sub-Index On-Demand"]
+        Ingest>"📥 Ingest Note"]:::agent
+        Index>"🔄 Rebuild Hierarchical Index"]:::agent
+        ReadSub>"🔍 Read Sub-Index On-Demand"]:::agent
     end
 
     subgraph ER ["🔐 Execution Rules"]
-        GPG["GPG-Signed Commits"]
-        PR["PR-Only Workflow"]
-        Sync["Cron Auto-Sync"]
+        GPG(("🔑 GPG-Signed Commits")):::security
+        PR(("🛡️ PR-Only Workflow")):::security
+        Sync(("⏱️ Cron Auto-Sync")):::security
     end
 
-    Human -- Writes Notes --> YAML
-    YAML -- Parsed by --> AI
-    AI -- Updates --> IndexMD
-    AI -- Updates --> SubIndex
-    AI -- Appends --> LogMD
-    AI -- Runs Checks --> Lint
-    ReadSub -- On-Demand --> SubIndex
-    IndexMD -. Synced via .-> Sync
-    SubIndex -. Synced via .-> Sync
-    LogMD -. Synced via .-> Sync
-    Sync --> GPG
-    GPG --> PR
+    %% Data Flow
+    Human -- "Writes Notes" --> YAML
+    YAML -- "Parsed by" --> AI
+    
+    %% AI Operations
+    AI -- "Updates Map" --> IndexMD
+    AI -- "Updates Catalog" --> SubIndex
+    AI -- "Appends" --> LogMD
+    AI -- "Runs Checks" --> Lint
+    ReadSub -- "On-Demand" --> SubIndex
+    
+    %% Sync & Security
+    IndexMD -. "Synced via" .-> Sync
+    SubIndex -. "Synced via" .-> Sync
+    LogMD -. "Synced via" .-> Sync
+    Sync -- "Triggers" --> GPG
+    GPG -- "Enforces" --> PR
 ```
 
 ### Core Library (`src/power_framework/`)
