@@ -184,46 +184,58 @@ timestamp: 2026-07-02T19:00:00
 ### Візуальна діаграма
 
 ```mermaid
-graph TB
-    subgraph Human ["👤 Human (Markdown UI)"]
-        PARA["P.A.R.A. Directory Structure"]
+flowchart TD
+    %% Modern 2026 Styling
+    classDef human fill:#6366f1,stroke:#4338ca,stroke-width:2px,color:#fff,rx:8
+    classDef data fill:#0ea5e9,stroke:#0369a1,stroke-width:2px,color:#fff,rx:8
+    classDef wiki fill:#10b981,stroke:#047857,stroke-width:2px,color:#fff,rx:8
+    classDef agent fill:#f59e0b,stroke:#b45309,stroke-width:2px,color:#fff,rx:8
+    classDef security fill:#ef4444,stroke:#b91c1c,stroke-width:2px,color:#fff,rx:8
+    
+    subgraph Human ["👤 Людина (Markdown UI)"]
+        PARA[["📁 Структура каталогів P.A.R.A."]]:::human
     end
 
-    subgraph OKF ["📄 OKF Overlay (Metadata Schema)"]
-        YAML["YAML Frontmatter"]
+    subgraph OKF ["📄 OKF Overlay (Схема Метаданих)"]
+        YAML[/"📝 YAML Frontmatter"\]:::data
     end
 
-    subgraph Wiki ["📖 LLM-Wiki (філософія Karpathy)"]
-        IndexMD["index.md (Навігаційна карта)"]
-        SubIndex["_index.md (Локальні каталоги)"]
-        LogMD["log.md (Лог змін)"]
-        Lint["Лінтинг посилань"]
+    subgraph Wiki ["📖 LLM-Wiki (Філософія Karpathy)"]
+        IndexMD[("🗂️ index.md (Навігаційна карта)")]:::wiki
+        SubIndex[("📂 _index.md (Локальні каталоги)")]:::wiki
+        LogMD[("📜 log.md (Лог змін)")]:::wiki
+        Lint{{"🛠️ Лінтинг посилань"}}:::wiki
     end
 
-    subgraph AI ["🤖 AI Agent (Local / Cloud)"]
-        Ingest["Ingest Note"]
-        Index["Rebuild Hierarchical Index"]
-        ReadSub["Read Sub-Index On-Demand"]
+    subgraph AI ["🤖 AI-Агент (Local / Cloud)"]
+        Ingest>"📥 Створення нотатки"]:::agent
+        Index>"🔄 Перебудова індексу"]:::agent
+        ReadSub>"🔍 Читання під-індексу"]:::agent
     end
 
-    subgraph ER ["🔐 Execution Rules"]
-        GPG["GPG-підписані коміти"]
-        PR["PR-Only Workflow"]
-        Sync["Cron Auto-Sync"]
+    subgraph ER ["🔐 Execution Rules (Правила)"]
+        GPG(("🔑 GPG-підписані коміти")):::security
+        PR(("🛡️ PR-Only Workflow")):::security
+        Sync(("⏱️ Cron Auto-Sync")):::security
     end
 
-    Human -- Writes Notes --> YAML
-    YAML -- Parsed by --> AI
-    AI -- Updates --> IndexMD
-    AI -- Updates --> SubIndex
-    AI -- Appends --> LogMD
-    AI -- Runs Checks --> Lint
-    ReadSub -- On-Demand --> SubIndex
-    IndexMD -. Synced via .-> Sync
-    SubIndex -. Synced via .-> Sync
-    LogMD -. Synced via .-> Sync
-    Sync --> GPG
-    GPG --> PR
+    %% Data Flow
+    Human -- "Пише нотатки" --> YAML
+    YAML -- "Парситься через" --> AI
+    
+    %% AI Operations
+    AI -- "Оновлює карту" --> IndexMD
+    AI -- "Оновлює каталог" --> SubIndex
+    AI -- "Дописує в" --> LogMD
+    AI -- "Перевіряє" --> Lint
+    ReadSub -- "На вимогу" --> SubIndex
+    
+    %% Sync & Security
+    IndexMD -. "Синхронізується" .-> Sync
+    SubIndex -. "Синхронізується" .-> Sync
+    LogMD -. "Синхронізується" .-> Sync
+    Sync -- "Запускає" --> GPG
+    GPG -- "Вимагає" --> PR
 ```
 
 ### Бібліотека (`src/power_framework/`)
