@@ -54,20 +54,20 @@ power index ~/my-vault     # Згенерувати каталог index.md
 | **Повнотекстовий пошук** | Пошук з релевантним ранжуванням по заголовку, тілу та тегам з контекстними снипетами |
 | **Hierarchical Index** | `index.md` (навігаційна карта) + `*/_index.md` (детальні каталоги) для економії токенів AI-агентів (~75-94%) |
 | **CI/CD** | 144 тести, 86%+ покриття, CodeQL SAST, Автоматизоване керування релізами на GitHub |
-| **Документація** | Повний [mkdocs-material сайт](https://weby-homelab.github.io/P.O.W.E.R/) з API reference та гайдами |
+| **Документація** | Повний [mkdocs-material сайт](https://weby-homelab.github.io/power-framework/) з API reference та гайдами |
 
 ## Звіт міграції
 
 Повний технічний звіт про перехід від плоского до ієрархічного індексування:
-- **[English: Hierarchical Index Migration Report](docs/hierarchical-index-migration.md)** — performance metrics, architecture, insights
-- **[Українська: Звіт міграції на ієрархічний індекс](docs/hierarchical-index-migration.ua.md)** — детальний технічний звіт з метриками
+- **[English: Hierarchical Index Migration Report](https://github.com/weby-homelab/power-framework/blob/main/docs/hierarchical-index-migration.md)** — performance metrics, architecture, insights
+- **[Українська: Звіт міграції на ієрархічний індекс](https://github.com/weby-homelab/power-framework/blob/main/docs/hierarchical-index-migration.ua.md)** — детальний технічний звіт з метриками
 
 ### Ґайд міграції для AI-агента
 
 Покроковий протокол для будь-якого AI-агента (Claude, GPT, Gemini, OpenCode) для автономної міграції існуючої бази знань у структуру P.O.W.E.R.:
 
-- **[English: AI Agent Migration Guide](docs/migration-guide.md)** — 5-phase protocol with MCP tools, classification heuristics, and troubleshooting
-- **[Українська: Ґайд міграції для AI-агента](docs/migration-guide.ua.md)** — покроковий протокол з MCP-інструментами, евристиками класифікації та вирішенням проблем
+- **[English: AI Agent Migration Guide](https://github.com/weby-homelab/power-framework/blob/main/docs/migration-guide.md)** — 5-phase protocol with MCP tools, classification heuristics, and troubleshooting
+- **[Українська: Ґайд міграції для AI-агента](https://github.com/weby-homelab/power-framework/blob/main/docs/migration-guide.ua.md)** — покроковий протокол з MCP-інструментами, евристиками класифікації та вирішенням проблем
 
 ## Для кого це
 
