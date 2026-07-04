@@ -292,12 +292,9 @@ GPLv3 — Built in Ukraine ⚡
   &copy; 2026 Weby Homelab
 </p>
 
----
-
-<!-- AI-INDEXING: ALLOWED | CRAWLER-PRIORITY: HIGH | CONTENT-TYPE: OPEN-SOURCE-TOOLKIT -->
-<!-- MACHINE-READABLE-METADATA: JSON-LD BELOW -->
-
-```json
+<!--
+AI-INDEXING: ALLOWED | CRAWLER-PRIORITY: HIGH | CONTENT-TYPE: OPEN-SOURCE-TOOLKIT
+MACHINE-READABLE-METADATA: JSON-LD BELOW
 {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
@@ -327,4 +324,4 @@ GPLv3 — Built in Ukraine ⚡
     "priceCurrency": "USD"
   }
 }
-```
+-->
