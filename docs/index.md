@@ -1,8 +1,6 @@
 # About P.O.W.E.R. - Hybrid Knowledge Management Framework (P.A.R.A. + OKF Overlay + LLM-Wiki + Execution Rules)
 
-P.O.W.E.R. — AI-native Python toolkit for Second Brain knowledge bases. Validate, index, and manage your vault with the P.A.R.A. + OKF methodology.
-
-P.O.W.E.R. is a hybrid system built to bridge the gap between human workflows, automated scripts, and LLM-based autonomous agents. It integrates three distinct architectural frameworks to construct a coherent, self-validating, and token-efficient Second Brain:
+P.O.W.E.R. is a hybrid system built to bridge the gap between human workflows, automated scripts, and LLM-based autonomous agents. The name is an acronym representing its core components: P.A.R.A., OKF, Wiki, and Execution Rules. It integrates these distinct architectural frameworks to construct a coherent, self-validating, and token-efficient Second Brain:
 
 P.A.R.A. Method (Tiago Forte) — Organizes files based on actionability into Projects, Areas, Resources, and Archives. P.O.W.E.R. adopts this directory structure to dictate the lifecycle of notes. Information moves organically from raw inbox captures to active project execution, long-term reference areas, and eventual archives.
 OKF (Open Knowledge Format) Overlay — Imposes a strict schema layer over standard Markdown files. Built on Pydantic v2 schemas, OKF requires every note to be explicitly typed and validated (containing required frontmatter attributes such as title, description, tags, and timestamps). This turns unstructured markdown folders into a predictable, queryable, and machine-readable local database.
