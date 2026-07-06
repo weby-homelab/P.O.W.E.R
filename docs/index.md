@@ -27,8 +27,8 @@ Unlike generic knowledge management tools, P.O.W.E.R. is designed from the groun
 - **`power search`** — Full-text vault search with relevance scoring
 - **`power rot`** — ROT Audit: detect redundant, outdated, and trivial notes
 - **`power archive`** — Auto-archive stale notes to `04_Archive/`
-- **`power relations`** — Suggest cross-note relations for Graph RAG enrichment
-- **`power sync`** — One-command cron setup for automated vault sync
+- **`power suggest-related`** — Suggest cross-note relations for Graph RAG enrichment
+- **`power cron`** — Run automated maintenance (lint + index + rot audit)
 - **MCP Server** — 9 tools (`lint_vault`, `generate_index`, `read_sub_index`, `ingest_note`, `search_vault_tool`, `synthesize_session`, `run_rot_audit`, `archive_stale_notes`, `suggest_related_notes`)
 - **Knowledge Graph** — `related` field for explicit cross-note graph links
 - **Governance** — `owner`, `status`, `expiry` fields tracked in sub-indexes

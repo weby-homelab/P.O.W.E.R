@@ -51,7 +51,7 @@ power index ~/my-vault     # Згенерувати каталог index.md
 
 | Функція | Що робить |
 |---------|-----------|
-| **CLI** | `power init`, `lint`, `index`, `ingest`, `search`, `rot`, `archive`, `relations`, `sync` — 9 команд для керування vault |
+| **CLI** | `power init`, `lint`, `index`, `ingest`, `search`, `rot`, `archive`, `cron`, `suggest-related` — 9 команд для керування vault |
 | **MCP Server** | Надає `lint_vault`, `generate_index`, `read_sub_index`, `ingest_note`, `search_vault`, `synthesize_session`, `run_rot_audit`, `archive_stale_notes`, `suggest_related_notes` AI-агентам |
 | **OKF Validation** | Pydantic v2 схеми з полями governance (`owner`, `status`, `expiry`) |
 | **Knowledge Graph (Graph RAG)** | Поле `related` для явних зв'язків між нотатками. Відображається в sub-indexes для AI-навігації |
@@ -60,8 +60,8 @@ power index ~/my-vault     # Згенерувати каталог index.md
 | **Повнотекстовий пошук** | Пошук з релевантним ранжуванням по заголовку, тілу та тегам з контекстними снипетами |
 | **ROT Audit** | Виявляє дублікати, застарілі та тривіальні нотатки — `power rot <path>` |
 | **Auto-Archive** | Автоматично архівує застарілі нотатки до `04_Archive/` — `power archive <path>` |
-| **Relation Suggestions** | Аналіз перетину ключових слів та тегів для Graph RAG — `power relations <path>` |
-| **Cron-Sync** | Одна команда для налаштування cron-синхронізації — `power sync <path>` |
+| **Relation Suggestions** | Аналіз перетину ключових слів та тегів для Graph RAG — `power suggest-related <path>` |
+| **Cron Maintenance** | Запускає lint + index + rot audit однією командою — `power cron <path>` |
 | **Hierarchical Index** | `index.md` (навігаційна карта) + `*/_index.md` (детальні каталоги) для економії токенів AI-агентів (~75-94%) |
 | **CI/CD** | 198 тестів, 87%+ покриття, CodeQL SAST, Автоматизовані GitHub релізи |
 | **Документація** | Повний [mkdocs-material сайт](https://weby-homelab.github.io/power-framework/) з API reference та гайдами |

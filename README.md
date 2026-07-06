@@ -51,7 +51,7 @@ power index ~/my-vault     # Generate catalog index.md
 
 | Feature | What it does |
 |---------|-------------|
-| **CLI** | `power init`, `lint`, `index`, `ingest`, `search`, `rot`, `archive`, `relations`, `sync` — 9 commands for full vault management |
+| **CLI** | `power init`, `lint`, `index`, `ingest`, `search`, `rot`, `archive`, `cron`, `suggest-related` — 9 commands for full vault management |
 | **MCP Server** | Exposes `lint_vault`, `generate_index`, `read_sub_index`, `ingest_note`, `search_vault`, `synthesize_session`, `run_rot_audit`, `archive_stale_notes`, `suggest_related_notes` to any AI agent |
 | **OKF Validation** | Pydantic v2 schemas enforce strict metadata on every note with governance (`owner`, `status`, `expiry`) |
 | **Knowledge Graph (Graph RAG)** | `related` field in OKF frontmatter for explicit cross-note graph links. Rendered in sub-indexes for AI navigation |
@@ -59,8 +59,8 @@ power index ~/my-vault     # Generate catalog index.md
 | **Agent Auto-Ingest** | `synthesize_session` MCP tool — agents autonomously create permanent notes with governance + graph links + full index rebuild |
 | **ROT Audit** | Detects redundant, outdated, and trivial notes — `power rot <path>` keeps your vault lean |
 | **Auto-Archive** | Automatically archives stale notes to `04_Archive/` — `power archive <path>` with dry-run preview |
-| **Relation Suggestions** | Keyword & tag overlap analysis for Graph RAG enrichment — `power relations <path>` |
-| **Cron-Sync** | One-command cron setup for automated vault sync — `power sync <path>` |
+| **Relation Suggestions** | Keyword & tag overlap analysis for Graph RAG enrichment — `power suggest-related <path>` |
+| **Cron Maintenance** | Runs lint + index + rot audit in one command — `power cron <path>` |
 | **Full-Text Search** | Relevance-scored search across title, body, and tags with context snippets |
 | **Hierarchical Index** | `index.md` (navigation map) + per-folder `_index.md` (detailed catalogs) for token-efficient AI reading (~75-94% token savings) |
 | **CI/CD** | 198 tests, 87%+ coverage, CodeQL SAST, Automated GitHub Releases |
@@ -95,8 +95,8 @@ power search <path> <query>    Full-text search with relevance scoring
 power ingest <path> [options]  Create a new note with validated OKF metadata
 power rot <path>               ROT Audit — detect redundant, outdated, trivial notes
 power archive <path>           Auto-archive stale notes to 04_Archive/
-power relations <path>         Suggest cross-note relations for Graph RAG
-power sync <path>              Set up cron-based auto-sync for the vault
+power suggest-related <path>   Suggest cross-note relations for Graph RAG
+power cron <path>              Run automated maintenance (lint + index + rot)
 ```
 
 ### Ingest Examples

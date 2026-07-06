@@ -3,7 +3,7 @@
 ## Synopsis
 
 ```
-power [-h] [-v] {init,lint,index,ingest,search,rot,archive,relations,sync} ...
+power [-h] [-v] {init,lint,index,ingest,search,rot,archive,cron,suggest-related} ...
 ```
 
 ## Global options
@@ -119,29 +119,28 @@ power archive path [--stale-days STALE_DAYS] [--dry-run]
 | `--stale-days` | No | Days without change to consider stale (default: 90) |
 | `--dry-run` | No | Preview which notes would be archived without moving them |
 
-### `relations`
+### `suggest-related`
 
 Suggest cross-note relations for Graph RAG enrichment.
 
 ```
-power relations path [--target TARGET_PATH] [--max-results MAX_RESULTS]
+power suggest-related path [--target TARGET_PATH] [--max-results MAX_RESULTS]
 ```
 
 | Argument/Flag | Required | Description |
 |---------------|----------|-------------|
 | `path` | Yes | Path to the vault directory |
 | `--target` | No | Analyze relations for a specific note path |
-| `--max-results` | No | Maximum number of suggestions (default: 10) |
+| `--max-results` | No | Maximum number of suggestions (default: 5) |
 
-### `sync`
+### `cron`
 
-Set up cron-based auto-sync for the vault (git add, commit, push).
+Run automated maintenance: lint + index + rot audit.
 
 ```
-power sync path [--schedule SCHEDULE]
+power cron path
 ```
 
 | Argument/Flag | Required | Description |
 |---------------|----------|-------------|
 | `path` | Yes | Path to the vault directory |
-| `--schedule` | No | Cron schedule expression (default: `0 */6 * * *` — every 6 hours) |
