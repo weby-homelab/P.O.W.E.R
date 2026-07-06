@@ -16,9 +16,11 @@ Utility functions for path safety, file I/O, and security.
 ## Constants
 | Name | Source Module | Value / Description |
 |------|---------------|---------------------|
-| `__version__` | `utils.py` | `"1.6.0"` |
-| `EXCLUDED_DIRS` | `utils.py` | `frozenset` of directory names excluded from scanning |
-| `EXCLUDED_ORPHAN_FILES` | `utils.py` | `frozenset` of filenames excluded from orphan checks |
+| `__version__` | `utils.py` | `"1.8.0"` |
+| `EXCLUDED_DIRS` | `constants.py` | `frozenset` of directory names excluded from scanning |
+| `EXCLUDED_ORPHAN_FILES` | `constants.py` | `frozenset` of filenames excluded from orphan checks |
 | `PARA_FOLDERS` | `models.py` | `tuple` of standard P.A.R.A. category folder names |
+| `SKIP_FILES` | `constants.py` | `frozenset` of filenames excluded from all scanning |
+| `SYSTEM_SKIP_PARTS` | `constants.py` | `tuple` of directory parts to skip in markdown check |
 | `VAULT_STRUCTURE` | `models.py` | `tuple` of all folders defining a compliant vault structure |
 

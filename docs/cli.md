@@ -91,6 +91,7 @@ power search path query [--max-results MAX_RESULTS]
 | `path` | Yes | Path to the vault directory |
 | `query` | Yes | Search query (supports multiple terms and "quoted phrases") |
 | `--max-results`| No | Maximum number of results (default: 20) |
+| `--mode` | No | Search mode: `fts` (default), `vector`, `hybrid` |
 
 ### `rot`
 
@@ -110,14 +111,13 @@ power rot path [--extended]
 Auto-archive stale notes to `04_Archive/`.
 
 ```
-power archive path [--stale-days STALE_DAYS] [--dry-run]
+power archive path [--no-dry-run]
 ```
 
 | Argument/Flag | Required | Description |
 |---------------|----------|-------------|
 | `path` | Yes | Path to the vault directory |
-| `--stale-days` | No | Days without change to consider stale (default: 90) |
-| `--dry-run` | No | Preview which notes would be archived without moving them |
+| `--no-dry-run` | No | Actually move notes (default: dry run, preview only) |
 
 ### `suggest-related`
 

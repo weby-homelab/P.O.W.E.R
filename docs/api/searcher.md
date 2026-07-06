@@ -4,8 +4,8 @@ Full-text search with relevance scoring using SQLite FTS5 (with memory fallback)
 
 | Function | Returns | Description |
 |----------|---------|-------------|
-| `search_vault(vault_dir, query, max_results)` | `list[SearchResult]` | Search the vault for notes matching the query |
-| `format_search_results(results, query)` | `str` | Format search results into a human-readable report string |
+| `search_vault(vault_dir, query, max_results, mode)` | `list[SearchResult]` | Search the vault with configurable mode: `fts` (BM25, default), `vector` (TF cosine), `hybrid` (RRF fusion) |
+| `format_search_results(results, query, mode)` | `str` | Format search results into a human-readable report string |
 
 ## `SearchResult`
 

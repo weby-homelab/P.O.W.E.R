@@ -6,6 +6,9 @@ Health-check functions for vault integrity.
 |----------|---------|-------------|
 | `run_lint_vault(vault_dir)` | `LintResult` | Check all notes for metadata, links, orphans, stale/expired notes |
 | `run_lint_report(vault_dir)` | `str` | Run lint and return formatted report string |
+| `run_rot_audit(vault_dir, extended)` | `ROTResult` | ROT Audit: redundant, outdated, trivial notes; `extended=True` for A2 scoring |
+| `run_rot_report(vault_dir, extended)` | `str` | Run ROT audit and return formatted report |
+| `archive_stale_notes(vault_dir, dry_run)` | `str` | Archive expired notes to `04_Archive/`; `dry_run=True` for preview |
 
 ## `LintResult`
 

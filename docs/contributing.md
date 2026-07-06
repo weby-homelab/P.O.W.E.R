@@ -5,6 +5,7 @@
 ```bash
 git clone https://github.com/weby-homelab/power-framework.git
 cd power-framework
+python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 ```
 
