@@ -16,10 +16,12 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+from .healer import heal_vault
 from .indexer import generate_log_initial, run_generate_hierarchical_index
 from .linter import archive_stale_notes, run_lint_report, run_rot_report
+from .markdown_checks import check_all as check_markdown_issues
 from .models import VAULT_STRUCTURE, NoteType, OKFMetadata
-from .parser import build_frontmatter
+from .parser import build_frontmatter, read_file_content
 from .relations import format_relation_suggestions, suggest_related
 from .searcher import format_search_results, search_vault
 from .utils import __version__, atomic_write
@@ -164,7 +166,7 @@ def _cmd_ingest(args: argparse.Namespace) -> int:
 
 
 def _cmd_search(args: argparse.Namespace) -> int:
-    """Full-text search across vault notes."""
+    """Search vault notes with configurable mode (fts/vector/hybrid)."""
     vault_dir = _resolve_path(args.path)
     if not vault_dir.exists():
         print(f"Vault not found: {vault_dir}")  # noqa: T201
@@ -172,9 +174,10 @@ def _cmd_search(args: argparse.Namespace) -> int:
 
     query = args.query
     max_results = args.max_results
+    mode = args.mode
 
-    results = search_vault(vault_dir, query, max_results=max_results)
-    report = format_search_results(results, query)
+    results = search_vault(vault_dir, query, max_results=max_results, mode=mode)
+    report = format_search_results(results, query, mode=mode)
     print(report)  # noqa: T201
     return 0
 
@@ -229,6 +232,51 @@ def _cmd_cron(args: argparse.Namespace) -> int:
     rot_report = run_rot_report(vault_dir)
     print(rot_report)  # noqa: T201
 
+    return 0
+
+
+def _cmd_heal(args: argparse.Namespace) -> int:
+    """Heal missing/invalid frontmatter in vault notes."""
+    vault_dir = _resolve_path(args.path)
+    if not vault_dir.exists():
+        print(f"Vault not found: {vault_dir}")  # noqa: T201
+        return 1
+
+    dry_run = not args.no_dry_run
+
+    report = heal_vault(vault_dir, dry_run=dry_run)
+    print(report)  # noqa: T201
+    return 0
+
+
+def _cmd_markdown_check(args: argparse.Namespace) -> int:
+    """Check markdown quality (trailing whitespace, list markers, header jumps, code language)."""
+    vault_dir = _resolve_path(args.path)
+    if not vault_dir.exists():
+        print(f"Vault not found: {vault_dir}")  # noqa: T201
+        return 1
+
+    total_issues = 0
+    for filepath in vault_dir.rglob("*.md"):
+        rel = filepath.relative_to(vault_dir)
+        if any(p in (".git", "05_Templates", ".system_generated") for p in rel.parts):
+            continue
+        if filepath.name in ("index.md", "log.md", "_index.md"):
+            continue
+
+        try:
+            content = read_file_content(filepath)
+        except Exception:
+            continue
+
+        issues = check_markdown_issues(content)
+        if issues:
+            total_issues += len(issues)
+            print(f"{rel}:")  # noqa: T201
+            for issue in issues:
+                print(f"  L{issue['line']}: [{issue['type']}] {issue['context']}")  # noqa: T201
+
+    print(f"\nTotal issues found: {total_issues}")  # noqa: T201
     return 0
 
 
@@ -310,12 +358,16 @@ def main() -> None:
         default=20,
         help="Maximum number of results (default: 20)",
     )
+    p_search.add_argument(
+        "--mode",
+        choices=["fts", "vector", "hybrid"],
+        default="fts",
+        help='Search mode: "fts" (BM25, default), "vector" (TF cosine), "hybrid" (RRF merged)',
+    )
     p_search.set_defaults(func=_cmd_search)
 
     # power rot
-    p_rot = subparsers.add_parser(
-        "rot", help="Run ROT (Redundant, Outdated, Trivial) audit"
-    )
+    p_rot = subparsers.add_parser("rot", help="Run ROT (Redundant, Outdated, Trivial) audit")
     p_rot.add_argument("path", help="Path to the vault directory")
     p_rot.set_defaults(func=_cmd_rot)
 
@@ -346,6 +398,28 @@ def main() -> None:
     )
     p_cron.add_argument("path", help="Path to the vault directory")
     p_cron.set_defaults(func=_cmd_cron)
+
+    # power heal
+    p_heal = subparsers.add_parser(
+        "heal",
+        help="Heal missing/invalid frontmatter in vault notes",
+    )
+    p_heal.add_argument("path", help="Path to the vault directory")
+    p_heal.add_argument(
+        "--no-dry-run",
+        action="store_true",
+        default=False,
+        help="Actually apply fixes (default: dry run)",
+    )
+    p_heal.set_defaults(func=_cmd_heal)
+
+    # power markdown-check
+    p_md = subparsers.add_parser(
+        "markdown-check",
+        help="Check markdown quality issues across the vault",
+    )
+    p_md.add_argument("path", help="Path to the vault directory")
+    p_md.set_defaults(func=_cmd_markdown_check)
 
     # power suggest-related
     p_suggest = subparsers.add_parser(

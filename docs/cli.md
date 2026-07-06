@@ -3,7 +3,7 @@
 ## Synopsis
 
 ```
-power [-h] [-v] {init,lint,index,ingest,search,rot,archive,cron,suggest-related} ...
+power [-h] [-v] {init,lint,index,ingest,search,rot,archive,cron,heal,markdown-check,suggest-related} ...
 ```
 
 ## Global options
@@ -132,6 +132,35 @@ power suggest-related path [--target TARGET_PATH] [--max-results MAX_RESULTS]
 | `path` | Yes | Path to the vault directory |
 | `--target` | No | Analyze relations for a specific note path |
 | `--max-results` | No | Maximum number of suggestions (default: 5) |
+
+### `heal` *(new in v1.7.1)*
+
+Heal missing/invalid frontmatter in vault notes.
+
+```
+power heal path [--no-dry-run]
+```
+
+| Argument/Flag | Required | Description |
+|---------------|----------|-------------|
+| `path` | Yes | Path to the vault directory |
+| `--no-dry-run` | No | Actually apply fixes (default: dry run, preview only) |
+
+Auto-fills: `type` (from folder), `title` (from filename), `description` (from first paragraph), `timestamp` (now), and fixes type casing. Creates timestamped backups before live edits.
+
+### `markdown-check` *(new in v1.7.1)*
+
+Check markdown quality issues across the vault.
+
+```
+power markdown-check path
+```
+
+| Argument/Flag | Required | Description |
+|---------------|----------|-------------|
+| `path` | Yes | Path to the vault directory |
+
+Checks: trailing whitespace, inconsistent list markers (`-` vs `*`), header jumps (e.g. h1→h3), code blocks without language hints.
 
 ### `cron`
 

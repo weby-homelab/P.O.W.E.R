@@ -112,3 +112,20 @@ Suggest cross-note relations based on keyword and tag overlap analysis.
 | `target_path` | `string` | No | Analyze relations for a specific note |
 | `max_results` | `integer` | No | Maximum suggestions (default: 10) |
 | `vault_path` | `string` | No | Path to vault root |
+
+### `heal_frontmatter_tool` *(new in v1.7.1)*
+
+Scan and heal missing/invalid frontmatter fields across vault notes.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `dry_run` | `boolean` | No | Preview without editing (default: true) |
+| `vault_path` | `string` | No | Path to vault root |
+
+### `check_markdown_tool` *(new in v1.7.1)*
+
+Check markdown quality issues across the vault: trailing whitespace, list markers, header jumps, code language.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `vault_path` | `string` | No | Path to vault root |

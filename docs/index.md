@@ -13,10 +13,14 @@ Unlike generic knowledge management tools, P.O.W.E.R. is designed from the groun
 - **AI-native metadata** — Pydantic v2 schemas enforce strict OKF frontmatter, so every note is machine-readable; includes governance fields (`owner`, `status`, `expiry`) and Graph RAG links (`related`)
 - **Token-efficient indexing** — hierarchical `index.md` + per-folder `_index.md` cuts AI agent context usage by ~75%
 - **Knowledge Graph** — `related` field connects notes across the vault; visualized in sub-indexes for Graph RAG workflows
-- **Freshness Monitoring** — linter detects stale/expired notes based on `expiry` metadata field
+- **Freshness Monitoring** — linter detects stale/expired notes based on `expiry` metadata field; A2 scoring adds type-based exponential decay freshness
+- **Content Deduplication** — TF-Vector cosine similarity detects near-duplicate notes without external embeddings
+- **Link Rot Detection** — HTTP HEAD checks for broken external links
+- **Frontmatter Healer** — auto-fills missing title, description, type, and timestamp across the vault
+- **Markdown Quality Checks** — detects trailing whitespace, inconsistent list markers, header jumps, missing code language
 - **Agent Auto-Ingest** — `synthesize_session` MCP tool lets agents autonomously create permanent knowledge artifacts with governance + graph links + full catalog maintenance
-- **MCP-native** — expose all tools to any MCP-compatible AI client (Claude, OpenCode, Cursor) with zero glue code
-- **Production-grade** — 198 tests, 87%+ coverage, CodeQL scanning, OIDC-signed GitHub Releases
+- **MCP-native** — 11 tools exposed to any MCP-compatible AI client (Claude, OpenCode, Cursor) with zero glue code
+- **Production-grade** — 270 tests, 89%+ coverage, CodeQL scanning, OIDC-signed GitHub Releases
 
 ## Features
 
@@ -25,11 +29,13 @@ Unlike generic knowledge management tools, P.O.W.E.R. is designed from the groun
 - **`power index`** — Compile hierarchical indexes (`index.md` + per-folder `_index.md`)
 - **`power ingest`** — Create new notes with validated frontmatter (supports `owner`, `status`, `expiry`, `related`)
 - **`power search`** — Full-text vault search with relevance scoring
-- **`power rot`** — ROT Audit: detect redundant, outdated, and trivial notes
+- **`power rot`** — ROT Audit: detect redundant, outdated, trivial notes; `--extended` for A2 scoring
 - **`power archive`** — Auto-archive stale notes to `04_Archive/`
+- **`power heal`** — Auto-fill missing frontmatter fields (title, description, type, timestamp)
+- **`power markdown-check`** — Detect trailing whitespace, inconsistent list markers, header jumps, missing code language
 - **`power suggest-related`** — Suggest cross-note relations for Graph RAG enrichment
 - **`power cron`** — Run automated maintenance (lint + index + rot audit)
-- **MCP Server** — 9 tools (`lint_vault`, `generate_index`, `read_sub_index`, `ingest_note`, `search_vault_tool`, `synthesize_session`, `run_rot_audit`, `archive_stale_notes`, `suggest_related_notes`)
+- **MCP Server** — 11 tools (`lint_vault`, `generate_index`, `read_sub_index`, `ingest_note`, `search_vault_tool`, `synthesize_session`, `rot_audit`, `archive_notes`, `suggest_related_tool`, `heal_frontmatter_tool`, `check_markdown_tool`)
 - **Knowledge Graph** — `related` field for explicit cross-note graph links
 - **Governance** — `owner`, `status`, `expiry` fields tracked in sub-indexes
 

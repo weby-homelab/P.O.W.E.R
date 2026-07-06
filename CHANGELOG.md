@@ -5,6 +5,20 @@ All notable changes to the P.O.W.E.R. Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.1] - 2026-07-06
+
+### Added
+- **Frontmatter Healer**: `power heal <path>` auto-fills missing title (from filename), description (from first paragraph), timestamp (now), type (from folder), and fixes type casing — with `--no-dry-run` for live mode and automatic backup before edits
+- **Markdown Quality Checks**: `power markdown-check <path>` detects trailing whitespace, inconsistent list markers (`-` vs `*`), header jumps (e.g. h1→h3), and code blocks without language hints
+- **MCP tools**: `heal_frontmatter_tool` and `check_markdown_tool` — AI agents can now heal frontmatter and audit markdown quality autonomously
+- **Extended ROT Audit (A2)**: `power rot --extended` (or MCP `rot_audit(extended=True)`) enables content dedup (TF-Vector cosine similarity), link rot checks (HTTP HEAD), freshness scoring (type-based exponential decay), and SQLite usage tracking
+
+### Changed
+- **Test suite expanded**: 198 → 270 tests (36.3% growth), including 19 healer tests, 17 markdown check tests, 8 A2 scoring tests, all passing with zero regressions
+- **`power rot` now 11 CLI commands**: `init`, `lint`, `index`, `ingest`, `search`, `rot`, `archive`, `cron`, `heal`, `markdown-check`, `suggest-related`
+- **MCP server now 11 tools**: `lint_vault`, `generate_index`, `read_sub_index`, `ingest_note`, `search_vault_tool`, `synthesize_session`, `rot_audit`, `archive_notes`, `suggest_related_tool`, `heal_frontmatter_tool`, `check_markdown_tool`
+- **`run_rot_audit()` / `run_rot_report()`**: Added `extended: bool = False` parameter for A2 scoring opt-in
+
 ## [1.7.0] - 2026-07-06
 
 ### Added
