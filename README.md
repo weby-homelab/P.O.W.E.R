@@ -29,7 +29,7 @@ Unlike generic knowledge management tools, P.O.W.E.R. is designed from the groun
 - **Knowledge Graph** — `related` field connects notes across the vault; visualized in sub-indexes for Graph RAG workflows
 - **Freshness Monitoring** — linter detects stale/expired notes based on `expiry` metadata field
 - **Agent Auto-Ingest** — `synthesize_session` MCP tool lets agents autonomously create permanent knowledge artifacts with governance + graph links + full catalog maintenance
-- **MCP-native** — expose all tools to any MCP-compatible AI client (Claude, OpenCode, Cursor) with zero glue code
+- **MCP-native** — expose all 12 tools to any MCP-compatible AI client (Claude, OpenCode, Cursor) with zero glue code, powered by FastMCP 3.x
 - **Production-grade** — 270+ tests, 81%+ coverage, CodeQL scanning, Automated GitHub Releases
 
 ## Quick Start
@@ -49,7 +49,7 @@ power markdown-check ~/my-vault  # Check markdown quality issues
 | Feature | What it does |
 |---------|-------------|
 | **CLI** | `power init`, `lint`, `index`, `ingest`, `search`, `rot`, `archive`, `cron`, `heal`, `markdown-check`, `suggest-related` — 11 commands for full vault management |
-| **MCP Server** | Exposes `lint_vault`, `generate_index`, `read_sub_index`, `ingest_note`, `search_vault`, `synthesize_session`, `run_rot_audit`, `archive_stale_notes`, `suggest_related_notes` to any AI agent |
+| **MCP Server** | Exposes `lint_vault`, `generate_index`, `read_sub_index`, `ensure_sub_index`, `ingest_note`, `search_vault_tool`, `synthesize_session`, `rot_audit`, `archive_notes`, `suggest_related_tool`, `heal_frontmatter_tool`, `check_markdown_tool` — 12 tools for AI agents |
 | **OKF Validation** | Pydantic v2 schemas enforce strict metadata on every note with governance (`owner`, `status`, `expiry`) |
 | **Knowledge Graph (Graph RAG)** | `related` field in OKF frontmatter for explicit cross-note graph links. Rendered in sub-indexes for AI navigation |
 | **Freshness Monitoring** | Linter flags stale/expired notes by checking `expiry` dates, ensuring your vault stays current |
@@ -270,12 +270,17 @@ flowchart TD
 |--------|---------|
 | `core/models.py` | Pydantic v2 schemas for OKF metadata validation |
 | `core/parser.py` | Safe YAML frontmatter parsing (PyYAML-based) |
-| `core/indexer.py` | Vault scanning and index.md generation |
+| `core/indexer.py` | Vault scanning and hierarchical index generation |
 | `core/linter.py` | Health checks: broken links, missing metadata, orphans, stale/expired notes |
-| `core/searcher.py` | Full-text search with relevance scoring |
-| `core/utils.py` | Path traversal protection, atomic writes, backups |
-| `core/cli.py` | Command-line interface (init, lint, index, ingest, search) |
-| `mcp/server.py` | FastMCP server exposing all tools to AI agents |
+| `core/searcher.py` | Full-text search with relevance scoring (FTS5/Vector/Hybrid) |
+| `core/healer.py` | Auto-fix missing/invalid frontmatter fields |
+| `core/relations.py` | Entity extraction & relation suggestions for Graph RAG |
+| `core/rot_scoring.py` | A2 scoring: content dedup, freshness, link rot, usage tracking |
+| `core/markdown_checks.py` | Markdown quality checks: trailing whitespace, list markers, header jumps |
+| `core/constants.py` | Centralized exclusion lists and system constants |
+| `core/utils.py` | Path traversal protection, atomic writes, backups, rate limiter |
+| `core/cli.py` | Command-line interface (11 commands via argparse) |
+| `mcp/power_server.py` | FastMCP 3.x server with 12 async tools + HTTP transport + /health |
 
 All components share `power_framework.core` as the single source of truth.
 
@@ -319,7 +324,7 @@ MACHINE-READABLE-METADATA: JSON-LD BELOW
   "alternateName": "power-framework",
   "description": "AI-native Python toolkit for Second Brain knowledge bases. Validate, index, search, and manage Obsidian vaults via CLI or MCP server using the P.A.R.A. + OKF methodology.",
   "url": "https://github.com/weby-homelab/power-framework",
-  "downloadUrl": "https://pypi.org/project/power-framework/",
+  "downloadUrl": "https://github.com/weby-homelab/power-framework/releases",
   "applicationCategory": "DeveloperApplication",
   "operatingSystem": "Linux, macOS, Windows",
   "programmingLanguage": "Python",
