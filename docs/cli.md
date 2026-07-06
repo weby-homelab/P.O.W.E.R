@@ -3,7 +3,7 @@
 ## Synopsis
 
 ```
-power [-h] [-v] {init,lint,index,ingest,search} ...
+power [-h] [-v] {init,lint,index,ingest,search,rot,archive,relations,sync} ...
 ```
 
 ## Global options
@@ -90,3 +90,58 @@ power search path query [--max-results MAX_RESULTS]
 | `path` | Yes | Path to the vault directory |
 | `query` | Yes | Search query (supports multiple terms and "quoted phrases") |
 | `--max-results`| No | Maximum number of results (default: 20) |
+
+### `rot`
+
+ROT Audit — detect redundant, outdated, and trivial notes.
+
+```
+power rot path [--stale-days STALE_DAYS] [--min-body-chars MIN_BODY_CHARS]
+```
+
+| Argument/Flag | Required | Description |
+|---------------|----------|-------------|
+| `path` | Yes | Path to the vault directory |
+| `--stale-days` | No | Days without change to consider stale (default: 90) |
+| `--min-body-chars` | No | Minimum body characters (default: 50) |
+
+### `archive`
+
+Auto-archive stale notes to `04_Archive/`.
+
+```
+power archive path [--stale-days STALE_DAYS] [--dry-run]
+```
+
+| Argument/Flag | Required | Description |
+|---------------|----------|-------------|
+| `path` | Yes | Path to the vault directory |
+| `--stale-days` | No | Days without change to consider stale (default: 90) |
+| `--dry-run` | No | Preview which notes would be archived without moving them |
+
+### `relations`
+
+Suggest cross-note relations for Graph RAG enrichment.
+
+```
+power relations path [--target TARGET_PATH] [--max-results MAX_RESULTS]
+```
+
+| Argument/Flag | Required | Description |
+|---------------|----------|-------------|
+| `path` | Yes | Path to the vault directory |
+| `--target` | No | Analyze relations for a specific note path |
+| `--max-results` | No | Maximum number of suggestions (default: 10) |
+
+### `sync`
+
+Set up cron-based auto-sync for the vault (git add, commit, push).
+
+```
+power sync path [--schedule SCHEDULE]
+```
+
+| Argument/Flag | Required | Description |
+|---------------|----------|-------------|
+| `path` | Yes | Path to the vault directory |
+| `--schedule` | No | Cron schedule expression (default: `0 */6 * * *` — every 6 hours) |

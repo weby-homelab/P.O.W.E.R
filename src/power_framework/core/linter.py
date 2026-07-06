@@ -6,12 +6,16 @@ Checks for:
   - Missing/invalid OKF frontmatter
   - Orphan notes (no inbound links)
   - Stale / expired notes (freshness governance)
+  - ROT (Redundant, Outdated, Trivial) analysis
+  - Auto-archiving of stale notes
 """
 
 from __future__ import annotations
 
+import os
 import re
-from datetime import date
+import shutil
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 from .parser import has_frontmatter, has_type_field, parse_frontmatter, read_file_content
@@ -20,6 +24,9 @@ from .utils import EXCLUDED_DIRS, clean_note_name, is_excluded_orphan
 WIKI_LINK_PATTERN = re.compile(r"\[\[(.*?)\]\]")
 GFM_LINK_PATTERN = re.compile(r"\[.*?\]\(((?![a-zA-Z][a-zA-Z0-9+.-]*://)[^)]*\.md)(?:#.*?)?\)")
 EMBED_LINK_PATTERN = re.compile(r"!\[\[(.*?)\]\]")
+
+TRIVIAL_BODY_MIN_CHARS = 50
+TITLE_SIMILARITY_THRESHOLD = 0.6
 
 
 class LintResult:
@@ -74,6 +81,81 @@ class LintResult:
             lines.append("OK: Vault is completely healthy! Zero errors found.")
 
         return "\n".join(lines)
+
+
+class ROTResult:
+    """Container for ROT (Redundant, Outdated, Trivial) audit results."""
+
+    def __init__(self) -> None:
+        self.redundant: list[tuple[str, str, float]] = []
+        self.outdated: list[tuple[str, str]] = []
+        self.trivial: list[tuple[str, int]] = []
+
+    @property
+    def has_issues(self) -> bool:
+        return bool(self.redundant or self.outdated or self.trivial)
+
+    @property
+    def total_issues(self) -> int:
+        return len(self.redundant) + len(self.outdated) + len(self.trivial)
+
+    def format_report(self, vault_dir: Path) -> str:
+        """Generate a human-readable ROT audit report."""
+        today = date.today()
+        lines = [
+            "=== P.O.W.E.R. ROT Audit Report ===",
+            f"Vault scanned: {vault_dir}",
+            f"Date: {today.isoformat()}",
+            "",
+        ]
+
+        if self.redundant:
+            lines.append(f"REDUNDANT: Similar / duplicate titles ({len(self.redundant)} pairs):")
+            for a, b, score in sorted(self.redundant):
+                pct = int(score * 100)
+                lines.append(f"  - [{pct}% similar] {a} <-> {b}")
+            lines.append("")
+
+        if self.outdated:
+            lines.append(f"OUTDATED: Expired / stale notes ({len(self.outdated)}):")
+            for rp, reason in sorted(self.outdated):
+                lines.append(f"  - {rp}: {reason}")
+            lines.append("")
+
+        if self.trivial:
+            lines.append(f"TRIVIAL: Notes with very short body content ({len(self.trivial)}):")
+            for rp, length in sorted(self.trivial):
+                lines.append(f"  - {rp}: only {length} chars of body content")
+            lines.append("")
+
+        if not self.has_issues:
+            lines.append("OK: No ROT issues found. Vault is clean!")
+
+        return "\n".join(lines)
+
+
+def _tokenize_for_similarity(text: str) -> set[str]:
+    """Split text into lowercase word tokens for similarity comparison."""
+    return set(re.findall(r"[a-z0-9а-яєіїґ']+", text.lower()))
+
+
+def _title_similarity(title_a: str, title_b: str) -> float:
+    """Compute Jaccard similarity between two title token sets."""
+    tokens_a = _tokenize_for_similarity(title_a)
+    tokens_b = _tokenize_for_similarity(title_b)
+    if not tokens_a or not tokens_b:
+        return 0.0
+    intersection = tokens_a & tokens_b
+    union = tokens_a | tokens_b
+    return len(intersection) / len(union)
+
+
+def _get_body_content(raw_content: str) -> str:
+    """Extract body content (after frontmatter) from raw markdown."""
+    match = re.match(r"^---.*?---\n(.*)", raw_content, re.DOTALL)
+    if match:
+        return match.group(1).strip()
+    return raw_content.strip()
 
 
 def _extract_links(content: str) -> list[str]:
@@ -183,3 +265,175 @@ def run_lint_report(vault_dir: Path) -> str:
     """Run lint and return formatted report string."""
     result = run_lint_vault(vault_dir)
     return result.format_report(vault_dir)
+
+
+def run_rot_audit(vault_dir: Path) -> ROTResult:
+    """
+    Run ROT (Redundant, Outdated, Trivial) audit on the vault.
+
+    Checks for:
+    1. Redundant — notes with similar/duplicate titles (Jaccard > threshold)
+    2. Outdated — notes with expired 'expiry' field
+    3. Trivial — notes with very short body content (< TRIVIAL_BODY_MIN_CHARS)
+    """
+    result = ROTResult()
+
+    title_map: dict[str, tuple[str, str]] = {}
+    stale_list: list[tuple[str, str]] = []
+
+    for filepath in vault_dir.rglob("*.md"):
+        rel = filepath.relative_to(vault_dir)
+        if any(part in EXCLUDED_DIRS for part in rel.parts):
+            continue
+        if filepath.name in ("index.md", "log.md", "_index.md"):
+            continue
+
+        try:
+            content = read_file_content(filepath)
+        except Exception:  # noqa: S112
+            continue
+
+        fm = parse_frontmatter(content)
+        if fm is None:
+            continue
+
+        title = str(fm.get("title", ""))
+        rel_path = str(rel)
+
+        # Track titles for redundancy check
+        if title:
+            title_map[rel_path] = (title, content)
+
+        # Track outdated
+        if "expiry" in fm:
+            try:
+                expiry_val = fm["expiry"]
+                if isinstance(expiry_val, date) and expiry_val < date.today():
+                    stale_list.append((rel_path, f"Expired on {expiry_val.isoformat()}"))
+            except (ValueError, TypeError):
+                pass
+
+        # Track trivial (body content < threshold)
+        body = _get_body_content(content)
+        body_len = len(body)
+        if 0 < body_len < TRIVIAL_BODY_MIN_CHARS:
+            result.trivial.append((rel_path, body_len))
+
+    result.outdated = stale_list
+
+    # Redundancy check — pairwise title similarity
+    sorted_titles = sorted(title_map.items())
+    checked_pairs: set[tuple[str, str]] = set()
+    for i in range(len(sorted_titles)):
+        for j in range(i + 1, len(sorted_titles)):
+            path_a, (title_a, _) = sorted_titles[i]
+            path_b, (title_b, _) = sorted_titles[j]
+            pair_key = (path_a, path_b) if path_a < path_b else (path_b, path_a)
+            if pair_key in checked_pairs:
+                continue
+            checked_pairs.add(pair_key)
+            sim = _title_similarity(title_a, title_b)
+            if sim >= TITLE_SIMILARITY_THRESHOLD:
+                result.redundant.append((path_a, path_b, sim))
+
+    return result
+
+
+def run_rot_report(vault_dir: Path) -> str:
+    """Run ROT audit and return formatted report string."""
+    result = run_rot_audit(vault_dir)
+    return result.format_report(vault_dir)
+
+
+def archive_stale_notes(vault_dir: Path, dry_run: bool = True) -> str:
+    """
+    Move stale / expired notes to 04_Archive.
+
+    Uses the same stale detection as the linter:
+      - Notes with 'expiry' date in the past
+      - Notes already in 04_Archive are skipped
+
+    Args:
+        vault_dir: Path to the vault root
+        dry_run: If True, only simulate (no actual moves)
+
+    Returns: Summary string of actions taken
+    """
+    archive_dir = vault_dir / "04_Archive"
+    today = date.today()
+    moved: list[str] = []
+    errors: list[str] = []
+
+    for filepath in vault_dir.rglob("*.md"):
+        rel = filepath.relative_to(vault_dir)
+        if any(part in EXCLUDED_DIRS for part in rel.parts):
+            continue
+        if filepath.name in ("index.md", "log.md", "_index.md"):
+            continue
+        # Skip notes already in archive
+        rel_str = str(rel)
+        if rel_str.startswith("04_Archive/"):
+            continue
+
+        try:
+            content = read_file_content(filepath)
+        except Exception:  # noqa: S112
+            continue
+
+        fm = parse_frontmatter(content)
+        if fm is None:
+            continue
+
+        is_archived_status = str(fm.get("status", "")).strip().lower() == "archived"
+
+        is_expired = False
+        if "expiry" in fm:
+            try:
+                expiry_val = fm["expiry"]
+                if isinstance(expiry_val, date) and expiry_val < today:
+                    is_expired = True
+            except (ValueError, TypeError):
+                pass
+
+        if not is_archived_status and not is_expired:
+            continue
+
+        # Determine target path in archive
+        rel_obj = Path(rel_str)
+        archive_target = archive_dir / rel_obj.name
+
+        if archive_target.exists():
+            errors.append(f"  {rel_str} -> SKIP (already exists in archive)")
+            continue
+
+        if dry_run:
+            moved.append(f"  {rel_str} -> {archive_target.relative_to(vault_dir)}")
+        else:
+            archive_dir.mkdir(parents=True, exist_ok=True)
+            shutil.move(str(filepath), str(archive_target))
+            moved.append(f"  {rel_str} -> {archive_target.relative_to(vault_dir)}")
+
+    lines = [
+        "=== Archive Stale Notes ===",
+        f"Mode: {'DRY RUN' if dry_run else 'LIVE'}",
+        f"Date: {today.isoformat()}",
+        "",
+    ]
+
+    if moved:
+        lines.append(f"Notes to archive ({len(moved)}):")
+        lines.extend(moved)
+        lines.append("")
+    else:
+        lines.append("No stale notes found.")
+        lines.append("")
+
+    if errors:
+        lines.append(f"Errors ({len(errors)}):")
+        lines.extend(errors)
+        lines.append("")
+
+    if not dry_run:
+        lines.append(f"Archived {len(moved)} note(s) to 04_Archive/.")
+
+    return "\n".join(lines)

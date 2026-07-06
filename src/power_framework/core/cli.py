@@ -17,9 +17,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .indexer import generate_log_initial, run_generate_hierarchical_index
-from .linter import run_lint_report
+from .linter import archive_stale_notes, run_lint_report, run_rot_report
 from .models import VAULT_STRUCTURE, NoteType, OKFMetadata
 from .parser import build_frontmatter
+from .relations import format_relation_suggestions, suggest_related
 from .searcher import format_search_results, search_vault
 from .utils import __version__, atomic_write
 
@@ -178,6 +179,76 @@ def _cmd_search(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_rot(args: argparse.Namespace) -> int:
+    """Run ROT (Redundant, Outdated, Trivial) audit."""
+    vault_dir = _resolve_path(args.path)
+    if not vault_dir.exists():
+        print(f"Vault not found: {vault_dir}")  # noqa: T201
+        return 1
+    report = run_rot_report(vault_dir)
+    print(report)  # noqa: T201
+    return 0
+
+
+def _cmd_archive(args: argparse.Namespace) -> int:
+    """Move stale/expired notes to 04_Archive."""
+    vault_dir = _resolve_path(args.path)
+    if not vault_dir.exists():
+        print(f"Vault not found: {vault_dir}")  # noqa: T201
+        return 1
+    result = archive_stale_notes(vault_dir, dry_run=args.dry_run)
+    print(result)  # noqa: T201
+    return 0
+
+
+def _cmd_cron(args: argparse.Namespace) -> int:
+    """Run automated maintenance: lint + index + rot. Designed for cron/systemd timer."""
+    vault_dir = _resolve_path(args.path)
+    if not vault_dir.exists():
+        print(f"Vault not found: {vault_dir}")  # noqa: T201
+        return 1
+
+    print("=== P.O.W.E.R. Cron Maintenance ===")  # noqa: T201
+    print(f"Vault: {vault_dir}")  # noqa: T201
+    print()  # noqa: T201
+
+    # Step 1: Lint
+    print("--- Step 1: Lint ---")  # noqa: T201
+    lint_report = run_lint_report(vault_dir)
+    print(lint_report)  # noqa: T201
+    print()  # noqa: T201
+
+    # Step 2: Index
+    print("--- Step 2: Index ---")  # noqa: T201
+    index_msg = run_generate_hierarchical_index(vault_dir)
+    print(index_msg)  # noqa: T201
+    print()  # noqa: T201
+
+    # Step 3: ROT audit
+    print("--- Step 3: ROT Audit ---")  # noqa: T201
+    rot_report = run_rot_report(vault_dir)
+    print(rot_report)  # noqa: T201
+
+    return 0
+
+
+def _cmd_suggest_related(args: argparse.Namespace) -> int:
+    """Auto-suggest related notes via keyword/tag overlap."""
+    vault_dir = _resolve_path(args.path)
+    if not vault_dir.exists():
+        print(f"Vault not found: {vault_dir}")  # noqa: T201
+        return 1
+
+    suggestions = suggest_related(
+        vault_dir,
+        target_path=args.target,
+        max_results=args.max_results,
+    )
+    report = format_relation_suggestions(suggestions, vault_dir)
+    print(report)  # noqa: T201
+    return 0
+
+
 def main() -> None:
     """P.O.W.E.R. CLI entry point."""
     parser = argparse.ArgumentParser(
@@ -240,6 +311,60 @@ def main() -> None:
         help="Maximum number of results (default: 20)",
     )
     p_search.set_defaults(func=_cmd_search)
+
+    # power rot
+    p_rot = subparsers.add_parser(
+        "rot", help="Run ROT (Redundant, Outdated, Trivial) audit"
+    )
+    p_rot.add_argument("path", help="Path to the vault directory")
+    p_rot.set_defaults(func=_cmd_rot)
+
+    # power archive
+    p_archive = subparsers.add_parser(
+        "archive",
+        help="Move stale/expired notes to 04_Archive",
+    )
+    p_archive.add_argument("path", help="Path to the vault directory")
+    p_archive.add_argument(
+        "--dry-run",
+        action="store_true",
+        default=True,
+        help="Simulate without moving (default: true)",
+    )
+    p_archive.add_argument(
+        "--no-dry-run",
+        action="store_false",
+        dest="dry_run",
+        help="Actually move files",
+    )
+    p_archive.set_defaults(func=_cmd_archive)
+
+    # power cron
+    p_cron = subparsers.add_parser(
+        "cron",
+        help="Run automated maintenance: lint + index + rot audit",
+    )
+    p_cron.add_argument("path", help="Path to the vault directory")
+    p_cron.set_defaults(func=_cmd_cron)
+
+    # power suggest-related
+    p_suggest = subparsers.add_parser(
+        "suggest-related",
+        help="Auto-suggest related notes via keyword/tag overlap",
+    )
+    p_suggest.add_argument("path", help="Path to the vault directory")
+    p_suggest.add_argument(
+        "--target",
+        default=None,
+        help="Specific note path to find relations for (optional)",
+    )
+    p_suggest.add_argument(
+        "--max-results",
+        type=int,
+        default=5,
+        help="Max suggestions (default: 5)",
+    )
+    p_suggest.set_defaults(func=_cmd_suggest_related)
 
     args = parser.parse_args()
 

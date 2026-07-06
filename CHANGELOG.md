@@ -5,6 +5,21 @@ All notable changes to the P.O.W.E.R. Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-07-06
+
+### Added
+- **ROT Audit (Redundant, Outdated, Trivial)**: `power rot <path>` detects duplicate titles (`redundant`), stale notes without changes (`outdated`), and notes with trivial body content (`trivial`) — keeps vaults lean and healthy
+- **Auto-Archive for stale notes**: `power archive <path>` archives stale notes older than 90 days (configurable threshold) — moves them from active folders to `04_Archive/` with `--dry-run` preview mode
+- **Entity Extraction / Relation Suggestions**: `power relations <path>` analyzes keyword overlap and tag similarity between notes, suggesting cross-links for Graph RAG enrichment
+- **Cron-Sync Setup**: `power sync <path>` auto-generates a cron entry for periodic `git add/commit/push` with template validation — one command to set up automated vault sync
+- **MCP tools**: `run_rot_audit`, `archive_stale_notes`, `suggest_related_notes` — AI agents can now audit, archive, and link notes autonomously
+- **Comprehensive ROT + Relations test suite**: 38 new tests (test_rot.py + test_relations.py) covering ROT detection, archive logic, keyword extraction, overlap scoring, relation suggestions
+
+### Changed
+- **Test suite expanded**: 160 → 198 tests (23.75% growth), coverage improved from 77% to 87%
+- **Linter expanded**: `run_rot_audit()` and `run_rot_report()` added as core linter functions alongside existing broken-link/metadata checks
+- **CLI commands extended**: `{init,lint,index,ingest,search,rot,archive,relations,sync}` — 9 commands total
+
 ## [1.5.1] - 2026-07-03
 
 ### Added

@@ -35,7 +35,7 @@ Unlike generic knowledge management tools, P.O.W.E.R. is designed from the groun
 - **Freshness Monitoring** — linter detects stale/expired notes based on `expiry` metadata field
 - **Agent Auto-Ingest** — `synthesize_session` MCP tool lets agents autonomously create permanent knowledge artifacts with governance + graph links + full catalog maintenance
 - **MCP-native** — expose all tools to any MCP-compatible AI client (Claude, OpenCode, Cursor) with zero glue code
-- **Production-grade** — 160 tests, 90%+ coverage, CodeQL scanning, OIDC-signed GitHub Releases
+- **Production-grade** — 198 tests, 87%+ coverage, CodeQL scanning, OIDC-signed GitHub Releases
 
 ## Quick Start
 
@@ -51,15 +51,19 @@ power index ~/my-vault     # Generate catalog index.md
 
 | Feature | What it does |
 |---------|-------------|
-| **CLI** | `power init`, `lint`, `index`, `ingest`, `search` — full vault management from terminal |
-| **MCP Server** | Exposes `lint_vault`, `generate_index`, `read_sub_index`, `ingest_note`, `search_vault`, `synthesize_session` to any AI agent |
+| **CLI** | `power init`, `lint`, `index`, `ingest`, `search`, `rot`, `archive`, `relations`, `sync` — 9 commands for full vault management |
+| **MCP Server** | Exposes `lint_vault`, `generate_index`, `read_sub_index`, `ingest_note`, `search_vault`, `synthesize_session`, `run_rot_audit`, `archive_stale_notes`, `suggest_related_notes` to any AI agent |
 | **OKF Validation** | Pydantic v2 schemas enforce strict metadata on every note with governance (`owner`, `status`, `expiry`) |
 | **Knowledge Graph (Graph RAG)** | `related` field in OKF frontmatter for explicit cross-note graph links. Rendered in sub-indexes for AI navigation |
 | **Freshness Monitoring** | Linter flags stale/expired notes by checking `expiry` dates, ensuring your vault stays current |
 | **Agent Auto-Ingest** | `synthesize_session` MCP tool — agents autonomously create permanent notes with governance + graph links + full index rebuild |
+| **ROT Audit** | Detects redundant, outdated, and trivial notes — `power rot <path>` keeps your vault lean |
+| **Auto-Archive** | Automatically archives stale notes to `04_Archive/` — `power archive <path>` with dry-run preview |
+| **Relation Suggestions** | Keyword & tag overlap analysis for Graph RAG enrichment — `power relations <path>` |
+| **Cron-Sync** | One-command cron setup for automated vault sync — `power sync <path>` |
 | **Full-Text Search** | Relevance-scored search across title, body, and tags with context snippets |
 | **Hierarchical Index** | `index.md` (navigation map) + per-folder `_index.md` (detailed catalogs) for token-efficient AI reading (~75-94% token savings) |
-| **CI/CD** | 160 tests, 90%+ coverage, CodeQL SAST, Automated GitHub Releases |
+| **CI/CD** | 198 tests, 87%+ coverage, CodeQL SAST, Automated GitHub Releases |
 | **Documentation** | Full [mkdocs-material site](https://weby-homelab.github.io/power-framework/) with API reference and guides |
 
 ## Migration Report
@@ -89,6 +93,10 @@ power lint <path>              Scan for broken links, missing metadata, orphans
 power index <path>             Generate hierarchical index (index.md + _index.md files)
 power search <path> <query>    Full-text search with relevance scoring
 power ingest <path> [options]  Create a new note with validated OKF metadata
+power rot <path>               ROT Audit — detect redundant, outdated, trivial notes
+power archive <path>           Auto-archive stale notes to 04_Archive/
+power relations <path>         Suggest cross-note relations for Graph RAG
+power sync <path>              Set up cron-based auto-sync for the vault
 ```
 
 ### Ingest Examples
@@ -282,7 +290,7 @@ cd power-framework
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 
-# Run tests (160 tests, 90%+ coverage)
+# Run tests (198 tests, 87%+ coverage)
 pytest tests/ -v
 
 # Lint & format

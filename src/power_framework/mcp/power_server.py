@@ -8,6 +8,10 @@ Exposes MCP tools for AI agent interaction with the knowledge vault:
 - read_sub_index: Read a specific category sub-index on-demand
 - ingest_note: Create a new note with validated OKF frontmatter
 - search_vault: Full-text search across vault notes
+- synthesize_session: Auto-ingest session knowledge artifact
+- rot_audit: ROT (Redundant, Outdated, Trivial) analysis
+- archive_notes: Move stale/expired notes to 04_Archive
+- suggest_related: Auto-discover knowledge graph connections
 
 Uses power_core for all business logic, ensuring consistency.
 """
@@ -26,15 +30,19 @@ from power_framework.core import (
     PARA_FOLDERS,
     NoteType,
     OKFMetadata,
+    archive_stale_notes,
     atomic_write,
     build_frontmatter,
+    format_relation_suggestions,
     format_search_results,
     resolve_vault_path,
     run_generate_hierarchical_index,
     run_generate_sub_index,
     run_lint_report,
+    run_rot_report,
     scan_folder_notes,
     search_vault,
+    suggest_related,
 )
 
 mcp = FastMCP("power")
@@ -231,6 +239,36 @@ def synthesize_session(
         f"Action appended to log.md.\n\n"
         f"Linting Check:\n{lint_result}"
     )
+
+
+@mcp.tool()
+def rot_audit(vault_path: str | None = None) -> str:
+    """Run the P.O.W.E.R. ROT audit: find Redundant, Outdated, and Trivial notes across the vault."""
+    path = _get_vault_path(vault_path)
+    return run_rot_report(path)
+
+
+@mcp.tool()
+def archive_notes(dry_run: bool = True, vault_path: str | None = None) -> str:
+    """Move stale/expired notes to 04_Archive. Use dry_run=True (default) to preview first."""
+    path = _get_vault_path(vault_path)
+    return archive_stale_notes(path, dry_run=dry_run)
+
+
+@mcp.tool()
+def suggest_related_tool(
+    target_path: str | None = None,
+    max_results: int = 5,
+    vault_path: str | None = None,
+) -> str:
+    """Auto-suggest related notes based on keyword and tag overlap. Optionally scope to a specific note by path."""
+    path = _get_vault_path(vault_path)
+    suggestions = suggest_related(
+        path,
+        target_path=target_path,
+        max_results=max_results,
+    )
+    return format_relation_suggestions(suggestions, path)
 
 
 def run() -> None:
