@@ -84,3 +84,31 @@ Create a session synthesis note with auto-classified OKF frontmatter, governance
 | `related` | `string[]` | No | Graph RAG links to related notes |
 | `owner` | `string` | No | Responsible entity |
 | `vault_path` | `string` | No | Path to vault root |
+
+### `run_rot_audit` *(new in v1.7.0)*
+
+Run a ROT (Redundant, Outdated, Trivial) audit on the vault. Returns categorized issues.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `vault_path` | `string` | No | Path to vault root |
+
+### `archive_stale_notes` *(new in v1.7.0)*
+
+Auto-archive stale notes older than the threshold to `04_Archive/`.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `stale_days` | `integer` | No | Days without change to consider stale (default: 90) |
+| `dry_run` | `boolean` | No | Preview without moving (default: true) |
+| `vault_path` | `string` | No | Path to vault root |
+
+### `suggest_related_notes` *(new in v1.7.0)*
+
+Suggest cross-note relations based on keyword and tag overlap analysis.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `target_path` | `string` | No | Analyze relations for a specific note |
+| `max_results` | `integer` | No | Maximum suggestions (default: 10) |
+| `vault_path` | `string` | No | Path to vault root |

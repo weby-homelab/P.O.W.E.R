@@ -25,7 +25,7 @@ from .indexer import (
     scan_folder_notes,
     scan_vault_notes,
 )
-from .linter import LintResult, run_lint_report, run_lint_vault
+from .linter import LintResult, ROTResult, archive_stale_notes, run_lint_report, run_lint_vault, run_rot_audit, run_rot_report
 from .models import (
     MAX_DESCRIPTION_LENGTH,
     MAX_TITLE_LENGTH,
@@ -46,6 +46,7 @@ from .parser import (
     read_file_content,
     validate_metadata,
 )
+from .relations import RelationSuggestion, format_relation_suggestions, suggest_related
 from .searcher import SearchResult, format_search_results, search_vault
 from .utils import (
     __version__,
@@ -63,18 +64,22 @@ __all__ = [
     "PARA_FOLDERS",
     "VAULT_STRUCTURE",
     "LintResult",
+    "ROTResult",
     "NoteFile",
     "NoteStatus",
     "NoteType",
     "OKFMetadata",
+    "RelationSuggestion",
     "SearchResult",
     "__version__",
+    "archive_stale_notes",
     "atomic_write",
     "build_frontmatter",
     "clean_note_name",
     "cli_main",
     "create_backup",
     "extract_frontmatter_raw",
+    "format_relation_suggestions",
     "format_search_results",
     "generate_index_content",
     "generate_main_index_content",
@@ -89,9 +94,12 @@ __all__ = [
     "run_generate_sub_index",
     "run_lint_report",
     "run_lint_vault",
+    "run_rot_audit",
+    "run_rot_report",
     "scan_folder_notes",
     "scan_vault_notes",
     "search_vault",
+    "suggest_related",
     "validate_metadata",
     "validate_vault_path",
 ]

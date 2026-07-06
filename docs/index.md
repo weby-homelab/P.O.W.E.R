@@ -16,7 +16,7 @@ Unlike generic knowledge management tools, P.O.W.E.R. is designed from the groun
 - **Freshness Monitoring** — linter detects stale/expired notes based on `expiry` metadata field
 - **Agent Auto-Ingest** — `synthesize_session` MCP tool lets agents autonomously create permanent knowledge artifacts with governance + graph links + full catalog maintenance
 - **MCP-native** — expose all tools to any MCP-compatible AI client (Claude, OpenCode, Cursor) with zero glue code
-- **Production-grade** — 160 tests, 90%+ coverage, CodeQL scanning, OIDC-signed GitHub Releases
+- **Production-grade** — 198 tests, 87%+ coverage, CodeQL scanning, OIDC-signed GitHub Releases
 
 ## Features
 
@@ -25,7 +25,11 @@ Unlike generic knowledge management tools, P.O.W.E.R. is designed from the groun
 - **`power index`** — Compile hierarchical indexes (`index.md` + per-folder `_index.md`)
 - **`power ingest`** — Create new notes with validated frontmatter (supports `owner`, `status`, `expiry`, `related`)
 - **`power search`** — Full-text vault search with relevance scoring
-- **MCP Server** — 6 tools (`lint_vault`, `generate_index`, `read_sub_index`, `ingest_note`, `search_vault_tool`, `synthesize_session`)
+- **`power rot`** — ROT Audit: detect redundant, outdated, and trivial notes
+- **`power archive`** — Auto-archive stale notes to `04_Archive/`
+- **`power relations`** — Suggest cross-note relations for Graph RAG enrichment
+- **`power sync`** — One-command cron setup for automated vault sync
+- **MCP Server** — 9 tools (`lint_vault`, `generate_index`, `read_sub_index`, `ingest_note`, `search_vault_tool`, `synthesize_session`, `run_rot_audit`, `archive_stale_notes`, `suggest_related_notes`)
 - **Knowledge Graph** — `related` field for explicit cross-note graph links
 - **Governance** — `owner`, `status`, `expiry` fields tracked in sub-indexes
 
