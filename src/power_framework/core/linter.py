@@ -8,14 +8,17 @@ Checks for:
   - Stale / expired notes (freshness governance)
   - ROT (Redundant, Outdated, Trivial) analysis
   - Auto-archiving of stale notes
+  - Content deduplication (TF-Vector cosine similarity)
+  - Link rot (external HTTP health)
+  - Freshness scoring (type-based decay)
+  - Usage tracking (SQLite access counter)
 """
 
 from __future__ import annotations
 
-import os
 import re
 import shutil
-from datetime import date, datetime, timezone
+from datetime import date, datetime
 from pathlib import Path
 
 from .parser import has_frontmatter, has_type_field, parse_frontmatter, read_file_content
@@ -84,23 +87,33 @@ class LintResult:
 
 
 class ROTResult:
-    """Container for ROT (Redundant, Outdated, Trivial) audit results."""
+    """Container for ROT (Redundant, Outdated, Trivial) audit results, plus extended A2 scoring."""
 
     def __init__(self) -> None:
         self.redundant: list[tuple[str, str, float]] = []
         self.outdated: list[tuple[str, str]] = []
         self.trivial: list[tuple[str, int]] = []
+        self.content_dedup: list[tuple[str, str, float]] = []
+        self.link_rot: dict[str, list[tuple[str, int]]] = {}
+        self.freshness_scores: dict[str, float] = {}
+        self.usage_counts: dict[str, int] = {}
 
     @property
     def has_issues(self) -> bool:
-        return bool(self.redundant or self.outdated or self.trivial)
+        return bool(self.redundant or self.outdated or self.trivial or self.content_dedup or self.link_rot)
 
     @property
     def total_issues(self) -> int:
-        return len(self.redundant) + len(self.outdated) + len(self.trivial)
+        return (
+            len(self.redundant)
+            + len(self.outdated)
+            + len(self.trivial)
+            + len(self.content_dedup)
+            + len(self.link_rot)
+        )
 
     def format_report(self, vault_dir: Path) -> str:
-        """Generate a human-readable ROT audit report."""
+        """Generate a human-readable ROT audit report, including extended A2 metrics."""
         today = date.today()
         lines = [
             "=== P.O.W.E.R. ROT Audit Report ===",
@@ -116,6 +129,13 @@ class ROTResult:
                 lines.append(f"  - [{pct}% similar] {a} <-> {b}")
             lines.append("")
 
+        if self.content_dedup:
+            lines.append(f"CONTENT DEDUP: Similar body content ({len(self.content_dedup)} pairs):")
+            for a, b, score in sorted(self.content_dedup):
+                pct = int(score * 100)
+                lines.append(f"  - [{pct}% similar content] {a} <-> {b}")
+            lines.append("")
+
         if self.outdated:
             lines.append(f"OUTDATED: Expired / stale notes ({len(self.outdated)}):")
             for rp, reason in sorted(self.outdated):
@@ -127,6 +147,33 @@ class ROTResult:
             for rp, length in sorted(self.trivial):
                 lines.append(f"  - {rp}: only {length} chars of body content")
             lines.append("")
+
+        if self.link_rot:
+            total_broken = sum(len(urls) for urls in self.link_rot.values())
+            lines.append(f"LINK ROT: Broken external links ({total_broken}) in {len(self.link_rot)} notes:")
+            for rp, urls in sorted(self.link_rot.items()):
+                for url, status in urls:
+                    status_label = "ERR" if status == -1 else str(status)
+                    lines.append(f"  - {rp}: {url} ({status_label})")
+            lines.append("")
+
+        if self.freshness_scores:
+            stale_notes = [(p, s) for p, s in self.freshness_scores.items() if s < 0.3]
+            if stale_notes:
+                lines.append(f"FRESHNESS: Stale notes (score < 0.3) ({len(stale_notes)}):")
+                for rp, score in sorted(stale_notes, key=lambda x: x[1]):
+                    lines.append(f"  - {rp}: freshness {score:.2f}")
+                lines.append("")
+
+        if self.usage_counts:
+            unused = [p for p, c in self.usage_counts.items() if c == 0]
+            if unused:
+                lines.append(f"USAGE: Never-accessed notes ({len(unused)}):")
+                for rp in sorted(unused)[:20]:
+                    lines.append(f"  - {rp}")
+                if len(unused) > 20:
+                    lines.append(f"  ... and {len(unused) - 20} more")
+                lines.append("")
 
         if not self.has_issues:
             lines.append("OK: No ROT issues found. Vault is clean!")
@@ -230,9 +277,7 @@ def run_lint_vault(vault_dir: Path) -> LintResult:
             try:
                 expiry_val = fm["expiry"]
                 if isinstance(expiry_val, date) and expiry_val < date.today():
-                    result.stale_notes.append(
-                        (rel_path, f"Expired on {expiry_val.isoformat()}")
-                    )
+                    result.stale_notes.append((rel_path, f"Expired on {expiry_val.isoformat()}"))
             except (ValueError, TypeError):
                 pass
 
@@ -267,7 +312,7 @@ def run_lint_report(vault_dir: Path) -> str:
     return result.format_report(vault_dir)
 
 
-def run_rot_audit(vault_dir: Path) -> ROTResult:
+def run_rot_audit(vault_dir: Path, extended: bool = False) -> ROTResult:
     """
     Run ROT (Redundant, Outdated, Trivial) audit on the vault.
 
@@ -275,6 +320,12 @@ def run_rot_audit(vault_dir: Path) -> ROTResult:
     1. Redundant — notes with similar/duplicate titles (Jaccard > threshold)
     2. Outdated — notes with expired 'expiry' field
     3. Trivial — notes with very short body content (< TRIVIAL_BODY_MIN_CHARS)
+
+    When extended=True, also runs A2 scoring:
+    - Content dedup via TF-Vector
+    - Link rot checks (HTTP HEAD)
+    - Freshness scoring (type-based decay)
+    - Usage tracking
     """
     result = ROTResult()
 
@@ -336,12 +387,40 @@ def run_rot_audit(vault_dir: Path) -> ROTResult:
             if sim >= TITLE_SIMILARITY_THRESHOLD:
                 result.redundant.append((path_a, path_b, sim))
 
+    # Extended A2 scoring
+    if extended:
+        from .rot_scoring import ContentDedupDetector, FreshnessScorer, LinkRotChecker, UsageTracker
+
+        try:
+            dedup = ContentDedupDetector()
+            result.content_dedup = dedup.detect(vault_dir)
+        except Exception:  # noqa: S112
+            pass
+
+        try:
+            link_checker = LinkRotChecker()
+            result.link_rot = link_checker.check_all(vault_dir)
+        except Exception:  # noqa: S112
+            pass
+
+        try:
+            scorer = FreshnessScorer()
+            result.freshness_scores = scorer.score_all(vault_dir)
+        except Exception:  # noqa: S112
+            pass
+
+        try:
+            tracker = UsageTracker(vault_dir)
+            result.usage_counts = tracker.get_all_counts()
+        except Exception:  # noqa: S112
+            pass
+
     return result
 
 
-def run_rot_report(vault_dir: Path) -> str:
+def run_rot_report(vault_dir: Path, extended: bool = False) -> str:
     """Run ROT audit and return formatted report string."""
-    result = run_rot_audit(vault_dir)
+    result = run_rot_audit(vault_dir, extended=extended)
     return result.format_report(vault_dir)
 
 

@@ -1,14 +1,17 @@
 """
-P.O.W.E.R. Full-Text Search Engine.
+P.O.W.E.R. Search Engine.
 
-SQLite FTS5-powered search across vault notes with ranked results,
-context snippets, and metadata-aware scoring.
+Multi-mode search across vault notes:
+- "fts": SQLite FTS5 full-text search with weighted scoring (default)
+- "vector": TF-vector cosine similarity for semantic-like ranking
+- "hybrid": Reciprocal Rank Fusion merge of FTS + vector results
 """
 
 from __future__ import annotations
 
 import re
 import sqlite3
+from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -39,12 +42,12 @@ class SearchResult:
 
 
 def _tokenize(text: str) -> list[str]:
-    """Split text into lowercase tokens (kept for backward compatibility)."""
+    """Split text into lowercase tokens."""
     return re.findall(r"[a-z0-9а-яєіїґ']+", text.lower())  # noqa: RUF001
 
 
 def _make_snippet(content: str, terms: list[str]) -> str:
-    """Extract a relevant snippet around the first match (kept for backward compatibility)."""
+    """Extract a relevant snippet around the first match."""
     lower = content.lower()
     best_pos = -1
     for term in terms:
@@ -75,7 +78,7 @@ def _score_note(
     metadata: OKFMetadata,
     terms: list[str],
 ) -> tuple[float, int, str]:
-    """Score a single note against search terms (kept for backward compatibility)."""
+    """Score a single note against search terms (backward compat / fallback)."""
     total_score = 0.0
     total_matches = 0
 
@@ -87,25 +90,21 @@ def _score_note(
     for term in terms:
         term_lower = term.lower()
 
-        # Title match
         title_count = title_lower.count(term_lower)
         if title_count:
             total_score += title_count * TITLE_WEIGHT
             total_matches += title_count
 
-        # Tag match
         tag_count = sum(1 for t in tags_lower if term_lower in t)
         if tag_count:
             total_score += tag_count * TAG_WEIGHT
             total_matches += tag_count
 
-        # Description match
         desc_count = desc_lower.count(term_lower)
         if desc_count:
             total_score += desc_count * DESCRIPTION_WEIGHT
             total_matches += desc_count
 
-        # Body content match
         body_count = content_lower.count(term_lower)
         if body_count:
             total_score += body_count * CONTENT_WEIGHT
@@ -116,7 +115,7 @@ def _score_note(
 
 
 def _scan_and_search(vault_dir: Path, terms: list[str]) -> list[SearchResult]:
-    """Scan vault and return scored search results (kept for backward compatibility / fallback)."""
+    """Scan vault and return scored search results (fallback)."""
     results: list[SearchResult] = []
 
     for filepath in vault_dir.rglob("*.md"):
@@ -178,7 +177,6 @@ def _init_db(conn: sqlite3.Connection) -> None:
 
 def _sync_vault_to_db(vault_dir: Path, conn: sqlite3.Connection) -> None:
     """Synchronize the files in the vault with the SQLite database."""
-    # 1. Get all markdown files in the vault
     disk_files: dict[str, float] = {}
     for filepath in vault_dir.rglob("*.md"):
         if filepath.name in ("index.md", "log.md", "_index.md"):
@@ -194,12 +192,10 @@ def _sync_vault_to_db(vault_dir: Path, conn: sqlite3.Connection) -> None:
         except Exception:  # noqa: S112
             continue
 
-    # 2. Get files from the database
     cursor = conn.cursor()
     cursor.execute("SELECT rel_path, mtime FROM file_metadata")
     db_files = {row[0]: row[1] for row in cursor.fetchall()}
 
-    # 3. Find files to delete
     to_delete = [rel_path for rel_path in db_files if rel_path not in disk_files]
     if to_delete:
         cursor.executemany("DELETE FROM fts_notes WHERE rel_path = ?", [(r,) for r in to_delete])
@@ -207,7 +203,6 @@ def _sync_vault_to_db(vault_dir: Path, conn: sqlite3.Connection) -> None:
             "DELETE FROM file_metadata WHERE rel_path = ?", [(r,) for r in to_delete]
         )
 
-    # 4. Find files to insert or update
     for rel_path, mtime in disk_files.items():
         if rel_path not in db_files or db_files[rel_path] != mtime:
             filepath = vault_dir / rel_path
@@ -221,10 +216,8 @@ def _sync_vault_to_db(vault_dir: Path, conn: sqlite3.Connection) -> None:
 
                 tags_str = " ".join(metadata.tags)
 
-                # Delete existing just in case
                 cursor.execute("DELETE FROM fts_notes WHERE rel_path = ?", (rel_path,))
 
-                # Insert new fts note
                 cursor.execute(
                     "INSERT INTO fts_notes (title, tags, description, content, rel_path, note_type) VALUES (?, ?, ?, ?, ?, ?)",
                     (
@@ -246,24 +239,12 @@ def _sync_vault_to_db(vault_dir: Path, conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
-def search_vault(vault_dir: Path, query: str, max_results: int = 20) -> list[SearchResult]:
-    """
-    Search the vault for notes matching the query using SQLite FTS5.
-
-    Supports:
-    - Multi-word queries
-    - Phrase matching via double quotes
-    - Prefix wildcard matching
-    - Ranked results sorted by weighted relevance score
-    """
-    if not query or not query.strip():
-        return []
-
-    vault_dir = Path(vault_dir).resolve()
-    if not vault_dir.is_dir():
-        return []
-
-    # Clean query and tokenize for FTS5 syntax
+def _fts_search(
+    vault_dir: Path,
+    query: str,
+    max_results: int = 20,
+) -> list[SearchResult]:
+    """SQLite FTS5 full-text search with weighted BM25 scoring."""
     clean_query = re.sub(r'[^\w\s"а-яєіїґ\']', " ", query, flags=re.IGNORECASE)  # noqa: RUF001
     terms: list[str] = []
     for match in re.finditer(r'"([^"]+)"|(\S+)', clean_query):
@@ -308,7 +289,7 @@ def search_vault(vault_dir: Path, query: str, max_results: int = 20) -> list[Sea
         for row in cursor.fetchall():
             rel_path, title, description, note_type, score, snippet, tags_str = row
             tags = tags_str.split(" ") if tags_str else []
-            match_count = 1  # FTS5 matches are ranked by score, match_count is 1 as fallback
+            match_count = 1
             results.append(
                 SearchResult(
                     rel_path=rel_path,
@@ -325,7 +306,6 @@ def search_vault(vault_dir: Path, query: str, max_results: int = 20) -> list[Sea
         conn.close()
         return results
     except Exception:
-        # Fallback to in-memory search if SQLite fails
         terms_fallback: list[str] = []
         for match in re.finditer(r'"([^"]+)"|(\S+)', query.strip()):
             term = (match.group(1) or match.group(2)).strip().lower()
@@ -338,19 +318,190 @@ def search_vault(vault_dir: Path, query: str, max_results: int = 20) -> list[Sea
         return fallback_results[:max_results]
 
 
-def format_search_results(results: list[SearchResult], query: str) -> str:
+def _compute_tf_vector(tokens: list[str]) -> dict[str, float]:
+    """Compute a normalized term-frequency vector from tokens."""
+    counter = Counter(tokens)
+    total = len(tokens) or 1
+    return {word: count / total for word, count in counter.items()}
+
+
+def _cosine_similarity(vec_a: dict[str, float], vec_b: dict[str, float]) -> float:
+    """Compute cosine similarity between two sparse term-frequency vectors."""
+    intersection = set(vec_a) & set(vec_b)
+    if not intersection:
+        return 0.0
+    dot_product = sum(vec_a[word] * vec_b[word] for word in intersection)
+    norm_a = sum(v * v for v in vec_a.values()) ** 0.5
+    norm_b = sum(v * v for v in vec_b.values()) ** 0.5
+    if norm_a == 0 or norm_b == 0:
+        return 0.0
+    return dot_product / (norm_a * norm_b)
+
+
+def _vector_search(
+    vault_dir: Path,
+    query: str,
+    max_results: int = 20,
+) -> list[SearchResult]:
+    """
+    Search vault notes using TF vector cosine similarity.
+
+    Computes a term-frequency vector for the query and each document,
+    then ranks by cosine similarity.  Pure-Python, no external deps.
+    """
+    query_tokens = _tokenize(query)
+    if not query_tokens:
+        return []
+
+    query_vec = _compute_tf_vector(query_tokens)
+    scored: list[tuple[float, SearchResult]] = []
+
+    for filepath in vault_dir.rglob("*.md"):
+        if filepath.name in ("index.md", "log.md", "_index.md"):
+            continue
+        if any(part in EXCLUDED_DIRS for part in filepath.relative_to(vault_dir).parts):
+            continue
+
+        try:
+            content = read_file_content(filepath)
+            metadata = validate_metadata(content)
+            if metadata is None:
+                continue
+
+            full_text = " ".join(
+                [
+                    metadata.title,
+                    " ".join(metadata.tags),
+                    metadata.description,
+                    content,
+                ]
+            )
+            doc_tokens = _tokenize(full_text)
+            doc_vec = _compute_tf_vector(doc_tokens)
+            similarity = _cosine_similarity(query_vec, doc_vec)
+
+            if similarity == 0:
+                continue
+
+            rel_path = str(filepath.relative_to(vault_dir))
+            snippet = _make_snippet(content, query_tokens)
+            scored.append(
+                (
+                    similarity,
+                    SearchResult(
+                        rel_path=rel_path,
+                        title=metadata.title,
+                        description=metadata.description,
+                        note_type=metadata.type,
+                        score=similarity,
+                        snippet=snippet,
+                        match_count=len(query_tokens),
+                        tags=metadata.tags,
+                    ),
+                )
+            )
+        except Exception:  # noqa: S112
+            continue
+
+    scored.sort(key=lambda x: (-x[0], x[1].title))
+    return [r for _, r in scored[:max_results]]
+
+
+def _rrf_merge(
+    fts_results: list[SearchResult],
+    vector_results: list[SearchResult],
+    k: int = 60,
+) -> list[SearchResult]:
+    """Merge two ranked result lists using Reciprocal Rank Fusion."""
+    rrf_scores: dict[str, float] = {}
+
+    for rank, result in enumerate(fts_results):
+        rrf_scores[result.rel_path] = 1.0 / (k + rank + 1)
+
+    for rank, result in enumerate(vector_results):
+        rrf_scores[result.rel_path] = rrf_scores.get(result.rel_path, 0.0) + 1.0 / (k + rank + 1)
+
+    doc_map: dict[str, SearchResult] = {}
+    for r in fts_results + vector_results:
+        if r.rel_path not in doc_map or r.score > doc_map[r.rel_path].score:
+            doc_map[r.rel_path] = r
+
+    merged: list[SearchResult] = []
+    for path, score in sorted(rrf_scores.items(), key=lambda x: -x[1]):
+        result = doc_map[path]
+        merged.append(
+            SearchResult(
+                rel_path=result.rel_path,
+                title=result.title,
+                description=result.description,
+                note_type=result.note_type,
+                score=score,
+                snippet=result.snippet,
+                match_count=result.match_count,
+                tags=result.tags,
+            )
+        )
+
+    return merged
+
+
+def search_vault(
+    vault_dir: Path,
+    query: str,
+    max_results: int = 20,
+    mode: str = "fts",
+) -> list[SearchResult]:
+    """
+    Search the vault for notes matching the query.
+
+    Args:
+        vault_dir: Path to the vault root directory.
+        query: Search query string.
+        max_results: Maximum number of results to return.
+        mode: Search mode - "fts" (SQLite FTS5, default),
+              "vector" (TF cosine similarity),
+              "hybrid" (RRF merge of FTS + vector).
+
+    Returns:
+        List of SearchResult sorted by relevance (highest first).
+    """
+    if not query or not query.strip():
+        return []
+
+    vault_dir = Path(vault_dir).resolve()
+    if not vault_dir.is_dir():
+        return []
+
+    mode = mode.lower()
+
+    if mode == "vector":
+        return _vector_search(vault_dir, query, max_results=max_results)
+
+    if mode == "hybrid":
+        fts_results = _fts_search(vault_dir, query, max_results=max_results * 2)
+        vector_results = _vector_search(vault_dir, query, max_results=max_results * 2)
+        return _rrf_merge(fts_results, vector_results)[:max_results]
+
+    return _fts_search(vault_dir, query, max_results=max_results)
+
+
+def format_search_results(results: list[SearchResult], query: str, mode: str = "fts") -> str:
     """Format search results into a human-readable report string."""
     if not results:
         return f"No results found for '{query}'."
 
+    mode_label = {"fts": "FTS", "vector": "Vector", "hybrid": "Hybrid (FTS+Vector)"}.get(
+        mode.lower(), mode.upper()
+    )
+
     lines = [
         f"=== Search Results for '{query}' ===",
-        f"Found {len(results)} matching note(s):",
+        f"Mode: {mode_label}  |  Found {len(results)} matching note(s):",
         "",
     ]
 
     for i, r in enumerate(results, 1):
-        score_str = f"{r.score:.1f}"
+        score_str = f"{r.score:.4f}"
         lines.append(f"{i}. [{r.note_type}] {r.title}  (score: {score_str})")
         lines.append(f"   Path: {r.rel_path}")
         lines.append(f"   {r.description}")

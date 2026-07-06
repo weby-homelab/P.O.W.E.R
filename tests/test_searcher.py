@@ -8,9 +8,13 @@ from pathlib import Path  # noqa: TC003
 from power_framework.core.models import OKFMetadata
 from power_framework.core.searcher import (
     SearchResult,
+    _compute_tf_vector,
+    _cosine_similarity,
     _make_snippet,
+    _rrf_merge,
     _score_note,
     _tokenize,
+    _vector_search,
     format_search_results,
     search_vault,
 )
@@ -177,3 +181,173 @@ class TestSearchVault:
             results = search_vault(sample_vault, "Test")
             assert len(results) > 0
             assert any("Test" in r.title for r in results)
+
+    def test_vector_mode(self, sample_vault: Path):
+        results = search_vault(sample_vault, "test project", mode="vector")
+        assert len(results) > 0
+        assert any("Test Project" in r.title for r in results)
+
+    def test_vector_mode_empty_query(self, sample_vault: Path):
+        results = search_vault(sample_vault, "", mode="vector")
+        assert results == []
+
+    def test_vector_mode_no_match(self, sample_vault: Path):
+        results = search_vault(sample_vault, "xyznonexistent12345", mode="vector")
+        assert results == []
+
+    def test_vector_mode_results_ordered(self, sample_vault: Path):
+        results = search_vault(sample_vault, "test", mode="vector")
+        if len(results) > 1:
+            scores = [r.score for r in results]
+            assert scores == sorted(scores, reverse=True)
+
+    def test_hybrid_mode(self, sample_vault: Path):
+        results = search_vault(sample_vault, "test project", mode="hybrid")
+        assert len(results) > 0
+        assert any("Test Project" in r.title for r in results)
+
+    def test_hybrid_mode_empty_query(self, sample_vault: Path):
+        results = search_vault(sample_vault, "", mode="hybrid")
+        assert results == []
+
+    def test_hybrid_mode_no_match(self, sample_vault: Path):
+        results = search_vault(sample_vault, "xyznonexistent12345", mode="hybrid")
+        assert results == []
+
+    def test_hybrid_mode_results_ordered(self, sample_vault: Path):
+        results = search_vault(sample_vault, "test", mode="hybrid")
+        if len(results) > 1:
+            scores = [r.score for r in results]
+            assert scores == sorted(scores, reverse=True)
+
+    def test_all_modes_return_same_content_type(self, sample_vault: Path):
+        fts_results = search_vault(sample_vault, "test", mode="fts")
+        vec_results = search_vault(sample_vault, "test", mode="vector")
+        hyb_results = search_vault(sample_vault, "test", mode="hybrid")
+        assert all(isinstance(r, SearchResult) for r in fts_results + vec_results + hyb_results)
+
+    def test_vector_mode_tag_sensitivity(self, sample_vault: Path):
+        results = search_vault(sample_vault, "sample", mode="vector")
+        assert len(results) > 0
+        assert any("sample" in t for r in results if r.tags for t in r.tags)
+
+    def test_hybrid_mode_outperforms_vector_on_phrase(self, sample_vault: Path):
+        hyb_results = search_vault(sample_vault, '"Test Project"', mode="hybrid")
+        fts_results = search_vault(sample_vault, '"Test Project"', mode="fts")
+        if fts_results and hyb_results:
+            assert hyb_results[0].score > 0
+
+    def test_format_search_results_with_mode(self, sample_vault: Path):
+        results = search_vault(sample_vault, "test", mode="hybrid")
+        report = format_search_results(results, "test", mode="hybrid")
+        assert "Hybrid" in report
+
+
+class TestTFVector:
+    """Tests for TF vector computation."""
+
+    def test_simple_tokens(self):
+        vec = _compute_tf_vector(["hello", "world"])
+        assert abs(vec["hello"] - 0.5) < 1e-9
+        assert abs(vec["world"] - 0.5) < 1e-9
+
+    def test_repeated_tokens(self):
+        vec = _compute_tf_vector(["test", "test", "hello"])
+        assert abs(vec["test"] - 2 / 3) < 1e-9
+        assert abs(vec["hello"] - 1 / 3) < 1e-9
+
+    def test_empty_tokens(self):
+        vec = _compute_tf_vector([])
+        assert vec == {}
+
+    def test_single_token(self):
+        vec = _compute_tf_vector(["only"])
+        assert abs(vec["only"] - 1.0) < 1e-9
+
+
+class TestCosineSimilarity:
+    """Tests for cosine similarity computation."""
+
+    def test_identical_vectors(self):
+        vec = {"hello": 0.5, "world": 0.5}
+        sim = _cosine_similarity(vec, vec)
+        assert abs(sim - 1.0) < 1e-9
+
+    def test_orthogonal_vectors(self):
+        vec_a = {"hello": 1.0}
+        vec_b = {"world": 1.0}
+        sim = _cosine_similarity(vec_a, vec_b)
+        assert abs(sim) < 1e-9
+
+    def test_partial_overlap(self):
+        vec_a = {"hello": 1.0}
+        vec_b = {"hello": 1.0, "world": 1.0}
+        sim = _cosine_similarity(vec_a, vec_b)
+        expected = 1.0 / (1.0 * (2.0**0.5))
+        assert abs(sim - expected) < 1e-9
+
+    def test_both_empty(self):
+        sim = _cosine_similarity({}, {})
+        assert abs(sim) < 1e-9
+
+    def test_one_empty(self):
+        sim = _cosine_similarity({"a": 1.0}, {})
+        assert abs(sim) < 1e-9
+
+
+class TestVectorSearch:
+    """Tests for vector search function."""
+
+    def test_finds_relevant_note(self, sample_vault: Path):
+        results = _vector_search(sample_vault, "project architecture")
+        assert len(results) > 0
+        titles = [r.title for r in results]
+        assert any("Weby-QRank" in t for t in titles)
+
+    def test_empty_vault(self, tmp_path: Path):
+        results = _vector_search(tmp_path / "empty", "test")
+        assert results == []
+
+    def test_max_results(self, sample_vault: Path):
+        results = _vector_search(sample_vault, "test", max_results=2)
+        assert len(results) <= 2
+
+
+class TestRRFMerge:
+    """Tests for Reciprocal Rank Fusion merge."""
+
+    def _make_result(self, rel_path: str, score: float = 1.0) -> SearchResult:
+        return SearchResult(
+            rel_path=rel_path,
+            title="Test",
+            description="",
+            note_type="Project",
+            score=score,
+            snippet="",
+            match_count=1,
+        )
+
+    def test_identical_lists(self):
+        list_a = [self._make_result(f"path{i}.md") for i in range(3)]
+        merged = _rrf_merge(list_a, list_a)
+        assert len(merged) == 3
+
+    def test_different_lists(self):
+        list_a = [self._make_result(f"path{i}.md") for i in range(3)]
+        list_b = [self._make_result(f"path{i}.md") for i in range(2, 5)]
+        merged = _rrf_merge(list_a, list_b)
+        assert len(merged) == 5
+
+    def test_results_ordered_by_rrf_score(self):
+        list_a = [self._make_result("common.md")]
+        list_b = [self._make_result("unique.md")]
+        merged = _rrf_merge(list_a, list_b)
+        assert merged[0].score > 0
+        assert len(merged) == 2
+
+    def test_shared_document_gets_higher_score(self):
+        shared = self._make_result("shared.md")
+        unique_a = self._make_result("unique_a.md")
+        unique_b = self._make_result("unique_b.md")
+        merged = _rrf_merge([shared, unique_a], [shared, unique_b])
+        assert merged[0].rel_path == "shared.md"

@@ -44,6 +44,9 @@ nav:
       - Parser: api/parser.md
       - Indexer: api/indexer.md
       - Linter: api/linter.md
+      - Healer: api/healer.md
+      - Markdown Checks: api/markdown_checks.md
+      - ROT Scoring: api/rot_scoring.md
       - Searcher: api/searcher.md
       - Utils: api/utils.md
   - Architecture: architecture.md

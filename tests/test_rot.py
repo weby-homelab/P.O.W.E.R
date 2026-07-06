@@ -4,7 +4,7 @@ Tests for ROT (Redundant, Outdated, Trivial) audit and auto-archive.
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 from pathlib import Path  # noqa: TC003
 
 from power_framework.core.linter import (
@@ -94,7 +94,7 @@ class TestRunRotAudit:
         tiny = vault / "01_Projects" / "TinyNote.md"
         tiny.write_text(
             "---\n"
-            'type: Project\n'
+            "type: Project\n"
             'title: "Tiny Note"\n'
             'description: "A very short note"\n'
             f"timestamp: {datetime.now(timezone.utc).isoformat()}\n"

@@ -33,8 +33,13 @@ from power_framework.core import (
     archive_stale_notes,
     atomic_write,
     build_frontmatter,
+    check_all as check_markdown,
+    fix_all as fix_markdown,
     format_relation_suggestions,
     format_search_results,
+    heal_frontmatter,
+    heal_vault,
+    read_file_content,
     resolve_vault_path,
     run_generate_hierarchical_index,
     run_generate_sub_index,
@@ -157,15 +162,20 @@ def ingest_note(
 
 
 @mcp.tool()
-def search_vault_tool(query: str, max_results: int = 20, vault_path: str | None = None) -> str:
-    """Full-text search across all vault notes. Returns ranked results with relevance scores and context snippets."""
+def search_vault_tool(
+    query: str,
+    max_results: int = 20,
+    search_mode: str = "fts",
+    vault_path: str | None = None,
+) -> str:
+    """Search across all vault notes. Returns ranked results with relevance scores and context snippets. Supports 'fts' (BM25, default), 'vector' (TF cosine), and 'hybrid' (RRF fusion) modes."""
     path = _get_vault_path(vault_path)
 
     if not query.strip():
         return "Search query cannot be empty."
 
-    results = search_vault(path, query, max_results=max_results)
-    return format_search_results(results, query)
+    results = search_vault(path, query, max_results=max_results, mode=search_mode)
+    return format_search_results(results, query, mode=search_mode)
 
 
 @mcp.tool()
@@ -242,10 +252,10 @@ def synthesize_session(
 
 
 @mcp.tool()
-def rot_audit(vault_path: str | None = None) -> str:
-    """Run the P.O.W.E.R. ROT audit: find Redundant, Outdated, and Trivial notes across the vault."""
+def rot_audit(vault_path: str | None = None, extended: bool = False) -> str:
+    """Run the P.O.W.E.R. ROT audit: find Redundant, Outdated, and Trivial notes across the vault. Use extended=True for A2 scoring (content dedup, link rot, freshness, usage)."""
     path = _get_vault_path(vault_path)
-    return run_rot_report(path)
+    return run_rot_report(path, extended=extended)
 
 
 @mcp.tool()
@@ -269,6 +279,59 @@ def suggest_related_tool(
         max_results=max_results,
     )
     return format_relation_suggestions(suggestions, path)
+
+
+@mcp.tool()
+def heal_frontmatter_tool(
+    dry_run: bool = True,
+    vault_path: str | None = None,
+) -> str:
+    """Scan and heal missing/invalid frontmatter fields across vault notes. Use dry_run=True (default) to preview first."""
+    path = _get_vault_path(vault_path)
+    return heal_vault(path, dry_run=dry_run)
+
+
+@mcp.tool()
+def check_markdown_tool(
+    vault_path: str | None = None,
+) -> str:
+    """Check markdown quality issues across the vault: trailing whitespace, list markers, header jumps, code language."""
+    path = _get_vault_path(vault_path)
+    total_issues = 0
+    lines = ["=== Markdown Quality Check Report ===", f"Vault: {path}", ""]
+    issue_types: dict[str, int] = {}
+
+    for filepath in path.rglob("*.md"):
+        rel = filepath.relative_to(path)
+        if any(p in (".git", "05_Templates", ".system_generated") for p in rel.parts):
+            continue
+        if filepath.name in ("index.md", "log.md", "_index.md"):
+            continue
+
+        try:
+            content = read_file_content(filepath)
+        except Exception:
+            continue
+
+        issues = check_markdown(content)
+        if issues:
+            total_issues += len(issues)
+            lines.append(f"{rel}:")
+            for issue in issues:
+                t = issue["type"]
+                issue_types[t] = issue_types.get(t, 0) + 1
+                lines.append(f"  L{issue['line']}: [{t}] {issue['context']}")
+
+    if total_issues == 0:
+        lines.append("No markdown quality issues found.")
+    else:
+        lines.append("")
+        lines.append("Summary by issue type:")
+        for t, count in sorted(issue_types.items()):
+            lines.append(f"  {t}: {count}")
+        lines.append(f"\nTotal issues found: {total_issues}")
+
+    return "\n".join(lines)
 
 
 def run() -> None:

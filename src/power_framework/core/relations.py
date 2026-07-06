@@ -10,7 +10,6 @@ Auto-discovers knowledge graph connections between notes using:
 from __future__ import annotations
 
 import re
-from collections import Counter
 from pathlib import Path
 
 from .models import OKFMetadata
@@ -25,15 +24,61 @@ SUGGEST_MAX_RESULTS = 5
 
 def _extract_keywords(text: str) -> set[str]:
     """Extract meaningful keywords from text (ignore short/common words)."""
-    stop_words = frozenset({
-        "this", "that", "with", "from", "have", "been", "will", "would",
-        "what", "which", "their", "them", "into", "about", "than",
-        "the", "and", "for", "are", "not", "but", "was", "has",
-        "can", "all", "its", "how", "note", "also", "very", "just",
-        "only", "more", "some", "such", "each", "well", "new",
-        "що", "для", "для", "так", "як", "але", "його", "є�ї",
-        "може", "бути", "були", "воно", "вона", "вони",
-    })
+    stop_words = frozenset(
+        {
+            "this",
+            "that",
+            "with",
+            "from",
+            "have",
+            "been",
+            "will",
+            "would",
+            "what",
+            "which",
+            "their",
+            "them",
+            "into",
+            "about",
+            "than",
+            "the",
+            "and",
+            "for",
+            "are",
+            "not",
+            "but",
+            "was",
+            "has",
+            "can",
+            "all",
+            "its",
+            "how",
+            "note",
+            "also",
+            "very",
+            "just",
+            "only",
+            "more",
+            "some",
+            "such",
+            "each",
+            "well",
+            "new",
+            "що",
+            "для",
+            "так",
+            "як",
+            "але",
+            "його",
+            "є�ї",
+            "може",
+            "бути",
+            "були",
+            "воно",
+            "вона",
+            "вони",
+        }
+    )
     tokens = set(re.findall(r"[a-zA-Zа-яєіїґ]{3,}", text.lower()))
     return {t for t in tokens if t not in stop_words}
 
@@ -129,12 +174,14 @@ def suggest_related(
                     continue
                 score = _compute_overlap_score(src_kw, tgt_kw, src_tags, tgt_tags)
                 if score >= score_threshold:
-                    suggestions.append(RelationSuggestion(
-                        source_path=src_path,
-                        target_path=tgt_path,
-                        score=score,
-                        reason=f"Keyword/tag overlap ({int(score * 100)}%)",
-                    ))
+                    suggestions.append(
+                        RelationSuggestion(
+                            source_path=src_path,
+                            target_path=tgt_path,
+                            score=score,
+                            reason=f"Keyword/tag overlap ({int(score * 100)}%)",
+                        )
+                    )
     else:
         paths = list(notes.keys())
         checked: set[tuple[str, str]] = set()
@@ -148,12 +195,14 @@ def suggest_related(
                 kw_b, tags_b, _, _ = notes[paths[j]]
                 score = _compute_overlap_score(kw_a, kw_b, tags_a, tags_b)
                 if score >= score_threshold:
-                    suggestions.append(RelationSuggestion(
-                        source_path=pair[0],
-                        target_path=pair[1],
-                        score=score,
-                        reason=f"Keyword/tag overlap ({int(score * 100)}%)",
-                    ))
+                    suggestions.append(
+                        RelationSuggestion(
+                            source_path=pair[0],
+                            target_path=pair[1],
+                            score=score,
+                            reason=f"Keyword/tag overlap ({int(score * 100)}%)",
+                        )
+                    )
 
     suggestions.sort(key=lambda s: (-s.score, s.source_path, s.target_path))
     return suggestions[:max_results]
