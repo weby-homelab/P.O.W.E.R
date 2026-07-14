@@ -17,6 +17,7 @@ from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from .chunker import SemanticChunker
 from .constants import EXCLUDED_DIRS
 from .embeddings import EmbeddingManager, EMBEDDING_DIM
 from .ignore import should_skip
@@ -186,6 +187,15 @@ def _init_db(conn: sqlite3.Connection) -> None:
             mtime REAL
         )
     """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS chunk_embeddings (
+            chunk_id TEXT PRIMARY KEY,
+            rel_path TEXT,
+            embedding BLOB,
+            content TEXT,
+            mtime REAL
+        )
+    """)
     conn.commit()
 
 
@@ -219,6 +229,9 @@ def _sync_vault_to_db(vault_dir: Path, conn: sqlite3.Connection) -> None:
         )
         cursor.executemany(
             "DELETE FROM doc_embeddings WHERE rel_path = ?", [(r,) for r in to_delete]
+        )
+        cursor.executemany(
+            "DELETE FROM chunk_embeddings WHERE rel_path = ?", [(r,) for r in to_delete]
         )
 
     embedder = EmbeddingManager()
@@ -276,6 +289,28 @@ def _sync_vault_to_db(vault_dir: Path, conn: sqlite3.Connection) -> None:
                         "INSERT OR REPLACE INTO doc_embeddings (rel_path, embedding, mtime) VALUES (?, ?, ?)",
                         (rel_path, blob, mtime),
                     )
+                except Exception:  # noqa: S112
+                    continue
+
+                try:
+                    chunker = SemanticChunker()
+                    chunks = chunker.chunk(
+                        content,
+                        title=metadata.title,
+                        description=metadata.description,
+                    )
+                    cursor.execute(
+                        "DELETE FROM chunk_embeddings WHERE rel_path = ?",
+                        (rel_path,),
+                    )
+                    for i, chunk_text in enumerate(chunks):
+                        chunk_id = f"{rel_path}::chunk_{i}"
+                        chunk_vec = embedder.embed(chunk_text)
+                        chunk_blob = struct.pack(f"{len(chunk_vec)}f", *chunk_vec)
+                        cursor.execute(
+                            "INSERT OR REPLACE INTO chunk_embeddings (chunk_id, rel_path, embedding, content, mtime) VALUES (?, ?, ?, ?, ?)",
+                            (chunk_id, rel_path, chunk_blob, chunk_text, mtime),
+                        )
                 except Exception:  # noqa: S112
                     continue
             except Exception:  # noqa: S112
@@ -499,7 +534,11 @@ def _semantic_search(
     query: str,
     max_results: int = 20,
 ) -> list[SearchResult]:
-    """Search vault notes using dense embedding cosine similarity."""
+    """Search vault notes using dense embedding cosine similarity over chunks.
+
+    Queries chunk_embeddings, groups by rel_path (taking the max similarity
+    across its chunks), and populates the snippet with the best chunk's content.
+    """
     if not query or not query.strip():
         return []
 
@@ -514,7 +553,7 @@ def _semantic_search(
         _sync_vault_to_db(vault_dir, conn)
 
         cursor = conn.cursor()
-        cursor.execute("SELECT rel_path, embedding, mtime FROM doc_embeddings")
+        cursor.execute("SELECT rel_path, embedding, content FROM chunk_embeddings")
         rows = cursor.fetchall()
         conn.close()
     except Exception:  # noqa: S112
@@ -527,25 +566,33 @@ def _semantic_search(
     if q_norm == 0:
         return []
 
-    scored: list[tuple[float, str]] = []
-    for rel_path, blob, _mtime in rows:
+    chunk_scores: list[tuple[float, str, str]] = []
+    for rel_path, blob, content in rows:
         try:
             dim = len(blob) // 4
-            doc_vec = list(struct.unpack(f"{dim}f", blob))
+            chunk_vec = list(struct.unpack(f"{dim}f", blob))
         except Exception:  # noqa: S112
             continue
 
-        dot = sum(qv * dv for qv, dv in zip(query_vec, doc_vec))
-        d_norm = sum(v * v for v in doc_vec) ** 0.5
+        dot = sum(qv * dv for qv, dv in zip(query_vec, chunk_vec))
+        d_norm = sum(v * v for v in chunk_vec) ** 0.5
         if d_norm == 0:
             continue
         similarity = dot / (q_norm * d_norm)
         if similarity <= 0:
             continue
-        scored.append((similarity, rel_path))
+        chunk_scores.append((similarity, rel_path, content))
 
-    scored.sort(key=lambda x: -x[0])
-    top_paths = [rel for _, rel in scored[:max_results]]
+    if not chunk_scores:
+        return []
+
+    doc_best: dict[str, tuple[float, str]] = {}
+    for similarity, rel_path, content in chunk_scores:
+        if rel_path not in doc_best or similarity > doc_best[rel_path][0]:
+            doc_best[rel_path] = (similarity, content)
+
+    scored_docs = sorted(doc_best.items(), key=lambda x: -x[1][0])
+    top_paths = [rel for rel, _ in scored_docs[:max_results]]
 
     results: list[SearchResult] = []
     for rel_path in top_paths:
@@ -555,8 +602,7 @@ def _semantic_search(
             metadata = validate_metadata(content)
             if metadata is None:
                 continue
-            similarity = next(s for s, r in scored if r == rel_path)
-            snippet = _make_snippet(content, _tokenize(query))
+            similarity, snippet = doc_best[rel_path]
             results.append(
                 SearchResult(
                     rel_path=rel_path,

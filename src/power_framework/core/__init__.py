@@ -14,6 +14,7 @@ Usage:
 
 from __future__ import annotations
 
+from .chunker import SemanticChunker
 from .cli import main as cli_main
 from .embeddings import EmbeddingManager
 from .healer import heal_frontmatter, heal_vault
@@ -116,6 +117,7 @@ __all__ = [
     "TypedRelation",
     "ROTResult",
     "RateLimiter",
+    "SemanticChunker",
     "RelationSuggestion",
     "QueryExpander",
     "RerankerManager",
