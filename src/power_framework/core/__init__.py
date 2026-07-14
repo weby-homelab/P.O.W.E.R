@@ -68,6 +68,7 @@ from .parser import (
     validate_metadata,
 )
 from .relations import RelationSuggestion, format_relation_suggestions, suggest_related
+from .reranker import RerankerManager
 from .rot_scoring import (
     TYPE_HALF_LIFE_DAYS,
     ContentDedupDetector,
@@ -107,6 +108,7 @@ __all__ = [
     "ROTResult",
     "RateLimiter",
     "RelationSuggestion",
+    "RerankerManager",
     "SearchResult",
     "UsageTracker",
     "__version__",

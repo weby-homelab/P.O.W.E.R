@@ -22,6 +22,7 @@ from .embeddings import EmbeddingManager, EMBEDDING_DIM
 from .ignore import should_skip
 from .models import OKFMetadata  # noqa: TC001
 from .parser import read_file_content, validate_metadata
+from .reranker import RerankerManager
 from .utils import get_cache_dir
 
 SNIPPET_WINDOW = 40
@@ -589,6 +590,7 @@ def search_vault(
         mode: Search mode - "fts" (SQLite FTS5, default),
               "vector" (TF cosine similarity),
               "hybrid" (RRF merge of FTS + vector),
+              "hybrid_reranked" (RRF merge + cross-encoder reranking),
               "semantic" (dense embedding cosine similarity via fastembed).
 
     Returns:
@@ -614,7 +616,41 @@ def search_vault(
         vector_results = _vector_search(vault_dir, query, max_results=max_results * 2)
         return _rrf_merge(fts_results, vector_results)[:max_results]
 
+    if mode == "hybrid_reranked":
+        return _hybrid_reranked_search(vault_dir, query, max_results=max_results)
+
     return _fts_search(vault_dir, query, max_results=max_results)
+
+
+def _hybrid_reranked_search(
+    vault_dir: Path,
+    query: str,
+    max_results: int = 20,
+) -> list[SearchResult]:
+    candidates = _fts_search(vault_dir, query, max_results=50)
+    vector_results = _vector_search(vault_dir, query, max_results=50)
+    candidates = _rrf_merge(candidates, vector_results)
+
+    if not candidates:
+        return []
+
+    documents: list[str] = []
+    for result in candidates:
+        filepath = vault_dir / result.rel_path
+        try:
+            content = read_file_content(filepath)
+            documents.append(content)
+        except Exception:  # noqa: S112
+            documents.append("")
+
+    reranker = RerankerManager()
+    reranked_scores = reranker.rerank(query, documents)
+
+    for result, score in zip(candidates, reranked_scores):
+        result.score = score
+
+    candidates.sort(key=lambda r: -r.score)
+    return candidates[:max_results]
 
 
 def format_search_results(
