@@ -35,7 +35,7 @@ Unlike generic knowledge management tools, P.O.W.E.R. is designed from the groun
 ## Quick Start
 
 ```bash
-pip install git+https://github.com/weby-homelab/power-framework.git@v1.8.0
+pip install git+https://github.com/weby-homelab/power-framework.git@v2.0.1
 
 power init ~/my-vault          # Create vault structure
 power lint ~/my-vault          # Check for broken links & missing metadata
@@ -62,7 +62,7 @@ power markdown-check ~/my-vault  # Check markdown quality issues
 | **Cron Maintenance** | Runs lint + index + rot audit in one command — `power cron <path>` |
 | **Advanced Hybrid Search** | 4-mode search (v2.0): FTS5 (BM25), Dense Vector Semantic (`fastembed` BGE-small-en-v1.5), Hybrid (RRF), and Hybrid Reranked (`cross-encoder` ms-marco-MiniLM-L-6-v2) with synonym & LLM query expansion and Contextual Retrieval chunking (`SemanticChunker`) |
 | **Hierarchical Index** | `index.md` (navigation map) + per-folder `_index.md` (detailed catalogs) for token-efficient AI reading (~75-94% token savings) |
-| **CI/CD** | 270+ tests, 81%+ coverage, CodeQL SAST, Automated GitHub Releases |
+| **CI/CD** | 360+ tests, 80%+ coverage, CodeQL SAST, Automated GitHub Releases |
 | **Documentation** | Full [mkdocs-material site](https://weby-homelab.github.io/power-framework/) with API reference and guides |
 
 ## Migration Report
@@ -119,7 +119,7 @@ power search ~/my-vault "deployment guide" --max-results 5
 Connect P.O.W.E.R. to any MCP-compatible AI client (local stdio or Docker HTTP transport).
 
 ```bash
-pip install git+https://github.com/weby-homelab/power-framework.git@v1.8.0
+pip install git+https://github.com/weby-homelab/power-framework.git@v2.0.1
 ```
 
 **Claude Desktop** (`~/.config/Claude/claude_desktop_config.json`):
@@ -392,7 +392,7 @@ description: P.O.W.E.R. - Hybrid Knowledge Management Framework (P.A.R.A. + OKF 
 applicationCategory: DeveloperApplication
 applicationSubCategory: KnowledgeManagement
 operatingSystem: Linux
-softwareVersion: 1.0.0
+softwareVersion: 2.0.1
 keywords: knowledge-management, second-brain, obsidian, para, okf, llm-wiki, mcp, ai-agents, python, execution-rules
 author: Weby Homelab (https://github.com/weby-homelab)
 codeRepository: https://github.com/weby-homelab/power-framework
