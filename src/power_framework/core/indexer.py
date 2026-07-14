@@ -175,8 +175,12 @@ def generate_main_index_content(folder_notes: dict[str, list[dict]]) -> str:
     lines.append("## Agent Protocol")
     lines.append("")
     lines.append("1. **Read this file** — identify the relevant category.")
-    lines.append("2. **Read the sub-index** — load `folder/_index.md` for detailed entries.")
-    lines.append("3. **Read specific notes** — only when the sub-index indicates relevance.")
+    lines.append(
+        "2. **Read the sub-index** — load `folder/_index.md` for detailed entries."
+    )
+    lines.append(
+        "3. **Read specific notes** — only when the sub-index indicates relevance."
+    )
     lines.append("4. **NEVER glob all `.md` files** — use sub-indexes as a map.")
     lines.append("")
 
@@ -223,7 +227,7 @@ def generate_sub_index_content(folder: str, notes: list[dict]) -> str:
             if note.get("expiry"):
                 lines.append(f"- **Review by:** {note['expiry']}")
             if note.get("related"):
-                rel_str = ", ".join(note["related"])
+                rel_str = ", ".join(r.path for r in note["related"])
                 lines.append(f"- **Related:** {rel_str}")
             if note.get("timestamp"):
                 lines.append(f"- **Updated:** {note['timestamp'][:10]}")

@@ -57,6 +57,7 @@ from .models import (
     NoteStatus,
     NoteType,
     OKFMetadata,
+    TypedRelation,
 )
 from .parser import (
     build_frontmatter,
@@ -68,7 +69,12 @@ from .parser import (
     validate_metadata,
 )
 from .query_expansion import QueryExpander
-from .relations import RelationSuggestion, format_relation_suggestions, suggest_related
+from .relations import (
+    KnowledgeGraph,
+    RelationSuggestion,
+    format_relation_suggestions,
+    suggest_related,
+)
 from .reranker import RerankerManager
 from .rot_scoring import (
     TYPE_HALF_LIFE_DAYS,
@@ -101,11 +107,13 @@ __all__ = [
     "EmbeddingManager",
     "FreshnessScorer",
     "LinkRotChecker",
+    "KnowledgeGraph",
     "LintResult",
     "NoteFile",
     "NoteStatus",
     "NoteType",
     "OKFMetadata",
+    "TypedRelation",
     "ROTResult",
     "RateLimiter",
     "RelationSuggestion",
