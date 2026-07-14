@@ -317,10 +317,10 @@ def _fts_search(
 ) -> list[SearchResult]:
     """SQLite FTS5 full-text search with weighted BM25 scoring."""
     clean_query = re.sub(
-        r'[^\w\s"а-яєіїґ\']',
+        r'[^\w\s"а-яєіїґ\']',  # noqa: RUF001
         " ",
         query,
-        flags=re.IGNORECASE,  # noqa: RUF001
+        flags=re.IGNORECASE,
     )
     terms: list[str] = []
     for match in re.finditer(r'"([^"]+)"|(\S+)', clean_query):
