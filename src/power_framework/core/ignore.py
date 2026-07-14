@@ -18,9 +18,12 @@ from __future__ import annotations
 import fnmatch
 import re
 from pathlib import Path
-from typing import Iterator
+from typing import TYPE_CHECKING
 
 from .constants import EXCLUDED_DIRS, PARA_FOLDERS_
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 POWERIGNORE_NAME = ".powerignore"
 
