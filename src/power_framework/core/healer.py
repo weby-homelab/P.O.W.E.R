@@ -111,7 +111,10 @@ def _format_frontmatter(
         val = fm_data.get(field)
         if val is not None and val != "" and val != []:
             if isinstance(val, list):
-                items = ", ".join(str(v) for v in val)
+                if field == "tags":
+                    items = ", ".join(f'"{_escape_yaml(str(v))}"' for v in val)
+                else:
+                    items = ", ".join(str(v) for v in val)
                 parts.append(f"{field}: [{items}]")
             elif isinstance(val, bool):
                 parts.append(f"{field}: {str(val).lower()}")
@@ -150,12 +153,20 @@ def heal_frontmatter(
     description: str | None = fm_data.get("description")
     timestamp: datetime | None = fm_data.get("timestamp")
 
+    # 1. Note Type healing (casing & invalid types)
+    valid_note_types = {t.value for t in NoteType}
     if note_type:
-        valid_types = {t.value.lower(): t.value for t in NoteType}
+        valid_types_lower = {t.value.lower(): t.value for t in NoteType}
         tl = str(note_type).strip().lower()
-        if tl in valid_types and str(note_type) != valid_types[tl]:
-            changes.append(f"Fixed type casing: '{note_type}' → '{valid_types[tl]}'")
-            note_type = valid_types[tl]
+        if tl in valid_types_lower:
+            if str(note_type) != valid_types_lower[tl]:
+                changes.append(f"Fixed type casing: '{note_type}' → '{valid_types_lower[tl]}'")
+                note_type = valid_types_lower[tl]
+        elif vault_dir:
+            inferred = _infer_type_from_folder(filepath, vault_dir)
+            if inferred and inferred != note_type:
+                changes.append(f"Fixed invalid type: '{note_type}' → '{inferred}'")
+                note_type = inferred
 
     if not note_type and vault_dir:
         inferred = _infer_type_from_folder(filepath, vault_dir)
@@ -163,21 +174,47 @@ def heal_frontmatter(
             changes.append(f"Added missing type: {inferred}")
             note_type = inferred
 
+    # 2. Title healing
     if not title:
         inferred = _infer_title_from_filename(filepath)
         if inferred:
             changes.append(f"Added missing title: '{inferred}'")
             title = inferred
 
-    if not description:
+    # 3. Description healing (missing or too long > 150 chars)
+    if description and len(description) > 150:
+        truncated = description[:147].strip() + "..."
+        changes.append("Truncated long description to 150 chars")
+        description = truncated
+    elif not description:
         inferred = _extract_first_paragraph(content)
         if inferred:
             changes.append(f"Added missing description: '{inferred[:60]}...'")
             description = inferred
 
-    if not timestamp:
+    # 4. Timestamp healing (missing or date/string conversion to datetime)
+    from datetime import date as date_type
+    if timestamp:
+        if not isinstance(timestamp, datetime) and isinstance(timestamp, date_type):
+            timestamp = datetime(timestamp.year, timestamp.month, timestamp.day, tzinfo=timezone.utc)
+            changes.append("Converted date timestamp to datetime")
+        elif isinstance(timestamp, str):
+            try:
+                timestamp = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+                changes.append("Parsed string timestamp to datetime")
+            except ValueError:
+                timestamp = datetime.now(timezone.utc)
+                changes.append("Replaced invalid string timestamp with current time")
+    else:
         timestamp = datetime.now(timezone.utc)
         changes.append("Added missing timestamp")
+
+    # 5. Tags list healing (convert non-strings like integers 2026 to strings)
+    tags = fm_data.get("tags")
+    if isinstance(tags, list):
+        if any(not isinstance(t, str) for t in tags):
+            fm_data["tags"] = [str(t) for t in tags]
+            changes.append("Converted non-string tags to strings")
 
     if not changes:
         return content, []
