@@ -343,6 +343,13 @@ ruff format src/ tests/
 mypy src/power_framework/
 ```
 
+### Test Reports & Benchmarks
+
+For detailed analysis and benchmarks of the P.O.W.E.R. framework:
+- [P.O.W.E.R. v2.0.1 Test Report & Speed Benchmarks](docs/tests/P.O.W.E.R.2.0.1-TEST-1.md) — Multi-lingual (UA/EN) embeddings via `BAAI/bge-m3`, test run outputs, and memory overhead optimization.
+- [Vector Search Degradation & Scalability Limits Analysis](docs/tests/P.O.W.E.R.2.0.1-TEST-2.md) — Comparison of linear NumPy search vs SIMD C `sqlite-vec`, graph-based HNSW, and Qdrant database.
+- [AI Agent Memory Benchmark & SOTA Competency Report (v2.0.3-TEST)](docs/tests/P.O.W.E.R.2.0.3-TEST.md) — Multi-turn incremental evaluations covering MemoryAgentBench (ICLR 2026), LoCoMo, LongMemEval, and BEAM.
+
 ## License
 
 GPLv3 — Built in Ukraine ⚡
