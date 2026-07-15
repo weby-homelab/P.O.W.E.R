@@ -12,6 +12,7 @@ EXCLUDED_DIRS: frozenset[str] = frozenset(
     {
         # System / framework managed directories
         ".git",
+        ".backups",
         "05_Templates",
         "scratch",
         ".system_generated",
