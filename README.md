@@ -46,7 +46,7 @@ power markdown-check ~/my-vault  # Check markdown quality issues
 
 | Feature                         | What it does                                                                                                                                                                                                                                                                      |
 | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **CLI**                         | `power init`, `lint`, `index`, `ingest`, `search`, `rot`, `archive`, `cron`, `heal`, `markdown-check`, `suggest-related` — 11 commands for full vault management                                                                                                                  |
+| **CLI**                         | `power init`, `lint`, `index`, `ingest`, `search`, `rot`, `status`, `archive`, `cron`, `heal`, `markdown-check`, `suggest-related` — 12 commands for full vault management                                                                                                                  |
 | **MCP Server**                  | Exposes `lint_vault`, `generate_index`, `read_sub_index`, `ensure_sub_index`, `ingest_note`, `search_vault_tool`, `synthesize_session`, `rot_audit`, `archive_notes`, `suggest_related_tool`, `heal_frontmatter_tool`, `check_markdown_tool` — 12 tools for AI agents             |
 | **OKF Validation**              | Pydantic v2 schemas enforce strict metadata on every note with governance (`owner`, `status`, `expiry`)                                                                                                                                                                           |
 | **Knowledge Graph (Graph RAG)** | `related` field in OKF frontmatter supporting `TypedRelation` (path, relation, confidence) with BFS traversal and Mermaid diagram export (`to_mermaid`)                                                                                                                           |
@@ -92,6 +92,7 @@ power index <path>             Generate hierarchical index (index.md + _index.md
 power search <path> <query>    Full-text search with relevance scoring
 power ingest <path> [options]  Create a new note with validated OKF metadata
 power rot <path>               ROT Audit — detect redundant, outdated, trivial notes
+power status [path]            Show vault status dashboard (statistics & health metrics)
 power heal <path>              Auto-heal missing/invalid frontmatter
 power markdown-check <path>    Check markdown quality issues
 power archive <path>           Auto-archive stale notes to 04_Archive/
@@ -194,7 +195,10 @@ timestamp: 2026-07-02T19:00:00
 owner: "team-alpha" # optional: governance — responsible owner
 status: active # optional: active | review | archived
 expiry: 2026-12-31 # optional: freshness management
-related: [01_Projects/Other.md] # optional: Graph RAG cross-links
+related:
+  - path: 01_Projects/Other.md
+    relation: depends_on # optional: relation type
+    confidence: 1.0 # optional: confidence score
 ---
 ```
 
@@ -313,7 +317,7 @@ flowchart TD
 | `core/markdown_checks.py` | Markdown quality checks: trailing whitespace, list markers, header jumps                                      |
 | `core/constants.py`       | Centralized exclusion lists and system constants                                                              |
 | `core/utils.py`           | Path traversal protection, atomic writes, backups, rate limiter                                               |
-| `core/cli.py`             | Command-line interface (11 commands via argparse)                                                             |
+| `core/cli.py`             | Command-line interface (12 commands via argparse)                                                             |
 | `mcp/power_server.py`     | FastMCP 3.x server with 12 async tools + HTTP transport + /health                                             |
 
 All components share `power_framework.core` as the single source of truth.
