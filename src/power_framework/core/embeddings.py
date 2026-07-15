@@ -22,6 +22,7 @@ class EmbeddingManager:
             return
         try:
             import os
+
             # Disable symlinks for HF downloads to prevent ONNX Runtime directory escape errors
             os.environ["HF_HUB_DISABLE_SYMLINKS"] = "1"
 
@@ -41,7 +42,7 @@ class EmbeddingManager:
                     sources=ModelSource(hf="onnx-community/bge-m3-ONNX"),
                     dim=1024,
                     model_file="onnx/model.onnx",
-                    additional_files=["onnx/model.onnx_data"]
+                    additional_files=["onnx/model.onnx_data"],
                 )
             except ValueError:
                 # Already registered
