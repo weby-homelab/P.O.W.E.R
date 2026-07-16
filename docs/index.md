@@ -11,16 +11,19 @@ Unlike generic knowledge management tools, P.O.W.E.R. is designed from the groun
 - **Knowledge Graph** — `related` field connects notes across the vault; visualized in sub-indexes for Graph RAG workflows
 - **Freshness Monitoring** — linter detects stale/expired notes based on `expiry` metadata field; A2 scoring adds type-based exponential decay freshness
 - **Content Deduplication** — TF-Vector cosine similarity detects near-duplicate notes without external embeddings
+- **Pluggable Embeddings** — hot-swappable backends: MiniLM-L12-v2 (default, 384d, ~680 MB), BGE-M3 (1024d), Qwen3-0.6B (ONNX); selected via `POWER_EMBED_PROVIDER` env var
+- **WAL-mode parallel safety** — all SQLite connections use `journal_mode=WAL` + `busy_timeout=30000` for lock-free concurrent FTS / vector search
 - **Link Rot Detection** — HTTP HEAD checks for broken external links (SSRF-protected)
 - **Frontmatter Healer** — auto-fills missing title, description, type, and timestamp across the vault
 - **Markdown Quality Checks** — detects trailing whitespace, inconsistent list markers, header jumps, missing code language
 - **Agent Auto-Ingest** — `synthesize_session` MCP tool lets agents autonomously create permanent knowledge artifacts with governance + graph links + full catalog maintenance
 - **MCP-native** — all 12 tools exposed to any MCP-compatible AI client (Claude, OpenCode, Cursor), powered by FastMCP 3.x
-- **Production-grade** — 377 tests, 73%+ coverage, CodeQL scanning, Automated GitHub Releases
+- **Production-grade** — 386 tests, 73%+ coverage, CodeQL scanning, Automated GitHub Releases
 
 ## Features
 
 - **`power init`** — Scaffold an OKF-compliant vault directory structure
+- **`power status`** — Display vault dashboard (statistics, PARA distribution, health metrics)
 - **`power lint`** — Health-check metadata, broken links, orphans, stale/expired notes
 - **`power index`** — Compile hierarchical indexes (`index.md` + per-folder `_index.md`)
 - **`power ingest`** — Create new notes with validated frontmatter (supports `owner`, `status`, `expiry`, `related`)

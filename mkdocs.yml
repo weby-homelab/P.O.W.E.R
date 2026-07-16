@@ -55,6 +55,7 @@ nav:
       - Searcher: api/searcher.md
       - Utils: api/utils.md
   - Architecture: architecture.md
+  - Changelog: CHANGELOG.md
   - Contributing: contributing.md
 
 extra:
