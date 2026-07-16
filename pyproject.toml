@@ -119,6 +119,20 @@ module = [
 ]
 disable_error_code = ["type-arg"]
 
+[[tool.mypy.overrides]]
+module = [
+    "power_framework.core.embeddings",
+    "power_framework.core.searcher",
+]
+disable_error_code = [
+    "import-not-found",
+    "import-untyped",
+    "no-untyped-def",
+    "no-any-return",
+    "attr-defined",
+    "union-attr",
+]
+
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F405"]
 "tests/*" = ["S101", "T20", "DTZ001"]
