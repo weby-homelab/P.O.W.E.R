@@ -10,12 +10,15 @@ Multi-mode search across vault notes:
 
 from __future__ import annotations
 
+import logging
 import re
 import sqlite3
 import struct
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 from .chunker import SemanticChunker
 from .embeddings import EmbeddingManager
@@ -162,6 +165,10 @@ def _scan_and_search(vault_dir: Path, terms: list[str]) -> list[SearchResult]:
 
 def _init_db(conn: sqlite3.Connection) -> None:
     """Initialize the SQLite database schema."""
+    # WAL + busy timeout prevent "database is locked" under parallel embedding.
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA busy_timeout=30000")
+    conn.execute("PRAGMA synchronous=NORMAL")
     conn.execute("""
         CREATE VIRTUAL TABLE IF NOT EXISTS fts_notes USING fts5(
             title,
@@ -198,8 +205,19 @@ def _init_db(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
-def _sync_vault_to_db(vault_dir: Path, conn: sqlite3.Connection) -> None:
-    """Synchronize the files in the vault with the SQLite database."""
+def _sync_vault_to_db(
+    vault_dir: Path, conn: sqlite3.Connection, sync_embeddings: bool = False
+) -> None:
+    """Synchronize the files in the vault with the SQLite database.
+
+    Args:
+        vault_dir: Path to the vault root.
+        conn: An open SQLite connection (WAL mode, busy_timeout set).
+        sync_embeddings: When False (default) only the lightweight FTS index and
+            file metadata are refreshed. This avoids loading the embedding model
+            (bge-m3, ~6GB) on every FTS search/index. Set True only when vector
+            or semantic search actually needs the dense embeddings.
+    """
     disk_files: dict[str, float] = {}
     for filepath in vault_dir.rglob("*.md"):
         if filepath.name in ("index.md", "log.md", "_index.md"):
@@ -220,7 +238,9 @@ def _sync_vault_to_db(vault_dir: Path, conn: sqlite3.Connection) -> None:
 
     to_delete = [rel_path for rel_path in db_files if rel_path not in disk_files]
     if to_delete:
-        cursor.executemany("DELETE FROM fts_notes WHERE rel_path = ?", [(r,) for r in to_delete])
+        cursor.executemany(
+            "DELETE FROM fts_notes WHERE rel_path = ?", [(r,) for r in to_delete]
+        )
         cursor.executemany(
             "DELETE FROM file_metadata WHERE rel_path = ?", [(r,) for r in to_delete]
         )
@@ -231,18 +251,31 @@ def _sync_vault_to_db(vault_dir: Path, conn: sqlite3.Connection) -> None:
             "DELETE FROM chunk_embeddings WHERE rel_path = ?", [(r,) for r in to_delete]
         )
 
-    embedder = EmbeddingManager()
+    embedder = EmbeddingManager() if sync_embeddings else None
+    logger.info(
+        "Starting sync loop over %d files (embeddings=%s)",
+        len(disk_files),
+        sync_embeddings,
+    )
 
-    for rel_path, mtime in disk_files.items():
+    for idx, (rel_path, mtime) in enumerate(disk_files.items()):
+        if idx % 50 == 0:
+            logger.info("Sync progress: %d/%d (%s)", idx, len(disk_files), rel_path)
         if rel_path not in db_files or db_files[rel_path] != mtime:
             filepath = vault_dir / rel_path
             try:
                 content = read_file_content(filepath)
                 metadata = validate_metadata(content)
                 if metadata is None:
-                    cursor.execute("DELETE FROM fts_notes WHERE rel_path = ?", (rel_path,))
-                    cursor.execute("DELETE FROM file_metadata WHERE rel_path = ?", (rel_path,))
-                    cursor.execute("DELETE FROM doc_embeddings WHERE rel_path = ?", (rel_path,))
+                    cursor.execute(
+                        "DELETE FROM fts_notes WHERE rel_path = ?", (rel_path,)
+                    )
+                    cursor.execute(
+                        "DELETE FROM file_metadata WHERE rel_path = ?", (rel_path,)
+                    )
+                    cursor.execute(
+                        "DELETE FROM doc_embeddings WHERE rel_path = ?", (rel_path,)
+                    )
                     continue
 
                 tags_str = " ".join(metadata.tags)
@@ -265,23 +298,25 @@ def _sync_vault_to_db(vault_dir: Path, conn: sqlite3.Connection) -> None:
                     (rel_path, mtime),
                 )
 
-                try:
-                    full_text = " ".join(
-                        [
-                            metadata.title,
-                            " ".join(metadata.tags),
-                            metadata.description,
-                            content,
-                        ]
-                    )
-                    vec = embedder.embed(full_text)
-                    blob = struct.pack(f"{len(vec)}f", *vec)
-                    cursor.execute(
-                        "INSERT OR REPLACE INTO doc_embeddings (rel_path, embedding, mtime) VALUES (?, ?, ?)",
-                        (rel_path, blob, mtime),
-                    )
-                except Exception:  # noqa: S112
-                    continue
+                if sync_embeddings and embedder is not None:
+                    try:
+                        full_text = " ".join(
+                            [
+                                metadata.title,
+                                " ".join(metadata.tags),
+                                metadata.description,
+                                content,
+                            ]
+                        )
+                        vec = embedder.embed(full_text)
+                        blob = struct.pack(f"{len(vec)}f", *vec)
+                        cursor.execute(
+                            "INSERT OR REPLACE INTO doc_embeddings (rel_path, embedding, mtime) VALUES (?, ?, ?)",
+                            (rel_path, blob, mtime),
+                        )
+                    except Exception as e:  # noqa: S112
+                        logger.warning("Embedding doc failed for %s: %s", rel_path, e)
+                        continue
 
                 try:
                     chunker = SemanticChunker()
@@ -302,9 +337,11 @@ def _sync_vault_to_db(vault_dir: Path, conn: sqlite3.Connection) -> None:
                             "INSERT OR REPLACE INTO chunk_embeddings (chunk_id, rel_path, embedding, content, mtime) VALUES (?, ?, ?, ?, ?)",
                             (chunk_id, rel_path, chunk_blob, chunk_text, mtime),
                         )
-                except Exception:  # noqa: S112
+                except Exception as e:  # noqa: S112
+                    logger.warning("Chunk embedding failed for %s: %s", rel_path, e)
                     continue
-            except Exception:  # noqa: S112
+            except Exception as e:  # noqa: S112
+                logger.warning("Processing failed for %s: %s", rel_path, e)
                 continue
 
     conn.commit()
@@ -338,9 +375,11 @@ def _fts_search(
     db_path = get_cache_dir() / "power_search.db"
 
     try:
-        conn = sqlite3.connect(str(db_path))
+        conn = sqlite3.connect(str(db_path), timeout=30)
+        conn.execute("PRAGMA busy_timeout=30000")
+        conn.execute("PRAGMA journal_mode=WAL")
         _init_db(conn)
-        _sync_vault_to_db(vault_dir, conn)
+        _sync_vault_to_db(vault_dir, conn, sync_embeddings=False)
 
         cursor = conn.cursor()
         cursor.execute(
@@ -495,7 +534,9 @@ def _rrf_merge(
         rrf_scores[result.rel_path] = 1.0 / (k + rank + 1)
 
     for rank, result in enumerate(vector_results):
-        rrf_scores[result.rel_path] = rrf_scores.get(result.rel_path, 0.0) + 1.0 / (k + rank + 1)
+        rrf_scores[result.rel_path] = rrf_scores.get(result.rel_path, 0.0) + 1.0 / (
+            k + rank + 1
+        )
 
     doc_map: dict[str, SearchResult] = {}
     for r in fts_results + vector_results:
@@ -540,9 +581,11 @@ def _semantic_search(
         embedder = EmbeddingManager()
         query_vec = embedder.embed(query)
 
-        conn = sqlite3.connect(str(db_path))
+        conn = sqlite3.connect(str(db_path), timeout=30)
+        conn.execute("PRAGMA busy_timeout=30000")
+        conn.execute("PRAGMA journal_mode=WAL")
         _init_db(conn)
-        _sync_vault_to_db(vault_dir, conn)
+        _sync_vault_to_db(vault_dir, conn, sync_embeddings=True)
 
         cursor = conn.cursor()
         cursor.execute("SELECT rel_path, embedding, content FROM chunk_embeddings")
@@ -658,7 +701,9 @@ def search_vault(
             vec = _vector_search(vault_dir, variant, max_results=max_results * 2)
             results = _rrf_merge(fts, vec)
         elif mode == "hybrid_reranked":
-            results = _hybrid_reranked_search(vault_dir, variant, max_results=max_results)
+            results = _hybrid_reranked_search(
+                vault_dir, variant, max_results=max_results
+            )
         else:
             results = _fts_search(vault_dir, variant, max_results=max_results)
         all_results.append(results)
@@ -704,7 +749,9 @@ def _hybrid_reranked_search(
     return candidates[:max_results]
 
 
-def format_search_results(results: list[SearchResult], query: str, mode: str = "fts") -> str:
+def format_search_results(
+    results: list[SearchResult], query: str, mode: str = "fts"
+) -> str:
     """Format search results into a human-readable report string."""
     if not results:
         return f"No results found for '{query}'."
