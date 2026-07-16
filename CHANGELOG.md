@@ -5,12 +5,26 @@ All notable changes to the P.O.W.E.R. Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.4] - 2026-07-17
+
+### Fixed
+
+- **Parallel-access "database is locked"**: WAL mode (`PRAGMA journal_mode=WAL`) and `busy_timeout=30000` are now applied on **every** SQLite connection in `searcher.py`, not only inside `_init_db`. Previously a fresh connect opened in `DELETE` journal mode and could collide with the long-lived MCP server connection, raising `SQLITE_BUSY` under concurrent FTS/vector calls.
+- **Unnecessary embedding-model load on FTS**: `_sync_vault_to_db` no longer instantiates `EmbeddingManager` and re-embeds every changed file during a plain full-text search. FTS sync (`sync_embeddings=False`) now refreshes only the FTS5 index and file metadata; dense embeddings are synced **only** when vector/semantic search is actually requested (`sync_embeddings=True`). This removes the ~6 GB bge-m3 spike from every FTS `power search` / `power index` run on memory-constrained hosts (e.g. PRXMX-01, 15 GB).
+- **Race on model init**: Added a `threading.Lock()` around `FastEmbedManager._lazy_init` so parallel callers cannot load the embedding model twice.
+
+### Changed
+
+- **WAL-aware Git sync**: Added `*.db-wal` / `*.db-shm` to `.gitignore` so transient WAL files are never committed; the canonical DB snapshot (`brain/.power_search.db`) is committed only after a `wal_checkpoint(TRUNCATE)`.
+
 ## [2.0.3] - 2026-07-15
 
 ### Added
+
 - **Status Dashboard Command**: Introduced the `power status` command to display structural statistics (total notes, PARA categories, OKF compliance level), Graph RAG relation counts, and vault health metrics (broken links, orphans, external reference counts).
 
 ### Changed
+
 - **Robust Link Rot Checking**: Swapped urllib requests with a modern Chrome User-Agent header and added GET request fallbacks on HEAD failures to eliminate false-positive link rots.
 - **Enhanced Metadata Healer**: Upgraded `power heal` to automatically correct Pydantic validation errors (trimming long descriptions, converting invalid type names/cases, parsing date-only timestamps to datetime, and forcing strings in tag lists).
 - **Excluded Backups Folder**: Added `.backups` to central `EXCLUDED_DIRS` to avoid treating backups as active vault files.
@@ -18,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.0.2] - 2026-07-15
 
 ### Fixed
+
 - **Memory OOM Prevention**: Switched default embedding model to `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` (384 dimensions) reducing RSS RAM usage from ~6.3 GB to ~680 MB, preventing OOM crashes on low-resource hosts (e.g. 12GB RAM VPS/proxmox nodes).
 - **Link Checker Parallelization**: Optimized `LinkRotChecker` using `ThreadPoolExecutor` to check external links in parallel, accelerating extended ROT audit (A2) from minutes to seconds.
 - **Configurable Embedding Model**: Added environment variable `POWER_EMBEDDING_MODEL` to customize the model, with support for automatic `.env` loading and test suite isolation.
@@ -26,11 +41,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.0.1] - 2026-07-15
 
 ### Changed
+
 - **BAAI/bge-m3 default model**: Bumped default embedding model to `BAAI/bge-m3` (1024 dimensions) with custom ONNX community source registration.
 
 ## [2.0.0] - 2026-07-14
 
 ### Added
+
 - **Dense Embeddings & Hybrid Search**: Integrated `fastembed` (`BAAI/bge-small-en-v1.5`) for local CPU-optimized dense vector embeddings. Added SQLite `chunk_embeddings` storage and `hybrid_reranked` search mode.
 - **Cross-Encoder Reranking**: Integrated `RerankerManager` (`Xenova/ms-marco-MiniLM-L-6-v2`) to rank search candidates by query-document relevance scores.
 - **Semantic Chunker**: Added `SemanticChunker` implementing the Anthropic Contextual Retrieval pattern, splitting markdown by H2/H3 headers, paragraphs, or fixed size, and prefixing each chunk with parent document context.
@@ -41,6 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **API Documentation**: Created comprehensive API markdown documentation for all four new RAG modules.
 
 ### Changed
+
 - Bumped version to `2.0.0`
 - Configured MyPy to ignore/skip external `numpy` type stubs, resolving incompatibility of PEP 695 syntax on Python 3.10/3.11 runtimes.
 - Re-formatted codebase and resolved all Ruff linter and MyPy typecheck issues.
@@ -48,6 +66,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.0] - 2026-07-06
 
 ### Added
+
 - **FastMCP 3.x migration**: Switched from `mcp.server.fastmcp` to standalone `fastmcp>=3.2` (Prefect) — structured `ToolError` error handling, `ErrorHandlingMiddleware` with `mask_error_details=True`, `asyncio.to_thread` wrappers for heavy tools
 - **HTTP transport for Docker**: MCP server supports both stdio (local) and HTTP (`:8000` with `/health` endpoint) via `POWER_MCP_TRANSPORT` env var
 - **Docker security hardening**: `cap_drop: [ALL]`, `read_only: true`, `tmpfs /tmp`, HEALTHCHECK now correctly pings HTTP endpoint
@@ -57,6 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Centralized `__version__`**: Uses `importlib.metadata.version()` with fallback
 
 ### Changed
+
 - **Python 3.14** added to CI matrix; `Dockerfile` base image bumped to `python:3.14-slim`
 - **`mypy strict = true`**: Now matches CHANGELOG claims — actual strict mode enabled
 - **Dependency groups (PEP 735)**: `[dependency-groups].dev` replaces `[project.optional-dependencies].dev`
@@ -67,6 +87,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CLI stdout/stderr**: `power search` results go to stdout; logs to stderr
 
 ### Fixed
+
 - **Path-traversal**: `validate_vault_path` string-prefix weakness replaced with `Path.relative_to()` check
 - **SSRF in LinkRotChecker**: Private/loopback/link-local IPs blocked before HTTP HEAD requests
 - **Cache isolation**: `.power_search.db` and `.power_usage.db` moved to XDG cache dir (no longer pollute vault)
@@ -81,6 +102,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Timestamp timezone normalization**: `OKFMetadata.timestamp` validator ensures UTC-aware datetimes
 
 ### Security
+
 - **SSRF hardening**: LinkRotChecker blocks private/loopback/link-local IPs
 - **Path-traversal hardening**: `relative_to()` replaces string-prefix check
 - **Docker hardening**: `cap_drop: [ALL]`, `read_only: true`
@@ -89,43 +111,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.7.1] - 2026-07-06
 
 ### Added
+
 - **Frontmatter Healer**: `power heal <path>` — auto-fills missing fields with `--no-dry-run` and automatic backup
 - **Markdown Quality Checks**: `power markdown-check <path>` — trailing whitespace, list markers, header jumps, code block language
 - **MCP tools**: `heal_frontmatter_tool` and `check_markdown_tool`
 - **Extended ROT Audit (A2)**: content dedup, link rot checks, freshness scoring, usage tracking
 
 ### Changed
+
 - **Test suite expanded**: 198 → 270 tests
 - **11 CLI commands** and **11 MCP tools**
 
 ## [1.7.0] - 2026-07-06
 
 ### Added
+
 - **ROT Audit**, **Auto-Archive**, **Relation Suggestions**, **Cron Maintenance**
 
 ## [1.5.1] - 2026-07-03
 
 ### Added
+
 - Post-Migration Self-Maintenance, empty folder support in hierarchical index
 
 ## [1.5.0] - 2026-07-03
 
 ### Added
+
 - `src/` layout migration, `power search` CLI, OIDC Trusted Publishing, CodeQL SAST, GitHub Pages docs, FastMCP migration
 
 ## [1.4.0] - 2026-07-02
 
 ### Added
+
 - CLI entry point (`power` command), init/lint/index/ingest
 
 ## [1.3.0] - 2026-07-02
 
 ### Added
+
 - `power_core` package, Pydantic v2 schemas, CI/CD
 
 ## [1.2.2] - 2026-07-02
 
 ### Fixed
+
 - Initial public release
 
 [2.0.3]: https://github.com/weby-homelab/power-framework/compare/v2.0.2...v2.0.3
