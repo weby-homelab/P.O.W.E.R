@@ -61,6 +61,10 @@ from power_framework.core import (
 )
 from power_framework.core.constants import SKIP_FILES
 from power_framework.core.ignore import should_skip
+from power_framework.core.index_worker import (
+    ensure_indexer_running,
+    set_vault_dir,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -231,7 +235,12 @@ async def search_vault_tool(
 
     def _do_search() -> str:
         results = search_vault(path, query, max_results=max_results, mode=search_mode)
-        return format_search_results(results, query, mode=search_mode)
+        return format_search_results(results, query, mode=search_mode, vault_dir=path)
+
+    # Performance Plan §1: start the background indexer and register the vault
+    # so the hot search path stays fast while indexing proceeds asynchronously.
+    set_vault_dir(path)
+    ensure_indexer_running()
 
     return await asyncio.to_thread(_do_search)
 

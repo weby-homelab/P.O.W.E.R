@@ -169,6 +169,21 @@ def get_cache_dir() -> Path:
     return cache_dir
 
 
+# Performance Plan §2: pin the fastembed model weight cache to a stable,
+# persistent location (NOT /tmp) so embedding model files are downloaded once
+# and reused across runs/sessions instead of being re-fetched on every cold
+# start.
+def get_embedding_cache_dir() -> Path:
+    """Return a persistent cache dir for embedding model weights."""
+    cache_dir = get_cache_dir() / "embeddings"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    return cache_dir
+
+
+# Ensure fastembed (and qwen3-embed) use the persistent cache dir.
+os.environ.setdefault("FASTEMBED_CACHE_DIR", str(get_embedding_cache_dir()))
+
+
 def validate_path_in_vault(filepath: Path, vault_dir: Path) -> Path:
     """Validate that a file path is within the vault directory (path traversal protection).
 
