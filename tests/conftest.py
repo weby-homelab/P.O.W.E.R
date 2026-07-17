@@ -11,6 +11,18 @@ from pathlib import Path  # noqa: TC003
 import pytest
 
 
+@pytest.fixture(autouse=True)
+def isolated_search_db(tmp_path: Path, monkeypatch):
+    """Isolate the shared search index DB so tests don't cross-contaminate.
+
+    Each test gets its own power_search.db in a temp dir (Performance Plan §1
+    background indexer uses POWER_SEARCH_DB when set).
+    """
+    db = tmp_path / "power_search.db"
+    monkeypatch.setenv("POWER_SEARCH_DB", str(db))
+    yield db
+
+
 @pytest.fixture
 def sample_vault(tmp_path: Path) -> Path:
     """Create a sample vault directory with valid OKF notes."""

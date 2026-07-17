@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import logging
 import os
+import sqlite3
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -20,6 +21,7 @@ from pathlib import Path
 from .constants import SKIP_FILES
 from .healer import heal_vault
 from .ignore import should_skip
+from .index_worker import set_vault_dir
 from .indexer import generate_log_initial, run_generate_hierarchical_index
 from .linter import archive_stale_notes, run_lint_report, run_rot_report, run_status_report
 from .markdown_checks import check_all as check_markdown_issues
@@ -182,9 +184,42 @@ def _cmd_search(args: argparse.Namespace) -> int:
     mode = args.mode
 
     results = search_vault(vault_dir, query, max_results=max_results, mode=mode)
-    report = format_search_results(results, query, mode=mode)
+    report = format_search_results(results, query, mode=mode, vault_dir=vault_dir)
     print(report)
     return 0
+
+
+def _cmd_sync(args: argparse.Namespace) -> int:
+    """Synchronously build the search index for the vault (FTS + embeddings)."""
+    vault_dir = _resolve_path(args.path)
+    if not vault_dir.exists():
+        logger.error("Vault not found: %s", vault_dir)
+        return 1
+
+    from .searcher import _sync_vault_to_db
+
+    set_vault_dir(vault_dir)
+    sync_embeddings = not getattr(args, "fts_only", False)
+    logger.info(
+        "Building %s index for %s ...",
+        "semantic" if sync_embeddings else "fts",
+        vault_dir,
+    )
+    _sync_vault_to_db(vault_dir, _open_conn(), sync_embeddings=sync_embeddings)
+    logger.info("Index build complete.")
+    return 0
+
+
+def _open_conn() -> sqlite3.Connection:
+    from .searcher import _init_db
+    from .utils import get_cache_dir
+
+    db_path = get_cache_dir() / "power_search.db"
+    conn = sqlite3.connect(str(db_path), timeout=30)
+    conn.execute("PRAGMA busy_timeout=30000")
+    conn.execute("PRAGMA journal_mode=WAL")
+    _init_db(conn)
+    return conn
 
 
 def _cmd_rot(args: argparse.Namespace) -> int:
@@ -285,6 +320,7 @@ def _cmd_rename(args: argparse.Namespace) -> int:
         new_file.parent.mkdir(parents=True, exist_ok=True)
         try:
             import os
+
             os.rename(old_file, new_file)
             logger.info("Physically renamed %s to %s", old_rel, new_rel)
         except Exception as e:
@@ -295,6 +331,7 @@ def _cmd_rename(args: argparse.Namespace) -> int:
 
     # 2. Propagate rename references
     from .healer import propagate_rename
+
     updated_count, logs = propagate_rename(vault_dir, old_rel, new_rel, dry_run=dry_run)
 
     if logs:
@@ -426,6 +463,18 @@ def main() -> None:
         help='Search mode: "fts" (BM25, default), "vector" (TF cosine), "hybrid" (RRF merged), "semantic" (dense embedding), "hybrid_reranked" (RRF + cross-encoder)',
     )
     p_search.set_defaults(func=_cmd_search)
+
+    p_sync = subparsers.add_parser(
+        "sync", help="Build the search index for the vault (FTS + dense embeddings)"
+    )
+    p_sync.add_argument("path", help="Path to the vault directory")
+    p_sync.add_argument(
+        "--fts-only",
+        action="store_true",
+        default=False,
+        help="Only build the lightweight FTS index (skip embedding generation)",
+    )
+    p_sync.set_defaults(func=_cmd_sync)
 
     p_rot = subparsers.add_parser("rot", help="Run ROT (Redundant, Outdated, Trivial) audit")
     p_rot.add_argument("path", help="Path to the vault directory")
