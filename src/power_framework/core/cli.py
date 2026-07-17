@@ -50,7 +50,7 @@ def _resolve_path(path_str: str) -> Path:
     """Resolve a vault path from CLI argument or environment variable."""
     if path_str:
         return Path(path_str).expanduser().resolve()
-    env_val = os.getenv("POWER_VAULT_DIR")
+    env_val = os.getenv("POWER_VAULT_DIR") or os.getenv("POWER_VAULT_PATH")
     if env_val:
         return Path(env_val).resolve()
     return Path.cwd().resolve()

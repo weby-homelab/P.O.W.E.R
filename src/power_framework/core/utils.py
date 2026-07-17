@@ -60,7 +60,7 @@ def resolve_vault_path(
     if explicit:
         return validate_vault_path(explicit)
 
-    env_val = os.getenv(env_var)
+    env_val = os.getenv(env_var) or os.getenv("POWER_VAULT_PATH")
     if env_val:
         return validate_vault_path(env_val)
 
@@ -190,7 +190,7 @@ try:
 
     __version__ = _get_version("power-framework")
 except Exception:
-    __version__ = "2.1.1"
+    __version__ = "2.1.2"
 
 
 def run_opencode_cli(prompt: str) -> str:
