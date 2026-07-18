@@ -200,9 +200,6 @@ def _scan_and_search(vault_dir: Path, terms: list[str]) -> list[SearchResult]:
     return results
 
 
-
-
-
 def _sync_vault_to_db(
     vault_dir: Path, conn: sqlite3.Connection, sync_embeddings: bool = False
 ) -> None:
