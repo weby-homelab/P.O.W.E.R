@@ -5,6 +5,43 @@ All notable changes to the P.O.W.E.R. Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-07-18
+
+### Added
+
+- **Low-RAM sync (OOM fix)**: `_sync_vault_to_db` now embeds documents and chunks
+  in **batches** via `embed_batch` instead of one `embed()` call per item. Peak
+  RAM is bounded by `POWER_EMBED_BATCH_SIZE` (default `32`), not vault size.
+- **Adaptive batch shrinking**: on `MemoryError` the batch size halves and the
+  batch is retried, so a sync survives memory pressure instead of crashing.
+- **Thread capping**: the embedding engine is pinned to `POWER_EMBED_NUM_THREADS`
+  (default `2`) via `OMP_NUM_THREADS` / `OPENBLAS_NUM_THREADS` to keep low-core
+  CPUs responsive.
+- **Process vmem backstop (opt-in)**: `power sync` can apply an `RLIMIT_AS` cap
+  via `POWER_SYNC_VMEM_LIMIT_MB` (default `0` = disabled) so a runaway batch
+  cannot trigger the kernel OOM-killer. Disabled by default because some backends
+  (e.g. Qwen3-0.6B ONNX) need >6 GB for their inference arena.
+- **Streamed DB commits**: vectors are committed every `POWER_EMBED_COMMIT_EVERY`
+  items (default `50`), preventing the SQLite WAL from buffering the whole vault
+  (which previously spiked ZFS write interrupts).
+- **Graceful degradation**: if even `batch_size=1` cannot be allocated (backend
+  arena exceeds RAM), the item is **skipped and logged** instead of aborting the
+  whole sync.
+- **Low-RAM model matrix** documented in `OOM_RECOVERY_PROTOCOL.md`: default
+  `fastembed` MiniLM-L12 (~470 MB, safe on 8 GB) vs opt-in `qwen3` 0.6B ONNX
+  (needs >=12 GB).
+- **`OOM_RECOVERY_PROTOCOL.md`** with low-RAM deployment guidance and a
+  centralized `remote-embedding` server option.
+- **`tests/test_low_ram_sync.py`** regression guard: asserts batch embedding is
+  used, survives simulated allocation failure, and skips embedding in FTS-only mode.
+
+### Changed
+
+- Default `POWER_EMBED_BATCH_SIZE` lowered to `8` (was per-item) and the sync path
+  now batches doc + chunk embeddings instead of one `embed()` call per item.
+- Background `index_worker` and `power sync` inherit the same bounded-memory
+  embedding path.
+
 ## [2.1.2] - 2026-07-17
 
 ### Fixed

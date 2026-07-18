@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import logging
 import os
+import resource
 import sqlite3
 import sys
 from datetime import datetime, timezone
@@ -200,6 +201,24 @@ def _cmd_sync(args: argparse.Namespace) -> int:
 
     set_vault_dir(vault_dir)
     sync_embeddings = not getattr(args, "fts_only", False)
+
+    # v2.2.0 low-RAM guard: cap the address space so an over-sized embedding
+    # batch cannot trigger the kernel OOM-killer and take down the host. This is
+    # an OPT-IN backstop (default 0 = disabled) because some backends (e.g.
+    # Qwen3-0.6B ONNX) legitimately need >6 GB for their inference arena. Enable
+    # it on tight 8 GB hosts via POWER_SYNC_VMEM_LIMIT_MB=6144.
+    vmem_limit_mb = int(os.getenv("POWER_SYNC_VMEM_LIMIT_MB", "0"))
+    if vmem_limit_mb and sync_embeddings and hasattr(resource, "RLIMIT_AS"):
+        try:
+            _, hard = resource.getrlimit(resource.RLIMIT_AS)
+            new_soft = (
+                min(vmem_limit_mb * 1024 * 1024, hard) if hard > 0 else vmem_limit_mb * 1024 * 1024
+            )
+            resource.setrlimit(resource.RLIMIT_AS, (new_soft, hard))
+            logger.info("Applied virtual-memory cap: %d MB", vmem_limit_mb)
+        except (ValueError, OSError) as e:  # pragma: no cover
+            logger.warning("Could not apply vmem cap: %s", e)
+
     logger.info(
         "Building %s index for %s ...",
         "semantic" if sync_embeddings else "fts",

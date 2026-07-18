@@ -393,6 +393,24 @@ For detailed analysis and benchmarks of the P.O.W.E.R. framework:
 - [Vector Search Degradation & Scalability Limits Analysis](docs/tests/P.O.W.E.R.2.0.1-TEST-2.md) — Comparison of linear NumPy search vs SIMD C `sqlite-vec`, graph-based HNSW, and Qdrant database.
 - [AI Agent Memory Benchmark & SOTA Competency Report (v2.0.3-TEST)](docs/tests/P.O.W.E.R.2.0.3-TEST.md) — Multi-turn incremental evaluations covering MemoryAgentBench (ICLR 2026), LoCoMo, LongMemEval, and BEAM.
 
+## Low-RAM Deployment (8–12 GB)
+
+`power sync` builds dense embeddings for the whole vault. To stay safely under
+RAM limits on small hosts, v2.2.0 batches embeddings and degrades gracefully
+instead of crashing. Key knobs (see [`OOM_RECOVERY_PROTOCOL.md`](OOM_RECOVERY_PROTOCOL.md)):
+
+```bash
+export POWER_EMBED_PROVIDER=fastembed        # default MiniLM-L12 (~470 MB, safe on 8 GB)
+export POWER_EMBED_NUM_THREADS=2             # cap CPU threads on low-core boxes
+export POWER_EMBED_BATCH_SIZE=16             # peak RAM bound; halves automatically on pressure
+# export POWER_SYNC_VMEM_LIMIT_MB=6144       # opt-in hard backstop (0 = disabled)
+```
+
+The default model is the multilingual MiniLM-L12 (≈8 GB safe). For better
+UA↔EN quality on **≥12 GB** hosts, opt into the Qwen3-0.6B ONNX backend
+(`POWER_EMBED_PROVIDER=qwen3`) — note it allocates a ~2.3 GB ONNXRuntime
+arena on CPU, so it is not suitable for 8 GB nodes.
+
 ## License
 
 GPLv3 — Built in Ukraine ⚡
