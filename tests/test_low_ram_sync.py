@@ -146,3 +146,41 @@ def test_sync_fts_only_skips_embedding(monkeypatch, tmp_path):
     cur.execute("SELECT COUNT(*) FROM fts_notes")
     assert cur.fetchone()[0] == 5
     conn.close()
+
+
+def test_fastembed_parallel_is_bounded_not_all_cores(monkeypatch, tmp_path):
+    """embed_batch must cap fastembed ``parallel`` to EMBED_NUM_THREADS.
+
+    Regresses the 32 GB RSS incident on a 20-core host: fastembed's
+    ``parallel=0`` spawned one model subprocess per core (20 copies of the
+    MiniLM ONNX model + arena), ballooning RSS to ~30 GB.
+    """
+    from power_framework.core import embeddings
+
+    captured = {}
+
+    class _FakeModel:
+        def embed(self, texts, batch_size=32, parallel=0):
+            captured["parallel"] = parallel
+            captured["batch_size"] = batch_size
+            for _ in texts:
+                yield [0.1, 0.2, 0.3]
+
+    class _FakeManager(embeddings.FastEmbedManager):
+        def _lazy_init(self):
+            self._model = _FakeModel()
+
+    monkeypatch.setenv("POWER_EMBED_NUM_THREADS", "2")
+    # Re-import so EMBED_NUM_THREADS is read from the patched env.
+    import importlib
+
+    embeddings = importlib.reload(embeddings)
+    monkeypatch.setattr(embeddings, "EMBED_NUM_THREADS", 2)
+
+    mgr = _FakeManager()
+    list(mgr.embed_batch(["a", "b", "c"], batch_size=8))
+
+    assert captured["parallel"] == 2, (
+        f"expected parallel=2 (bounded), got {captured.get('parallel')}"
+    )
+    assert captured["parallel"] != 0, "parallel=0 spawns one process per core (OOM risk)"
