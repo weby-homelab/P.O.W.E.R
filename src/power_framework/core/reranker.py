@@ -11,9 +11,7 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_RERANKER_MODEL = "jinaai/jina-reranker-v2-base-multilingual"
 
-QWEN3_RERANKER_MODEL = os.getenv(
-    "POWER_QWEN3_RERANKER_MODEL", "n24q02m/Qwen3-Reranker-0.6B-ONNX"
-)
+QWEN3_RERANKER_MODEL = os.getenv("POWER_QWEN3_RERANKER_MODEL", "n24q02m/Qwen3-Reranker-0.6B-ONNX")
 
 
 class RerankerManager:
