@@ -8,8 +8,6 @@ import json
 import time
 import sys
 from pathlib import Path
-from dataclasses import dataclass, field
-from typing import Optional
 import math
 
 VAULT_PATH = "/root/geminicli/brain"
