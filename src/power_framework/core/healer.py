@@ -352,13 +352,15 @@ def propagate_rename(
             note_type = fm_data.get("type")
             title = fm_data.get("title")
             description = fm_data.get("description")
-            timestamp = fm_data.get("timestamp")
-
-            if isinstance(timestamp, str):
+            raw_timestamp = fm_data.get("timestamp")
+            parsed_timestamp: datetime | None = None
+            if isinstance(raw_timestamp, datetime):
+                parsed_timestamp = raw_timestamp
+            elif isinstance(raw_timestamp, str):
                 with contextlib.suppress(ValueError):
-                    timestamp = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+                    parsed_timestamp = datetime.fromisoformat(raw_timestamp.replace("Z", "+00:00"))
 
-            new_fm = _format_frontmatter(fm_data, note_type, title, description, timestamp)
+            new_fm = _format_frontmatter(fm_data, note_type, title, description, parsed_timestamp)
             healed = re.sub(
                 r"^---.*?\n---\n?",
                 new_fm + "\n",

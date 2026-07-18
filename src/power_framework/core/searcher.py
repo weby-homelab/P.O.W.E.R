@@ -314,7 +314,7 @@ def _sync_vault_to_db(
 
     # v2.2.0: collect changed files first, then embed in batches. This avoids
     # holding the embedding model AND all vectors in memory at once.
-    changed: list[tuple[str, str, object, str]] = []  # (rel_path, content, metadata, mtime)
+    changed: list[tuple[str, str, OKFMetadata, float]] = []  # (rel_path, content, metadata, mtime)
     for idx, (rel_path, mtime) in enumerate(disk_files.items()):
         if idx % 50 == 0:
             logger.info("Sync scan: %d/%d (%s)", idx, len(disk_files), rel_path)
@@ -424,7 +424,7 @@ def _embed_and_store(embedder, cursor, conn, doc_items, chunk_items) -> None:
     batch_size = int(os.getenv("POWER_EMBED_BATCH_SIZE", "8"))
     commit_every = int(os.getenv("POWER_EMBED_COMMIT_EVERY", "50"))
 
-    def _embed_retry(texts: list[str], bs: int) -> list | None:
+    def _embed_retry(texts: list[str], bs: int) -> list[list[float]] | None:
         """Embed ``texts`` with adaptive halving on any allocation failure.
 
         Returns the vectors, or ``None`` if even ``batch_size=1`` cannot be
