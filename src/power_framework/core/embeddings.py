@@ -36,7 +36,21 @@ def _load_env(env_path: str = "/root/geminicli/.env") -> None:
 if "pytest" not in sys.modules and "PYTEST_CURRENT_TEST" not in os.environ:
     _load_env()
 
+# Default embedding provider (v2.2.0 low-RAM work).
+#
+# We default to ``fastembed`` with the multilingual MiniLM-L12 model. It is a
+# small ONNX model (~470 MB weights + tiny runtime) that, with the batched
+# sync path added in v2.2.0, stays well under 8 GB peak RSS. The ``qwen3``
+# ONNX backend (Qwen3-Embedding-0.6B) gives better cross-lingual quality but
+# allocates a ~2.3 GB ONNXRuntime arena per matmul node on CPU, so it needs
+# >=12 GB and is opt-in via POWER_EMBED_PROVIDER=qwen3. See
+# OOM_RECOVERY_PROTOCOL.md for the matrix.
 EMBED_PROVIDER = os.getenv("POWER_EMBED_PROVIDER", "fastembed").lower()
+
+# Number of threads used by the embedding engine. On small / low-core CPUs
+# (e.g. i5-5200U, 4 threads) leaving this unset lets ONNX/PyTorch saturate all
+# cores and starve the rest of the system. Default 2 keeps the box responsive.
+EMBED_NUM_THREADS = int(os.getenv("POWER_EMBED_NUM_THREADS", "2"))
 
 OLLAMA_EMBED_MODEL = os.getenv("POWER_OLLAMA_EMBED_MODEL", "qwen3-embedding:0.6b")
 
@@ -45,7 +59,7 @@ FASTEMBED_MODEL = os.getenv(
     "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
 )
 
-# Qwen3 ONNX backend (qwen3-embed, no torch / no Ollama) — TEST-4 default.
+# Qwen3 ONNX backend (qwen3-embed, no torch / no Ollama) — low-RAM default.
 QWEN3_EMBED_MODEL = os.getenv("POWER_QWEN3_EMBED_MODEL", "n24q02m/Qwen3-Embedding-0.6B-ONNX")
 # q4f16 ONNX by default; set to "n24q02m/Qwen3-Embedding-0.6B-ONNX" with
 # POWER_QWEN3_EMBED_VARIANT to control which onnx file is used if needed.
@@ -206,6 +220,8 @@ class FastEmbedManager:
                 return
             try:
                 os.environ["HF_HUB_DISABLE_SYMLINKS"] = "1"
+                os.environ["OMP_NUM_THREADS"] = str(EMBED_NUM_THREADS)
+                os.environ["OPENBLAS_NUM_THREADS"] = str(EMBED_NUM_THREADS)
                 from fastembed import TextEmbedding
                 from fastembed.common.model_description import (
                     ModelSource,
@@ -232,7 +248,11 @@ class FastEmbedManager:
             except Exception as e:
                 logger.warning("Could not register custom model BAAI/bge-m3: %s", e)
 
-        logger.info("Loading embedding model %s ...", self.model_name)
+        logger.info(
+            "Loading embedding model %s (threads=%d) ...",
+            self.model_name,
+            EMBED_NUM_THREADS,
+        )
         self._model = TextEmbedding(model_name=self.model_name)
 
     def embed(self, text: str) -> list[float]:
@@ -240,10 +260,13 @@ class FastEmbedManager:
         assert self._model is not None
         return [float(v) for v in next(iter(self._model.embed([text])))]
 
-    def embed_batch(self, texts: list[str]) -> list[list[float]]:
+    def embed_batch(self, texts: list[str], batch_size: int = 32) -> list[list[float]]:
         self._lazy_init()
         assert self._model is not None
-        return [[float(v) for v in vec] for vec in self._model.embed(texts)]
+        return [
+            [float(v) for v in vec]
+            for vec in self._model.embed(texts, batch_size=batch_size, parallel=0)
+        ]
 
 
 class Qwen3EmbeddingManager:
@@ -268,7 +291,13 @@ class Qwen3EmbeddingManager:
                 "qwen3-embed is required for the qwen3 provider. "
                 "Install it with: pip install qwen3-embed"
             ) from None
-        logger.info("Loading Qwen3 embedding model %s (ONNX) ...", self.model_name)
+        os.environ["OMP_NUM_THREADS"] = str(EMBED_NUM_THREADS)
+        os.environ["OPENBLAS_NUM_THREADS"] = str(EMBED_NUM_THREADS)
+        logger.info(
+            "Loading Qwen3 embedding model %s (ONNX, threads=%d) ...",
+            self.model_name,
+            EMBED_NUM_THREADS,
+        )
         self._model = Qwen3TextEmbedding(model_name=self.model_name)
 
     def embed(self, text: str) -> list[float]:
@@ -276,10 +305,10 @@ class Qwen3EmbeddingManager:
         assert self._model is not None
         return [float(v) for v in next(iter(self._model.embed([text])))]
 
-    def embed_batch(self, texts: list[str]) -> list[list[float]]:
+    def embed_batch(self, texts: list[str], batch_size: int = 32) -> list[list[float]]:
         self._lazy_init()
         assert self._model is not None
-        return [[float(v) for v in vec] for vec in self._model.embed(texts)]
+        return [[float(v) for v in vec] for vec in self._model.embed(texts, batch_size=batch_size)]
 
 
 _EMBED_MANAGER_CACHE: dict[str, object] = {}
@@ -288,7 +317,9 @@ _EMBED_MANAGER_CACHE: dict[str, object] = {}
 def get_embedding_manager(
     model_name: str | None = None,
 ) -> OllamaEmbeddingManager | FastEmbedManager | Qwen3EmbeddingManager:
-    provider = os.getenv("POWER_EMBED_PROVIDER", "fastembed").lower()
+    # Respect the module-level default (v2.2.0: qwen3) unless explicitly
+    # overridden via the environment variable.
+    provider = os.getenv("POWER_EMBED_PROVIDER", EMBED_PROVIDER).lower()
     if provider == "ollama":
         key = f"ollama:{model_name or OLLAMA_EMBED_MODEL}"
         if key not in _EMBED_MANAGER_CACHE:

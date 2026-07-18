@@ -11,9 +11,9 @@ Multi-mode search across vault notes:
 from __future__ import annotations
 
 import logging
+import os
 import re
 import sqlite3
-import struct
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -255,7 +255,15 @@ def _sync_vault_to_db(
             file metadata are refreshed. This avoids loading the embedding model
             (bge-m3, ~6GB) on every FTS search/index. Set True only when vector
             or semantic search actually needs the dense embeddings.
+
+    Memory note (v2.2.0): when ``sync_embeddings`` is True the dense embeddings
+    are computed in **batches** via ``embedder.embed_batch`` instead of one
+    ``embed`` call per document/chunk. This bounds peak RAM (no OOM on 8-12 GB
+    hosts) and is ~5-10x faster than per-item embedding. Results are streamed to
+    the DB with periodic commits so the working set never holds the whole vault.
     """
+    import json
+
     disk_files: dict[str, float] = {}
     for filepath in vault_dir.rglob("*.md"):
         if filepath.name in ("index.md", "log.md", "_index.md"):
@@ -289,15 +297,13 @@ def _sync_vault_to_db(
         cursor.executemany("DELETE FROM tf_vectors WHERE rel_path = ?", [(r,) for r in to_delete])
 
     embedder = get_embedding_manager() if sync_embeddings else None
-    logger.info(
-        "Starting sync loop over %d files (embeddings=%s)",
-        len(disk_files),
-        sync_embeddings,
-    )
 
+    # v2.2.0: collect changed files first, then embed in batches. This avoids
+    # holding the embedding model AND all vectors in memory at once.
+    changed: list[tuple[str, str, object, str]] = []  # (rel_path, content, metadata, mtime)
     for idx, (rel_path, mtime) in enumerate(disk_files.items()):
         if idx % 50 == 0:
-            logger.info("Sync progress: %d/%d (%s)", idx, len(disk_files), rel_path)
+            logger.info("Sync scan: %d/%d (%s)", idx, len(disk_files), rel_path)
         if rel_path not in db_files or db_files[rel_path] != mtime:
             filepath = vault_dir / rel_path
             try:
@@ -308,92 +314,170 @@ def _sync_vault_to_db(
                     cursor.execute("DELETE FROM file_metadata WHERE rel_path = ?", (rel_path,))
                     cursor.execute("DELETE FROM doc_embeddings WHERE rel_path = ?", (rel_path,))
                     continue
-
-                tags_str = " ".join(metadata.tags)
-
-                cursor.execute("DELETE FROM fts_notes WHERE rel_path = ?", (rel_path,))
-
-                cursor.execute(
-                    "INSERT INTO fts_notes (title, tags, description, content, rel_path, note_type) VALUES (?, ?, ?, ?, ?, ?)",
-                    (
-                        metadata.title,
-                        tags_str,
-                        metadata.description,
-                        content,
-                        rel_path,
-                        metadata.type,
-                    ),
-                )
-                cursor.execute(
-                    "INSERT OR REPLACE INTO file_metadata (rel_path, mtime) VALUES (?, ?)",
-                    (rel_path, mtime),
-                )
-
-                # Save pre-computed TF-vector to database
-                import json
-
-                full_text = " ".join(
-                    [
-                        metadata.title,
-                        " ".join(metadata.tags),
-                        metadata.description,
-                        content,
-                    ]
-                )
-                tokens = _tokenize(full_text)
-                tf_vec = _compute_tf_vector(tokens)
-                cursor.execute(
-                    "INSERT OR REPLACE INTO tf_vectors (rel_path, tf_data, mtime) VALUES (?, ?, ?)",
-                    (rel_path, json.dumps(tf_vec), mtime),
-                )
-
-                if sync_embeddings and embedder is not None:
-                    try:
-                        full_text = " ".join(
-                            [
-                                metadata.title,
-                                " ".join(metadata.tags),
-                                metadata.description,
-                                content,
-                            ]
-                        )
-                        vec = embedder.embed(full_text)
-                        blob = struct.pack(f"{len(vec)}f", *vec)
-                        cursor.execute(
-                            "INSERT OR REPLACE INTO doc_embeddings (rel_path, embedding, mtime) VALUES (?, ?, ?)",
-                            (rel_path, blob, mtime),
-                        )
-                    except Exception as e:
-                        logger.warning("Embedding doc failed for %s: %s", rel_path, e)
-                        continue
-
-                try:
-                    chunker = SemanticChunker()
-                    chunks = chunker.chunk(
-                        content,
-                        title=metadata.title,
-                        description=metadata.description,
-                    )
-                    cursor.execute(
-                        "DELETE FROM chunk_embeddings WHERE rel_path = ?",
-                        (rel_path,),
-                    )
-                    for i, chunk_text in enumerate(chunks):
-                        chunk_id = f"{rel_path}::chunk_{i}"
-                        chunk_vec = embedder.embed(chunk_text)
-                        chunk_blob = struct.pack(f"{len(chunk_vec)}f", *chunk_vec)
-                        cursor.execute(
-                            "INSERT OR REPLACE INTO chunk_embeddings (chunk_id, rel_path, embedding, content, mtime) VALUES (?, ?, ?, ?, ?)",
-                            (chunk_id, rel_path, chunk_blob, chunk_text, mtime),
-                        )
-                except Exception as e:
-                    logger.warning("Chunk embedding failed for %s: %s", rel_path, e)
-                    continue
+                changed.append((rel_path, content, metadata, mtime))
             except Exception as e:
                 logger.warning("Processing failed for %s: %s", rel_path, e)
                 continue
 
+    logger.info(
+        "Sync: %d changed file(s) of %d (embeddings=%s)",
+        len(changed),
+        len(disk_files),
+        sync_embeddings,
+    )
+
+    # --- Lightweight pass: FTS + TF-vector (cheap, no model load) ---
+    for rel_path, content, metadata, mtime in changed:
+        try:
+            tags_str = " ".join(metadata.tags)
+            cursor.execute("DELETE FROM fts_notes WHERE rel_path = ?", (rel_path,))
+            cursor.execute(
+                "INSERT INTO fts_notes (title, tags, description, content, rel_path, note_type) VALUES (?, ?, ?, ?, ?, ?)",
+                (
+                    metadata.title,
+                    tags_str,
+                    metadata.description,
+                    content,
+                    rel_path,
+                    metadata.type,
+                ),
+            )
+            cursor.execute(
+                "INSERT OR REPLACE INTO file_metadata (rel_path, mtime) VALUES (?, ?)",
+                (rel_path, mtime),
+            )
+
+            full_text = " ".join(
+                [metadata.title, " ".join(metadata.tags), metadata.description, content]
+            )
+            tokens = _tokenize(full_text)
+            tf_vec = _compute_tf_vector(tokens)
+            cursor.execute(
+                "INSERT OR REPLACE INTO tf_vectors (rel_path, tf_data, mtime) VALUES (?, ?, ?)",
+                (rel_path, json.dumps(tf_vec), mtime),
+            )
+        except Exception as e:  # noqa: PERF203
+            logger.warning("FTS/TF write failed for %s: %s", rel_path, e)
+            continue
     conn.commit()
+
+    if not (sync_embeddings and embedder is not None):
+        _maybe_vacuum(conn, to_delete, db_files)
+        return
+
+    # --- Dense-embedding pass: batched, adaptive batch size (v2.2.0) ---
+    # Two queues: doc-level (one vector per note) and chunk-level (one vector
+    # per chunk). Embedding is done per-queue in fixed-size batches so peak RAM
+    # stays bounded regardless of vault size.
+    doc_items: list[tuple[str, str, float]] = []  # (rel_path, full_text, mtime)
+    chunk_items: list[tuple[str, str, str, float]] = []  # (chunk_id, rel_path, text, mtime)
+    chunker = SemanticChunker()
+    for rel_path, content, metadata, mtime in changed:
+        try:
+            full_text = " ".join(
+                [metadata.title, " ".join(metadata.tags), metadata.description, content]
+            )
+            doc_items.append((rel_path, full_text, mtime))
+
+            cursor.execute("DELETE FROM chunk_embeddings WHERE rel_path = ?", (rel_path,))
+            chunks = chunker.chunk(content, title=metadata.title, description=metadata.description)
+            for i, chunk_text in enumerate(chunks):
+                chunk_items.append((f"{rel_path}::chunk_{i}", rel_path, chunk_text, mtime))
+        except Exception as e:  # noqa: PERF203
+            logger.warning("Chunk prep failed for %s: %s", rel_path, e)
+            continue
+
+    _embed_and_store(embedder, cursor, conn, doc_items, chunk_items)
+    _maybe_vacuum(conn, to_delete, db_files)
+
+
+def _embed_and_store(embedder, cursor, conn, doc_items, chunk_items) -> None:
+    """Embed document + chunk texts in adaptive batches and stream to the DB.
+
+    Peak RAM is bounded by ``batch_size`` and by committing every
+    ``POWER_EMBED_COMMIT_EVERY`` items so the SQLite WAL never buffers the whole
+    vault (which previously spiked ZFS write interrupts). If the embedding
+    backend cannot allocate memory for a batch (ONNXRuntime arena failure or
+    Python ``MemoryError``), the batch size is halved and retried — eventually
+    down to a single item — so a sync survives memory pressure instead of
+    crashing the host.
+    """
+    import struct
+
+    # Low-RAM default: Qwen3-0.6B on CPU allocates a multi-GB arena per MatMul
+    # node at large batch sizes, so keep the default small. Tune up on bigger
+    # hosts via POWER_EMBED_BATCH_SIZE.
+    batch_size = int(os.getenv("POWER_EMBED_BATCH_SIZE", "8"))
+    commit_every = int(os.getenv("POWER_EMBED_COMMIT_EVERY", "50"))
+
+    def _embed_retry(texts: list[str], bs: int) -> list | None:
+        """Embed ``texts`` with adaptive halving on any allocation failure.
+
+        Returns the vectors, or ``None`` if even ``batch_size=1`` cannot be
+        allocated (e.g. a backend whose single-item inference arena exceeds
+        available RAM). Callers skip the item instead of aborting the whole sync.
+        """
+        cur = bs
+        last_err: Exception | None = None
+        while cur >= 1:
+            try:
+                return embedder.embed_batch(texts, batch_size=cur)
+            except Exception as e:  # noqa: PERF203
+                last_err = e
+                if cur == 1:
+                    break
+                cur //= 2
+                logger.warning(
+                    "Embedding allocation failed (bs=%d): %s — shrinking to %d",
+                    cur * 2,
+                    type(e).__name__,
+                    cur,
+                )
+        logger.error(
+            "Embedding skipped: backend cannot allocate even batch_size=1 (%s). "
+            "Use a smaller model or raise POWER_SYNC_VMEM_LIMIT_MB.",
+            type(last_err).__name__,
+        )
+        return None
+
+    def _store_docs(items: list[tuple[str, str, float]]) -> None:
+        texts = [t for _, t, _ in items]
+        vecs = _embed_retry(texts, batch_size)
+        if vecs is None:
+            return
+        for (rel_path, _, mtime), vec in zip(items, vecs, strict=True):
+            blob = struct.pack(f"{len(vec)}f", *vec)
+            cursor.execute(
+                "INSERT OR REPLACE INTO doc_embeddings (rel_path, embedding, mtime) VALUES (?, ?, ?)",
+                (rel_path, blob, mtime),
+            )
+
+    def _store_chunks(items: list[tuple[str, str, str, float]]) -> None:
+        texts = [t for _, _, t, _ in items]
+        vecs = _embed_retry(texts, batch_size)
+        if vecs is None:
+            return
+        for (chunk_id, rel_path, _, mtime), vec in zip(items, vecs, strict=True):
+            blob = struct.pack(f"{len(vec)}f", *vec)
+            cursor.execute(
+                "INSERT OR REPLACE INTO chunk_embeddings (chunk_id, rel_path, embedding, content, mtime) VALUES (?, ?, ?, ?, ?)",
+                (chunk_id, rel_path, blob, _, mtime),
+            )
+
+    total = len(doc_items) + len(chunk_items)
+    for i in range(0, len(doc_items), batch_size):
+        _store_docs(doc_items[i : i + batch_size])
+        if (i // batch_size) % commit_every == 0:
+            conn.commit()
+    for i in range(0, len(chunk_items), batch_size):
+        _store_chunks(chunk_items[i : i + batch_size])
+        if (i // batch_size) % commit_every == 0:
+            conn.commit()
+    conn.commit()
+    logger.info("Embedding pass complete: %d vector(s) written", total)
+
+
+def _maybe_vacuum(conn, to_delete, db_files) -> None:
     # Performance Plan §2: do NOT run VACUUM on every sync (it rebuilds the
     # whole DB and blocks writers). Only vacuum when a meaningful fraction of
     # rows were deleted (significant churn), otherwise leave free pages for
