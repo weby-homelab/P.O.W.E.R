@@ -411,6 +411,12 @@ UA↔EN quality on **≥12 GB** hosts, opt into the Qwen3-0.6B ONNX backend
 (`POWER_EMBED_PROVIDER=qwen3`) — note it allocates a ~2.3 GB ONNXRuntime
 arena on CPU, so it is not suitable for 8 GB nodes.
 
+> **⚠️ `POWER_EMBED_NUM_THREADS` is mandatory on big hosts.** fastembed's
+> `parallel=0` spawns one model subprocess **per CPU core**. On a 20-core box
+> that loaded 20 copies of the model → **~32 GB RSS**. POWER now caps this to
+> `POWER_EMBED_NUM_THREADS` (default 2, peak ~700 MB). Never raise it above
+> what your RAM allows (cores × ~1.5 GB).
+
 ## License
 
 GPLv3 — Built in Ukraine ⚡

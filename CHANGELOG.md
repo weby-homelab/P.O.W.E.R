@@ -5,6 +5,18 @@ All notable changes to the P.O.W.E.R. Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.1] - 2026-07-18
+
+### Fixed
+
+- **Critical RAM blowup on multi-core hosts**: `FastEmbedManager.embed_batch`
+  passed `parallel=0` to fastembed, which spawns **one model subprocess per
+  CPU core**. On a 20-core host this loaded 20 copies of the MiniLM ONNX model
+    - ONNXRuntime arena, ballooning RSS to **~32 GB** (observed on `ws`). Now
+      `parallel` is bounded to `POWER_EMBED_NUM_THREADS` (default 2), so peak RSS
+      drops to **~700 MB** regardless of core count.
+- Added regression test `test_fastembed_parallel_is_bounded_not_all_cores`.
+
 ## [2.2.0] - 2026-07-18
 
 ### Added

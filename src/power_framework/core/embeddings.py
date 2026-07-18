@@ -263,9 +263,14 @@ class FastEmbedManager:
     def embed_batch(self, texts: list[str], batch_size: int = 32) -> list[list[float]]:
         self._lazy_init()
         assert self._model is not None
+        # NOTE: parallel=0 makes fastembed spawn one subprocess per CPU core,
+        # each loading its own copy of the model + ONNXRuntime arena. On a
+        # many-core host (e.g. 20 cores) this balloons RSS to ~30 GB and can
+        # trigger OOM on small nodes. Bound it to EMBED_NUM_THREADS instead.
+        parallel = max(1, EMBED_NUM_THREADS)
         return [
             [float(v) for v in vec]
-            for vec in self._model.embed(texts, batch_size=batch_size, parallel=0)
+            for vec in self._model.embed(texts, batch_size=batch_size, parallel=parallel)
         ]
 
 
