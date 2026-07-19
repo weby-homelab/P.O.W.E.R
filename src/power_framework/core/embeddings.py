@@ -318,15 +318,34 @@ _EMBED_MANAGER_CACHE: dict[str, object] = {}
 def get_embedding_manager(
     model_name: str | None = None,
 ) -> OllamaEmbeddingManager | FastEmbedManager | Qwen3EmbeddingManager:
-    # Respect the module-level default (v2.2.0: qwen3) unless explicitly
+    # Respect the module-level default (v2.2.3: qwen3) unless explicitly
     # overridden via the environment variable.
     provider = os.getenv("POWER_EMBED_PROVIDER", EMBED_PROVIDER).lower()
-    if provider == "ollama":
+
+    # Graceful fallback: if the qwen3 backend is selected but `qwen3-embed`
+    # is not installed (e.g. minimal install / CI without the extra), fall
+    # back to fastembed instead of raising at import time. This keeps the CLI
+    # and tests working everywhere.
+    effective_provider = provider
+    if effective_provider == "qwen3":
+        try:
+            from qwen3_embed import TextEmbedding as _Q  # noqa: F401
+
+            _ = _Q
+        except ImportError:
+            logger.warning(
+                "POWER_EMBED_PROVIDER=qwen3 but `qwen3-embed` is not installed. "
+                "Falling back to fastembed (MiniLM). Install with: pip install "
+                "'power-framework[qwen3]'."
+            )
+            effective_provider = "fastembed"
+
+    if effective_provider == "ollama":
         key = f"ollama:{model_name or OLLAMA_EMBED_MODEL}"
         if key not in _EMBED_MANAGER_CACHE:
             _EMBED_MANAGER_CACHE[key] = OllamaEmbeddingManager(model_name or OLLAMA_EMBED_MODEL)
         return _EMBED_MANAGER_CACHE[key]  # type: ignore[return-value]
-    if provider == "qwen3":
+    if effective_provider == "qwen3":
         key = f"qwen3:{model_name or QWEN3_EMBED_MODEL}"
         if key not in _EMBED_MANAGER_CACHE:
             _EMBED_MANAGER_CACHE[key] = Qwen3EmbeddingManager(model_name or QWEN3_EMBED_MODEL)

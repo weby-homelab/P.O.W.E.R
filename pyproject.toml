@@ -61,6 +61,11 @@ dev = [
     "pre-commit>=4.0.0",
     "pip-audit>=2.7.0",
 ]
+# Qwen3 ONNX backend (1024d, no PyTorch). Optional so minimal installs and
+# CI on small runners keep the light fastembed/MiniLM path available.
+qwen3 = [
+    "qwen3-embed>=1.12.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/weby-homelab/power-framework"
