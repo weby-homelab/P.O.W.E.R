@@ -18,6 +18,7 @@ import sqlite3
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from .chunker import SemanticChunker
 from .db import _init_db
@@ -29,6 +30,9 @@ from .parser import read_file_content, validate_metadata
 from .query_expansion import QueryExpander
 from .utils import get_cache_dir
 
+if TYPE_CHECKING:
+    from .reranker import RerankerProtocol
+
 logger = logging.getLogger(__name__)
 
 # Module-level cross-encoder reranker singleton. The fastembed/qwen3 cross-encoder
@@ -36,10 +40,10 @@ logger = logging.getLogger(__name__)
 # query (as the old code did) reloaded the model on every call, inflating
 # hybrid_reranked latency to 5-40s per query. Caching it here keeps the model
 # resident across queries within a process.
-_reranker_singleton: object | None = None
+_reranker_singleton: RerankerProtocol | None = None
 
 
-def _get_reranker():
+def _get_reranker() -> RerankerProtocol:
     """Return the active reranker (cached), falling back Jina <- ColBERT if needed.
 
     POWER 3.0 Phase 3: ColBERT is opt-in; if it is requested but unavailable we

@@ -314,7 +314,7 @@ class Qwen3EmbeddingManager:
 
     def __init__(self, model_name: str = QWEN3_EMBED_MODEL) -> None:
         self.model_name = model_name
-        self._model = None
+        self._model: Any | None = None
         self._dim = 1024
 
     @property
@@ -537,7 +537,9 @@ def get_embedding_manager(
         if key in _EMBED_MANAGER_CACHE:
             return _EMBED_MANAGER_CACHE[key]  # type: ignore[return-value]
         try:
-            mgr = BGEM3OnnxManager(BGE_M3_ONNX_REPO)
+            mgr: (
+                OllamaEmbeddingManager | FastEmbedManager | Qwen3EmbeddingManager | BGEM3OnnxManager
+            ) = BGEM3OnnxManager(BGE_M3_ONNX_REPO)
             mgr._lazy_init()  # eager probe: fail loudly, not silently
             _EMBED_MANAGER_CACHE[key] = mgr
             return mgr

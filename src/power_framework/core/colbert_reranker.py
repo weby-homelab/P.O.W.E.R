@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import logging
 import os
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +61,7 @@ class ColBERTLateInteractionReranker:
 
     def __init__(self, model_name: str = COLBERT_DEFAULT_MODEL) -> None:
         self.model_name = model_name
-        self._model: object | None = None
+        self._model: Any | None = None
         if not is_colbert_enabled():
             raise ColBERTUnavailableError(
                 "ColBERT backend is opt-in; set POWER_RERANKER=colbert to enable."
@@ -106,6 +107,6 @@ class ColBERTLateInteractionReranker:
             if sim is None:
                 scores.append(0.0)
                 continue
-            max_sim_per_q = sim.max(dim=1).values  # type: ignore[attr-defined]
+            max_sim_per_q = sim.max(dim=1).values
             scores.append(float(max_sim_per_q.sum()))
         return scores

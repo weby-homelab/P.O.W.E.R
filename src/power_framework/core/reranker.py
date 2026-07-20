@@ -2,12 +2,21 @@ from __future__ import annotations
 
 import logging
 import os
+from typing import Protocol
 
 logger = logging.getLogger(__name__)
 
 DEFAULT_RERANKER_MODEL = "jinaai/jina-reranker-v2-base-multilingual"
 
 QWEN3_RERANKER_MODEL = os.getenv("POWER_QWEN3_RERANKER_MODEL", "n24q02m/Qwen3-Reranker-0.6B-ONNX")
+
+
+class RerankerProtocol(Protocol):
+    """Structural type for any reranker backend used by ``get_reranker``."""
+
+    def rerank(self, query: str, documents: list[str]) -> list[float]:
+        """Return a relevance score per document (higher = more relevant)."""
+        ...
 
 
 class RerankerManager:
@@ -44,7 +53,7 @@ class RerankerManager:
         return [float(s) for s in scores]
 
 
-def get_reranker():
+def get_reranker() -> RerankerProtocol:
     """Return the active reranker backend.
 
     POWER 3.0 Phase 3: ColBERT late-interaction is an opt-in, RAM-gated backend
