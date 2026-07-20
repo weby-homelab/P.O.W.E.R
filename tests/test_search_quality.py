@@ -23,6 +23,7 @@ Run:
 from __future__ import annotations
 
 import importlib.util
+import os
 import sys
 from pathlib import Path
 
@@ -30,8 +31,20 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 HARNESS = REPO_ROOT / "scripts" / "check_search_quality.py"
-REAL_VAULT = Path("/root/gemma/brain")
+REAL_VAULT = Path(os.getenv("POWER_VAULT_DIR", "/root/gemma/brain"))
 GATE = 0.50
+
+
+def _vault_present(path: Path) -> bool:
+    """Safe ``Path.exists`` that treats *any* OS error (incl. EACCES) as absent.
+
+    This keeps the bench test skippable in sandboxed CI runners where the
+    hardcoded local vault path may exist but is not readable.
+    """
+    try:
+        return path.exists()
+    except OSError:
+        return False
 
 
 def _load_harness():
@@ -46,7 +59,7 @@ def _load_harness():
 
 
 @pytest.mark.bench
-@pytest.mark.skipif(not REAL_VAULT.exists(), reason="real brain vault not present")
+@pytest.mark.skipif(not _vault_present(REAL_VAULT), reason="real brain vault not present")
 def test_search_quality_gate():
     harness = _load_harness()
     if harness is None:
