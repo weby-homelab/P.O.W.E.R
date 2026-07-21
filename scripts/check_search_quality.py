@@ -5,8 +5,8 @@ This script builds a deterministic ground-truth (GT) relevance set from a vault
 using grep-style content validation (NO LLM / NO API), runs the canonical
 ``search_vault`` reranked pipeline over a curated query set, and scores the run.
 
-PRIMARY metric (POWER 3.0 Phase 3): **UDCG@5** — Utility-Discounted Cumulative
-Gain (see ``power_framework.core.metrics.udcg``), which captures *utility* for an
+Legacy diagnostic metric: normalized discounted lexical gain@5 (see
+``power_framework.core.metrics.discounted_lexical_gain``), which captures a
 LLM RAG reader rather than just graded relevance. SECONDARY: ndcg@5 / recall@5 /
 mrr@5 (via ``ranx``).
 
@@ -432,12 +432,14 @@ def evaluate(
 ) -> dict[str, float]:
     """Build qrels + run, compute metrics, print, and return the metric dict.
 
-    POWER 3.0 Phase 3: UDCG (Utility-Discounted Cumulative Gain) is now the
-    PRIMARY quality metric (see ``power_framework.core.metrics.udcg``). nDCG@5
-    remains the secondary, historically-gated metric.
+    The legacy lexical proxy is diagnostic only; it is not EACL-2026 UDCG and
+    must not be used as a release-quality gate. nDCG@5 remains historical.
     """
     ranx = _ensure_ranx()
-    from power_framework.core.metrics.udcg import normalized_udcg, utilities_from_relevance
+    from power_framework.core.metrics.discounted_lexical_gain import (
+        normalized_discounted_lexical_gain,
+        utilities_from_relevance,
+    )
 
     queries = list((overrides or {}).keys()) or DEFAULT_QUERIES
     qrels = load_or_build_qrels(vault, force=force_qrels, overrides=overrides)
@@ -489,7 +491,7 @@ def evaluate(
             matched = sum(1 for t in terms if t in text)
             grade = int(round(matched / n_terms * 3))  # 0..3 graded relevance
             utilities.extend(utilities_from_relevance([grade], max_relevance=3))
-        per_query_udcg.append(normalized_udcg(utilities, k=5))
+        per_query_udcg.append(normalized_discounted_lexical_gain(utilities, k=5))
     udcg5 = sum(per_query_udcg) / len(per_query_udcg) if per_query_udcg else 0.0
 
     passed = nd >= gate and udcg5 >= udcg_gate
