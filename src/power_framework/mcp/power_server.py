@@ -56,6 +56,7 @@ from power_framework.core import (
     scan_folder_notes,
     search_vault,
     suggest_related,
+    validate_vault_path,
 )
 from power_framework.core import (
     check_all as check_markdown,
@@ -83,9 +84,32 @@ _LOOPBACK_HTTP_HOSTS = frozenset({"127.0.0.1", "::1"})
 
 
 def _get_vault_path(vault_path: str | None = None) -> Path:
-    """Resolve vault path with security validation."""
+    """Resolve a tool vault path without allowing configured-root substitution."""
+    configured_root = os.getenv("POWER_VAULT_DIR")
+    if configured_root:
+        try:
+            root = validate_vault_path(configured_root)
+            if vault_path:
+                requested = validate_vault_path(vault_path, allowed_root=str(root))
+                if requested != root:
+                    raise ValueError("MCP tools may only use the configured vault root")
+        except (FileNotFoundError, NotADirectoryError, ValueError) as exc:
+            raise ToolError("Vault path must match the configured POWER_VAULT_DIR root.") from exc
+        return root
+
     args = {"vault_path": vault_path} if vault_path else {}
     return resolve_vault_path(args)
+
+
+def _require_configured_vault_root() -> Path:
+    """Require a canonical vault root before the MCP server accepts clients."""
+    configured_root = os.getenv("POWER_VAULT_DIR")
+    if not configured_root:
+        raise RuntimeError("POWER_VAULT_DIR must be configured before starting the MCP server")
+    try:
+        return validate_vault_path(configured_root)
+    except (FileNotFoundError, NotADirectoryError, ValueError) as exc:
+        raise RuntimeError("POWER_VAULT_DIR must reference an existing vault directory") from exc
 
 
 def _resolve_note_target(vault_path: Path, name: str) -> Path:
@@ -453,9 +477,11 @@ def run() -> None:
     """
     transport = os.getenv("POWER_MCP_TRANSPORT", "stdio")
     if transport == "http":
+        _require_configured_vault_root()
         host, port = _get_http_transport_config()
         mcp.run(transport="http", host=host, port=port)
     elif transport == "stdio":
+        _require_configured_vault_root()
         mcp.run(transport="stdio")
     else:
         raise ValueError("POWER_MCP_TRANSPORT must be either 'stdio' or 'http'")

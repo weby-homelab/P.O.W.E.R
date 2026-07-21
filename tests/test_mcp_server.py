@@ -133,9 +133,28 @@ async def test_mcp_write_tools_reject_path_traversal(
     assert sentinel.read_text(encoding="utf-8") == "do not modify"
 
 
-def test_http_transport_defaults_to_loopback(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_mcp_tools_reject_vault_root_substitution(
+    sample_vault: Path,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    other_vault = tmp_path / "other_vault"
+    other_vault.mkdir()
+    monkeypatch.setenv("POWER_VAULT_DIR", str(sample_vault))
+
+    with pytest.raises(ToolError, match="configured POWER_VAULT_DIR"):
+        await lint_vault(vault_path=str(other_vault))
+
+    result = await lint_vault(vault_path=str(sample_vault))
+    assert "P.O.W.E.R. Health Lint Report" in result
+
+
+def test_http_transport_defaults_to_loopback(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     run_mock = Mock()
     monkeypatch.setenv("POWER_MCP_TRANSPORT", "http")
+    monkeypatch.setenv("POWER_VAULT_DIR", str(tmp_path))
     monkeypatch.delenv("POWER_MCP_HOST", raising=False)
     monkeypatch.delenv("POWER_MCP_PORT", raising=False)
     monkeypatch.setattr(power_server.mcp, "run", run_mock)
@@ -169,4 +188,12 @@ def test_run_rejects_unknown_transport(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("POWER_MCP_TRANSPORT", "tcp")
 
     with pytest.raises(ValueError, match="POWER_MCP_TRANSPORT"):
+        power_server.run()
+
+
+def test_run_requires_configured_vault_root(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("POWER_MCP_TRANSPORT", "stdio")
+    monkeypatch.delenv("POWER_VAULT_DIR", raising=False)
+
+    with pytest.raises(RuntimeError, match="POWER_VAULT_DIR"):
         power_server.run()

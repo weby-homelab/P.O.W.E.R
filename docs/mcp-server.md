@@ -4,10 +4,14 @@ The P.O.W.E.R. Framework exposes its full functionality via the [Model Context P
 
 ## Transport modes
 
+Every MCP server process requires `POWER_VAULT_DIR` to name one existing vault
+root before it starts. This is the canonical boundary for every tool; a caller
+cannot switch to another vault with the optional `vault_path` parameter.
+
 ### Local (stdio) — default
 
 ```bash
-python -m power_framework.mcp
+POWER_VAULT_DIR=/path/to/your/vault python -m power_framework.mcp
 ```
 
 The server starts with **stdio** transport — ideal for local AI clients like Claude Desktop or OpenCode.
@@ -17,7 +21,7 @@ The server starts with **stdio** transport — ideal for local AI clients like C
 Set `POWER_MCP_TRANSPORT=http` for a local HTTP endpoint on `127.0.0.1:8000`:
 
 ```bash
-POWER_MCP_TRANSPORT=http python -m power_framework.mcp
+POWER_VAULT_DIR=/path/to/your/vault POWER_MCP_TRANSPORT=http python -m power_framework.mcp
 ```
 
 Docker Compose example:
@@ -78,7 +82,7 @@ Run health checks: missing metadata, broken links, orphans, stale notes.
 
 | Parameter    | Type     | Required | Description        |
 | ------------ | -------- | -------- | ------------------ |
-| `vault_path` | `string` | No       | Path to vault root |
+| `vault_path` | `string` | No       | Must equal configured `POWER_VAULT_DIR` |
 
 ### `generate_index`
 
@@ -86,7 +90,7 @@ Compile hierarchical index (`index.md` + per-folder `_index.md` files). Rate lim
 
 | Parameter    | Type     | Required | Description        |
 | ------------ | -------- | -------- | ------------------ |
-| `vault_path` | `string` | No       | Path to vault root |
+| `vault_path` | `string` | No       | Must equal configured `POWER_VAULT_DIR` |
 
 ### `read_sub_index`
 
