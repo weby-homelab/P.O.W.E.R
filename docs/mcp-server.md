@@ -12,9 +12,9 @@ python -m power_framework.mcp
 
 The server starts with **stdio** transport — ideal for local AI clients like Claude Desktop or OpenCode.
 
-### HTTP (Docker / remote) — v3.0.0
+### HTTP (local loopback)
 
-Set `POWER_MCP_TRANSPORT=http` for HTTP mode with `/health` endpoint on port 8000:
+Set `POWER_MCP_TRANSPORT=http` for a local HTTP endpoint on `127.0.0.1:8000`:
 
 ```bash
 POWER_MCP_TRANSPORT=http python -m power_framework.mcp
@@ -22,23 +22,17 @@ POWER_MCP_TRANSPORT=http python -m power_framework.mcp
 
 Docker Compose example:
 
-```yaml
-services:
-    power-mcp:
-        image: weby-homelab/power-framework:v3.0.0
-        ports:
-            - "8000:8000"
-        volumes:
-            - ./vault:/vault:ro
-        environment:
-            - POWER_VAULT_DIR=/vault
-            - POWER_MCP_TRANSPORT=http
-        cap_drop:
-            - ALL
-        read_only: true
-```
+`POWER_MCP_HOST` may be set only to `127.0.0.1` or `::1`; `POWER_MCP_PORT`
+defaults to `8000`. Any non-loopback host, invalid port, or unknown transport
+fails closed at startup.
 
 Health check: `GET http://localhost:8000/health`
+
+Remote HTTP is intentionally disabled in 3.1 until an authenticated,
+scope-aware deployment policy is implemented. Do not publish this endpoint with
+Docker port mapping, a tunnel, or a reverse proxy as an unauthenticated MCP
+service. Use local stdio, local loopback HTTP, or a separately authenticated
+gateway with an explicit threat model.
 
 ## Client configuration
 

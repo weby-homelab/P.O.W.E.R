@@ -79,6 +79,7 @@ mcp.add_middleware(
 
 _write_limiter = RateLimiter(max_calls=10, period=60.0)
 _index_limiter = RateLimiter(max_calls=5, period=60.0)
+_LOOPBACK_HTTP_HOSTS = frozenset({"127.0.0.1", "::1"})
 
 
 def _get_vault_path(vault_path: str | None = None) -> Path:
@@ -95,6 +96,24 @@ def _resolve_note_target(vault_path: Path, name: str) -> Path:
         raise ToolError(
             "Invalid note path; use an existing PARA directory and a Markdown filename."
         ) from exc
+
+
+def _get_http_transport_config() -> tuple[str, int]:
+    """Return a fail-closed local-only HTTP MCP transport configuration."""
+    host = os.getenv("POWER_MCP_HOST", "127.0.0.1")
+    if host not in _LOOPBACK_HTTP_HOSTS:
+        raise ValueError(
+            "Remote HTTP MCP is disabled until an authenticated, scoped transport policy is configured."
+        )
+
+    try:
+        port = int(os.getenv("POWER_MCP_PORT", "8000"))
+    except ValueError as exc:
+        raise ValueError("POWER_MCP_PORT must be an integer between 1 and 65535") from exc
+    if not 1 <= port <= 65535:
+        raise ValueError("POWER_MCP_PORT must be an integer between 1 and 65535")
+
+    return host, port
 
 
 @mcp.tool
@@ -430,13 +449,16 @@ async def check_markdown_tool(
 def run() -> None:
     """Start the MCP server. Transport is determined by POWER_MCP_TRANSPORT env var.
 
-    Defaults to stdio for local use. Set POWER_MCP_TRANSPORT=http for Docker/HTTP mode.
+    Defaults to stdio. HTTP is available only on an explicit loopback address.
     """
     transport = os.getenv("POWER_MCP_TRANSPORT", "stdio")
     if transport == "http":
-        mcp.run(transport="http", host="0.0.0.0", port=8000)
-    else:
+        host, port = _get_http_transport_config()
+        mcp.run(transport="http", host=host, port=port)
+    elif transport == "stdio":
         mcp.run(transport="stdio")
+    else:
+        raise ValueError("POWER_MCP_TRANSPORT must be either 'stdio' or 'http'")
 
 
 if __name__ == "__main__":

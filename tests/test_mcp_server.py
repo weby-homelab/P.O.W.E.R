@@ -5,10 +5,12 @@ Tests for P.O.W.E.R. MCP Server tool calls using FastMCP functions directly.
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from unittest.mock import Mock
 
 import pytest
 from fastmcp.exceptions import ToolError
 
+from power_framework.mcp import power_server
 from power_framework.mcp.power_server import (
     ensure_sub_index,
     generate_index,
@@ -129,3 +131,42 @@ async def test_mcp_write_tools_reject_path_traversal(
             )
 
     assert sentinel.read_text(encoding="utf-8") == "do not modify"
+
+
+def test_http_transport_defaults_to_loopback(monkeypatch: pytest.MonkeyPatch) -> None:
+    run_mock = Mock()
+    monkeypatch.setenv("POWER_MCP_TRANSPORT", "http")
+    monkeypatch.delenv("POWER_MCP_HOST", raising=False)
+    monkeypatch.delenv("POWER_MCP_PORT", raising=False)
+    monkeypatch.setattr(power_server.mcp, "run", run_mock)
+
+    power_server.run()
+
+    run_mock.assert_called_once_with(transport="http", host="127.0.0.1", port=8000)
+
+
+@pytest.mark.parametrize("host", ["0.0.0.0", "192.0.2.20", "example.test"])  # noqa: S104
+def test_http_transport_rejects_non_loopback_bind(
+    monkeypatch: pytest.MonkeyPatch,
+    host: str,
+) -> None:
+    monkeypatch.setenv("POWER_MCP_HOST", host)
+
+    with pytest.raises(ValueError, match="Remote HTTP MCP is disabled"):
+        power_server._get_http_transport_config()
+
+
+@pytest.mark.parametrize("port", ["not-a-port", "0", "65536"])
+def test_http_transport_rejects_invalid_port(monkeypatch: pytest.MonkeyPatch, port: str) -> None:
+    monkeypatch.setenv("POWER_MCP_HOST", "127.0.0.1")
+    monkeypatch.setenv("POWER_MCP_PORT", port)
+
+    with pytest.raises(ValueError, match="POWER_MCP_PORT"):
+        power_server._get_http_transport_config()
+
+
+def test_run_rejects_unknown_transport(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("POWER_MCP_TRANSPORT", "tcp")
+
+    with pytest.raises(ValueError, match="POWER_MCP_TRANSPORT"):
+        power_server.run()
