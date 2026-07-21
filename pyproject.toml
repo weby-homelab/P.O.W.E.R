@@ -91,6 +91,9 @@ packages = ["src/power_framework"]
 testpaths = ["tests"]
 asyncio_mode = "auto"
 addopts = "-v --tb=short --cov=power_framework --cov-report=term-missing --cov-fail-under=70"
+markers = [
+    "bench: optional real-vault benchmark; never a blocking hermetic CI gate",
+]
 
 [tool.ruff]
 target-version = "py310"
