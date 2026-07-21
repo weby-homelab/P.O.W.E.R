@@ -45,7 +45,9 @@ async def test_read_sub_index_nonexistent_folder(tmp_path: Path) -> None:
 
 
 async def test_search_vault_finds_notes(sample_vault: Path) -> None:
-    envelope = json.loads(await search_vault_tool(query="Test", vault_path=str(sample_vault)))
+    envelope = json.loads(
+        await search_vault_tool(query="Test", search_mode="fts", vault_path=str(sample_vault))
+    )
     assert envelope["trust"] == "untrusted"
     assert envelope["data_only"] is True
     assert envelope["result_count"] > 0
@@ -119,7 +121,11 @@ async def test_search_vault_rejects_result_budget_overrides(
 
 async def test_search_vault_no_matches(sample_vault: Path) -> None:
     envelope = json.loads(
-        await search_vault_tool(query="XyzzyNonExistent12345", vault_path=str(sample_vault))
+        await search_vault_tool(
+            query="XyzzyNonExistent12345",
+            search_mode="fts",
+            vault_path=str(sample_vault),
+        )
     )
     assert envelope["result_count"] == 0
     assert envelope["results"] == []

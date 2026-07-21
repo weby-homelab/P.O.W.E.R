@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 from power_framework.core import index_worker
 from power_framework.core.searcher import (
     RERANK_CANDIDATE_LIMIT,
+    DenseIndexUnavailableError,
     _hybrid_reranked_search,
     _init_db,
     _semantic_search,
@@ -30,8 +31,8 @@ def indexed_vault(sample_vault: Path, monkeypatch):
     Phase 1 (POWER 3.0) decoupled semantic embeddings from the core FTS
     index: the canonical embedder (BGE-M3) is a heavyweight, network/model
     download that must NOT be a hard dependency of the FTS path or of CI.
-    So the test fixture builds an FTS-only index and relies on the B7
-    fallback (semantic -> FTS) for semantic-style queries in tests.
+    The fixture deliberately builds an FTS-only index; semantic and reranked
+    modes must reject it instead of silently changing retrieval contracts.
     """
 
     monkeypatch.setenv("POWER_VAULT_DIR", str(sample_vault))
@@ -112,18 +113,15 @@ class TestBackgroundIndexer:
 
 
 class TestSemanticNumpy:
-    """§5: _semantic_search uses vectorized numpy cosine."""
+    """Semantic search requires a compatible dense index before model loading."""
 
-    def test_numpy_cosine_returns_ranked(self, indexed_vault):
-        res_np = _semantic_search(indexed_vault, "test project resource", max_results=5)
-        assert isinstance(res_np, list)
-        if res_np:
-            scores = [r.score for r in res_np]
-            assert scores == sorted(scores, reverse=True)
+    def test_semantic_search_rejects_fts_only_index(self, indexed_vault):
+        with pytest.raises(DenseIndexUnavailableError, match="power sync"):
+            _semantic_search(indexed_vault, "test project resource", max_results=5)
 
-    def test_semantic_empty_on_no_embeddings(self, tmp_path):
-        res = _semantic_search(tmp_path, "anything", max_results=5)
-        assert res == []
+    def test_semantic_search_rejects_missing_index(self, tmp_path):
+        with pytest.raises(DenseIndexUnavailableError, match="power sync"):
+            _semantic_search(tmp_path, "anything", max_results=5)
 
 
 class TestBoundedRerank:
@@ -132,7 +130,15 @@ class TestBoundedRerank:
     def test_rerank_limit_constant(self):
         assert RERANK_CANDIDATE_LIMIT == 20
 
-    def test_hybrid_reranked_returns_results(self, indexed_vault):
+    def test_hybrid_reranked_uses_hermetic_reranker(self, indexed_vault, monkeypatch):
+        from power_framework.core import searcher
+
+        class FakeReranker:
+            def rerank(self, query: str, documents: list[str]) -> list[float]:
+                del query
+                return [float(len(documents) - rank) for rank in range(len(documents))]
+
+        monkeypatch.setattr(searcher, "_get_reranker", lambda: FakeReranker())
         results = _hybrid_reranked_search(indexed_vault, "test project", max_results=5)
         assert isinstance(results, list)
         assert len(results) <= 5
@@ -191,36 +197,22 @@ class TestEmbeddingCacheDir:
         assert cache.exists() or cache.parent.exists()
 
 
-class TestSemanticFallback:
-    """B7 / FP-7: semantic search must never silently return [].
+class TestSemanticFailClosed:
+    """Dense retrieval never silently falls back to a different mode."""
 
-    When the embedder is unavailable or the embedding store is empty,
-    _semantic_search must degrade to FTS and return real results (or an
-    honest empty list only when the FTS index is genuinely empty too).
-    """
-
-    def test_falls_back_to_fts_on_dead_embedder(self, indexed_vault, monkeypatch):
+    def test_does_not_load_embedder_without_dense_index(self, indexed_vault, monkeypatch):
         from power_framework.core import searcher
 
-        class _Dead:
-            def embed(self, text):
-                raise RuntimeError("simulated dead embedder")
+        monkeypatch.setattr(
+            searcher,
+            "get_embedding_manager",
+            lambda: pytest.fail("embedder must not load before index validation"),
+        )
+        with pytest.raises(DenseIndexUnavailableError, match="power sync"):
+            searcher._semantic_search(indexed_vault, "test project", max_results=5)
 
-            def embed_batch(self, texts, batch_size=8):
-                raise RuntimeError("simulated dead embedder")
-
-        monkeypatch.setattr(searcher, "get_embedding_manager", lambda *a, **k: _Dead())
-        # Query uses terms present in the indexed sample notes ("test", "project")
-        # so the FTS fallback can return real hits (FTS is a strict AND of terms,
-        # unlike fuzzy semantic matching).
-        res = searcher._semantic_search(indexed_vault, "test project", max_results=5)
-        # Not a silent empty list; FTS fallback returns the indexed notes.
-        assert isinstance(res, list)
-        assert len(res) > 0
-
-    def test_no_silent_empty_on_empty_vault(self, tmp_path):
+    def test_empty_vault_reports_missing_dense_index(self, tmp_path):
         from power_framework.core import searcher
 
-        # An empty vault has neither embeddings nor FTS hits -> honest [].
-        res = searcher._semantic_search(tmp_path, "anything", max_results=5)
-        assert res == []
+        with pytest.raises(DenseIndexUnavailableError, match="power sync"):
+            searcher._semantic_search(tmp_path, "anything", max_results=5)
