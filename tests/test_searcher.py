@@ -14,6 +14,7 @@ from power_framework.core.searcher import (
     CANONICAL_SEARCH_MODES,
     DEFAULT_SEARCH_MODE,
     DenseIndexUnavailableError,
+    SearchModeSpec,
     SearchResult,
     _compute_tf_vector,
     _cosine_similarity,
@@ -25,6 +26,7 @@ from power_framework.core.searcher import (
     _vector_search,
     format_search_results,
     format_untrusted_search_envelope,
+    get_search_mode_spec,
     normalize_search_mode,
     search_vault,
     validate_dense_index,
@@ -55,6 +57,12 @@ class TestSearchModeContract:
     def test_default_mode_is_canonical(self):
         assert DEFAULT_SEARCH_MODE == "reranked"
         assert DEFAULT_SEARCH_MODE in CANONICAL_SEARCH_MODES
+        assert get_search_mode_spec(DEFAULT_SEARCH_MODE) == SearchModeSpec(
+            candidate_sources=("fts", "tf_vector", "dense"),
+            fusion="rrf",
+            reranker=True,
+            requires_dense_index=True,
+        )
 
     def test_normalize_mode_accepts_case_and_legacy_alias(self):
         assert normalize_search_mode("RERANKED") == "reranked"

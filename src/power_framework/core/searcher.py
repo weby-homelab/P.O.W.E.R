@@ -98,6 +98,25 @@ CANONICAL_SEARCH_MODES = frozenset({"fts", "vector", "hybrid", "semantic", "rera
 SEARCH_MODE_ALIASES = {"hybrid_reranked": "reranked"}
 
 
+@dataclass(frozen=True)
+class SearchModeSpec:
+    """The executable retrieval contract for one canonical search mode."""
+
+    candidate_sources: tuple[str, ...]
+    fusion: str | None
+    reranker: bool
+    requires_dense_index: bool
+
+
+SEARCH_MODE_REGISTRY = {
+    "fts": SearchModeSpec(("fts",), None, False, False),
+    "vector": SearchModeSpec(("tf_vector",), None, False, False),
+    "hybrid": SearchModeSpec(("fts", "tf_vector"), "rrf", False, False),
+    "semantic": SearchModeSpec(("dense",), None, False, True),
+    "reranked": SearchModeSpec(("fts", "tf_vector", "dense"), "rrf", True, True),
+}
+
+
 class DenseIndexUnavailableError(RuntimeError):
     """Raised when a request explicitly requires a usable dense index."""
 
@@ -130,6 +149,11 @@ def normalize_search_mode(mode: str) -> str:
         supported = ", ".join(sorted(CANONICAL_SEARCH_MODES | set(SEARCH_MODE_ALIASES)))
         raise ValueError(f"Unsupported search mode '{mode}'. Supported modes: {supported}")
     return normalized
+
+
+def get_search_mode_spec(mode: str) -> SearchModeSpec:
+    """Resolve a requested mode to its canonical, testable retrieval contract."""
+    return SEARCH_MODE_REGISTRY[normalize_search_mode(mode)]
 
 
 def validate_dense_index(vault_dir: Path) -> int:
