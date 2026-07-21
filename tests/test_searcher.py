@@ -108,6 +108,22 @@ class TestSearchModeContract:
             tables = {row[0] for row in conn.execute("SELECT name FROM sqlite_master")}
         assert "dense_index_manifest" in tables
 
+    def test_dense_index_validation_requires_matching_manifest(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        db_path = tmp_path / "index.db"
+        monkeypatch.setattr("power_framework.core.searcher._db_path", lambda: db_path)
+        with sqlite3.connect(db_path) as conn:
+            _init_db(conn)
+            conn.execute(
+                "INSERT INTO chunk_embeddings VALUES (?, ?, ?, ?, ?)",
+                ("chunk", "note.md", b"\0" * 16, "text", 0.0),
+            )
+            conn.commit()
+
+        with pytest.raises(DenseIndexUnavailableError, match="manifest"):
+            validate_dense_index(tmp_path)
+
 
 class TestScoreNote:
     """Tests for note scoring against search terms."""

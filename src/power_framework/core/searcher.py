@@ -175,6 +175,11 @@ def validate_dense_index(vault_dir: Path) -> int:
                 "SELECT COUNT(*), MIN(LENGTH(embedding)), MAX(LENGTH(embedding)) "
                 "FROM chunk_embeddings"
             ).fetchone()
+            manifest = dict(
+                conn.execute(
+                    "SELECT manifest_key, manifest_value FROM dense_index_manifest"
+                ).fetchall()
+            )
     except sqlite3.Error as exc:
         raise DenseIndexUnavailableError(
             f"Dense index cannot be read for {vault_dir}: {exc}. Run 'power sync {vault_dir}'."
@@ -184,7 +189,17 @@ def validate_dense_index(vault_dir: Path) -> int:
         raise DenseIndexUnavailableError(
             f"Dense index is empty or inconsistent for {vault_dir}. Run 'power sync {vault_dir}'."
         )
-    return min_size // 4
+    dimension = min_size // 4
+    if manifest != {
+        "schema_version": "1",
+        "embedding_dimension": str(dimension),
+        "chunk_count": str(rows),
+    }:
+        raise DenseIndexUnavailableError(
+            f"Dense index manifest is missing or incompatible for {vault_dir}. "
+            f"Run 'power sync {vault_dir}'."
+        )
+    return dimension
 
 
 def _tokenize(text: str) -> list[str]:
