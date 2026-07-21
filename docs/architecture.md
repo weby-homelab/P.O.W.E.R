@@ -23,7 +23,7 @@ src/power_framework/
 │   ├── reranker.py     # Cross-Encoder reranker (Jina v2 multilingual default)
 │   ├── query_expansion.py # Synonym map (EN/UK) + OpenRouter Multi-Query expansion
 │   ├── chunker.py      # Semantic & contextual chunker (Anthropic Contextual Retrieval)
-│   ├── metrics/        # Retrieval metrics (udcg.py — UDCG@5 search-quality gate)
+│   ├── metrics/        # Retrieval metrics (legacy discounted lexical gain; true UDCG deferred)
 │   └── utils.py        # Path safety, atomic writes, version, rate limiter
 └── mcp/
     ├── __init__.py     # Package marker
