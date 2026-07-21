@@ -41,12 +41,13 @@ from power_framework.core import (
     RateLimiter,
     TypedRelation,
     archive_stale_notes,
-    atomic_write,
+    atomic_write_in_vault,
     build_frontmatter,
     format_relation_suggestions,
     format_search_results,
     heal_vault,
     read_file_content,
+    resolve_path_in_vault,
     resolve_vault_path,
     run_generate_hierarchical_index,
     run_generate_sub_index,
@@ -84,6 +85,16 @@ def _get_vault_path(vault_path: str | None = None) -> Path:
     """Resolve vault path with security validation."""
     args = {"vault_path": vault_path} if vault_path else {}
     return resolve_vault_path(args)
+
+
+def _resolve_note_target(vault_path: Path, name: str) -> Path:
+    """Resolve untrusted MCP note names only within approved PARA folders."""
+    try:
+        return resolve_path_in_vault(vault_path, name, allowed_directories=PARA_FOLDERS)
+    except ValueError as exc:
+        raise ToolError(
+            "Invalid note path; use an existing PARA directory and a Markdown filename."
+        ) from exc
 
 
 @mcp.tool
@@ -175,7 +186,7 @@ async def ingest_note(
     if not name.endswith(".md"):
         name += ".md"
 
-    target_file = path / name
+    target_file = _resolve_note_target(path, name)
 
     if target_file.exists():
         raise ToolError(f"Note already exists at {name}")
@@ -194,8 +205,7 @@ async def ingest_note(
     full_content = f"{frontmatter}\n\n{content}\n"
 
     def _write_and_index() -> str:
-        target_file.parent.mkdir(parents=True, exist_ok=True)
-        atomic_write(target_file, full_content)
+        atomic_write_in_vault(path, name, full_content, allowed_directories=PARA_FOLDERS)
         index_result = run_generate_hierarchical_index(path)
 
         log_file = path / "log.md"
@@ -279,7 +289,7 @@ async def synthesize_session(
     if not name.endswith(".md"):
         name += ".md"
 
-    target_file = path / name
+    target_file = _resolve_note_target(path, name)
     if target_file.exists():
         raise ToolError(f"Note already exists at {name}")
 
@@ -298,8 +308,7 @@ async def synthesize_session(
     full_content = f"{frontmatter}\n\n{content}\n"
 
     def _write_and_index() -> str:
-        target_file.parent.mkdir(parents=True, exist_ok=True)
-        atomic_write(target_file, full_content)
+        atomic_write_in_vault(path, name, full_content, allowed_directories=PARA_FOLDERS)
         index_result = run_generate_hierarchical_index(path)
 
         log_file = path / "log.md"

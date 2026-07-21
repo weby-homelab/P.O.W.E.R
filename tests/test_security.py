@@ -9,10 +9,12 @@ import pytest
 
 from power_framework.core.utils import (
     atomic_write,
+    atomic_write_in_vault,
     clean_note_name,
     create_backup,
     is_excluded_dir,
     is_excluded_orphan,
+    resolve_path_in_vault,
     resolve_vault_path,
     validate_vault_path,
 )
@@ -100,6 +102,83 @@ class TestAtomicWrite:
         atomic_write(filepath, "content")
         temps = list(tmp_path.glob(".test.txt.*.tmp"))
         assert len(temps) == 0
+
+
+class TestVaultRelativeWritePaths:
+    """Tests for centralized validation of untrusted note paths."""
+
+    _allowed_directories = ("01_Projects", "06_Daily_Logs")
+
+    def test_allows_existing_nested_markdown_path(self, sample_vault: Path):
+        target = resolve_path_in_vault(
+            sample_vault,
+            "01_Projects/Weby-QRank/Architecture.md",
+            self._allowed_directories,
+        )
+        assert target == sample_vault / "01_Projects" / "Weby-QRank" / "Architecture.md"
+
+    @pytest.mark.parametrize(
+        "untrusted_path",
+        [
+            "../../outside.md",
+            "01_Projects/../outside.md",
+            "%2e%2e/outside.md",
+            "C:\\outside.md",
+            "01_Projects\\outside.md",
+            "01_Projects/outside.txt",
+        ],
+    )
+    def test_rejects_unsafe_untrusted_paths(self, sample_vault: Path, untrusted_path: str):
+        with pytest.raises(ValueError, match=r"path|Path|Markdown|Symlink|Target"):
+            resolve_path_in_vault(sample_vault, untrusted_path, self._allowed_directories)
+
+    def test_rejects_absolute_path(self, sample_vault: Path, tmp_path: Path):
+        outside_path = tmp_path.parent / "outside.md"
+
+        with pytest.raises(ValueError, match="Absolute"):
+            resolve_path_in_vault(sample_vault, str(outside_path), self._allowed_directories)
+
+    def test_rejects_symlinked_parent_that_escapes_vault(self, sample_vault: Path, tmp_path: Path):
+        outside_directory = tmp_path / "outside"
+        outside_directory.mkdir()
+        escape_link = sample_vault / "01_Projects" / "escape"
+        escape_link.symlink_to(outside_directory, target_is_directory=True)
+
+        with pytest.raises(ValueError, match="Target"):
+            resolve_path_in_vault(
+                sample_vault,
+                "01_Projects/escape/Outside.md",
+                self._allowed_directories,
+            )
+
+    def test_atomic_write_rejects_symlinked_note_without_changing_sentinel(
+        self,
+        sample_vault: Path,
+        tmp_path: Path,
+    ):
+        sentinel = tmp_path / "outside.md"
+        sentinel.write_text("do not modify", encoding="utf-8")
+        target_link = sample_vault / "01_Projects" / "Escape.md"
+        target_link.symlink_to(sentinel)
+
+        with pytest.raises(ValueError, match="Symlink"):
+            atomic_write_in_vault(
+                sample_vault,
+                "01_Projects/Escape.md",
+                "unsafe content",
+                allowed_directories=self._allowed_directories,
+            )
+
+        assert sentinel.read_text(encoding="utf-8") == "do not modify"
+
+    def test_atomic_write_creates_note_inside_vault(self, sample_vault: Path):
+        target = atomic_write_in_vault(
+            sample_vault,
+            "01_Projects/Safe.md",
+            "safe content",
+            allowed_directories=self._allowed_directories,
+        )
+        assert target.read_text(encoding="utf-8") == "safe content"
 
 
 class TestCreateBackup:

@@ -7,13 +7,16 @@ Path validation, atomic writes, backup management, and security helpers.
 from __future__ import annotations
 
 import os
+import secrets
 import shutil
 import tempfile
 import time
 from collections import defaultdict
+from contextlib import suppress
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import Any
+from urllib.parse import unquote
 
 from .constants import EXCLUDED_DIRS, EXCLUDED_ORPHAN_FILES
 
@@ -90,6 +93,96 @@ def atomic_write(filepath: Path, content: str, encoding: str = "utf-8") -> None:
         if os.path.exists(tmp_path):
             os.unlink(tmp_path)
         raise
+
+
+def resolve_path_in_vault(
+    vault_root: Path,
+    untrusted_relative_path: str,
+    allowed_directories: tuple[str, ...] | None = None,
+) -> Path:
+    """Resolve a Markdown file path without allowing it to escape a vault root.
+
+    The supplied path is intentionally treated as untrusted input: absolute and
+    Windows-drive paths, traversal components, control characters, backslashes,
+    non-Markdown targets, and symlink escapes are rejected.  The parent must
+    already exist so callers do not create an attacker-selected directory tree.
+    """
+    root = validate_vault_path(str(vault_root))
+    raw_path = str(untrusted_relative_path)
+    decoded_path = unquote(raw_path)
+
+    if not raw_path or any(ord(char) < 32 or ord(char) == 127 for char in decoded_path):
+        raise ValueError("Invalid vault-relative path")
+    if "\\" in decoded_path:
+        raise ValueError("Windows path separators are not allowed")
+
+    windows_path = PureWindowsPath(decoded_path)
+    posix_path = Path(decoded_path)
+    if posix_path.is_absolute() or windows_path.is_absolute() or windows_path.drive:
+        raise ValueError("Absolute paths are not allowed")
+
+    path_parts = Path(decoded_path).parts
+    if not path_parts or any(part in {".", ".."} for part in path_parts):
+        raise ValueError("Path traversal is not allowed")
+    if allowed_directories and path_parts[0] not in allowed_directories:
+        raise ValueError("Path is outside the allowed vault directories")
+    if Path(path_parts[-1]).suffix.lower() != ".md":
+        raise ValueError("Only Markdown note targets are allowed")
+
+    candidate = root.joinpath(*path_parts)
+    try:
+        parent = candidate.parent.resolve(strict=True)
+        parent.relative_to(root)
+    except (FileNotFoundError, ValueError) as exc:
+        raise ValueError("Target parent is outside the vault or does not exist") from exc
+
+    target = parent / candidate.name
+    if target.is_symlink():
+        raise ValueError("Symlink note targets are not allowed")
+    return target
+
+
+def atomic_write_in_vault(
+    vault_root: Path,
+    untrusted_relative_path: str,
+    content: str,
+    encoding: str = "utf-8",
+    allowed_directories: tuple[str, ...] | None = None,
+) -> Path:
+    """Atomically write an untrusted relative note path inside a vault.
+
+    The destination directory is opened with ``O_NOFOLLOW`` and every temporary
+    file operation is performed through that directory descriptor. This keeps a
+    symlink replacement from redirecting the write outside the canonical root.
+    """
+    target = resolve_path_in_vault(vault_root, untrusted_relative_path, allowed_directories)
+    directory_flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_NOFOLLOW", 0)
+    directory_fd = os.open(target.parent, directory_flags)
+    temporary_name = f".{target.name}.{secrets.token_hex(16)}.tmp"
+    temporary_fd: int | None = None
+
+    try:
+        temporary_flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0)
+        temporary_fd = os.open(temporary_name, temporary_flags, 0o600, dir_fd=directory_fd)
+        with os.fdopen(temporary_fd, "w", encoding=encoding) as temporary_file:
+            temporary_fd = None
+            temporary_file.write(content)
+        os.replace(
+            temporary_name,
+            target.name,
+            src_dir_fd=directory_fd,
+            dst_dir_fd=directory_fd,
+        )
+    except Exception:
+        if temporary_fd is not None:
+            os.close(temporary_fd)
+        with suppress(FileNotFoundError):
+            os.unlink(temporary_name, dir_fd=directory_fd)
+        raise
+    finally:
+        os.close(directory_fd)
+
+    return target
 
 
 def create_backup(filepath: Path, backup_dir: Path | None = None) -> Path | None:

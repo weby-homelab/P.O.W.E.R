@@ -16,6 +16,7 @@ from power_framework.mcp.power_server import (
     lint_vault,
     read_sub_index,
     search_vault_tool,
+    synthesize_session,
 )
 
 if TYPE_CHECKING:
@@ -96,3 +97,35 @@ async def test_ingest_note_tool(sample_vault: Path) -> None:
             content="Hello world",
             vault_path=str(sample_vault),
         )
+
+
+@pytest.mark.parametrize("tool_name", ["ingest", "synthesize"])
+async def test_mcp_write_tools_reject_path_traversal(
+    sample_vault: Path,
+    tmp_path: Path,
+    tool_name: str,
+) -> None:
+    sentinel = tmp_path / "outside.md"
+    sentinel.write_text("do not modify", encoding="utf-8")
+
+    if tool_name == "ingest":
+        with pytest.raises(ToolError, match="Invalid note path"):
+            await ingest_note(
+                name="../../outside.md",
+                note_type="Project",
+                title="Unsafe note",
+                description="Must be rejected",
+                content="unsafe",
+                vault_path=str(sample_vault),
+            )
+    else:
+        with pytest.raises(ToolError, match="Invalid note path"):
+            await synthesize_session(
+                name="../../outside.md",
+                title="Unsafe session",
+                description="Must be rejected",
+                content="unsafe",
+                vault_path=str(sample_vault),
+            )
+
+    assert sentinel.read_text(encoding="utf-8") == "do not modify"
