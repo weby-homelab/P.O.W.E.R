@@ -86,7 +86,12 @@ from .rot_scoring import (
     LinkRotChecker,
     UsageTracker,
 )
-from .searcher import SearchResult, format_search_results, search_vault
+from .searcher import (
+    SearchResult,
+    format_search_results,
+    format_untrusted_search_envelope,
+    search_vault,
+)
 from .utils import (
     RateLimiter,
     __version__,
@@ -149,6 +154,7 @@ __all__ = [
     "fix_trailing_whitespace",
     "format_relation_suggestions",
     "format_search_results",
+    "format_untrusted_search_envelope",
     "generate_index_content",
     "generate_log_initial",
     "generate_main_index_content",

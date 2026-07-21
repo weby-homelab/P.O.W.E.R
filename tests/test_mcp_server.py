@@ -4,6 +4,7 @@ Tests for P.O.W.E.R. MCP Server tool calls using FastMCP functions directly.
 
 from __future__ import annotations
 
+import json
 from typing import TYPE_CHECKING
 from unittest.mock import Mock
 
@@ -44,9 +45,11 @@ async def test_read_sub_index_nonexistent_folder(tmp_path: Path) -> None:
 
 
 async def test_search_vault_finds_notes(sample_vault: Path) -> None:
-    result = await search_vault_tool(query="Test", vault_path=str(sample_vault))
-    assert "Test" in result
-    assert "Found" in result
+    envelope = json.loads(await search_vault_tool(query="Test", vault_path=str(sample_vault)))
+    assert envelope["trust"] == "untrusted"
+    assert envelope["data_only"] is True
+    assert envelope["result_count"] > 0
+    assert envelope["results"][0]["source"]["content_sha256"]
 
 
 async def test_search_vault_empty_query(sample_vault: Path) -> None:
@@ -55,8 +58,11 @@ async def test_search_vault_empty_query(sample_vault: Path) -> None:
 
 
 async def test_search_vault_no_matches(sample_vault: Path) -> None:
-    result = await search_vault_tool(query="XyzzyNonExistent12345", vault_path=str(sample_vault))
-    assert "No results" in result
+    envelope = json.loads(
+        await search_vault_tool(query="XyzzyNonExistent12345", vault_path=str(sample_vault))
+    )
+    assert envelope["result_count"] == 0
+    assert envelope["results"] == []
 
 
 async def test_lint_vault_on_sample(sample_vault: Path) -> None:
