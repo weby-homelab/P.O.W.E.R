@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import os
-import sys
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -11,30 +10,6 @@ if TYPE_CHECKING:
     from fastembed import TextEmbedding
 
 logger = logging.getLogger(__name__)
-
-
-def _load_env(env_path: str = "/root/geminicli/.env") -> None:
-    if os.path.exists(env_path):
-        try:
-            with open(env_path, encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
-                    if not line or line.startswith("#"):
-                        continue
-                    if "=" in line:
-                        key, val = line.split("=", 1)
-                        key = key.strip()
-                        val = val.strip().strip('"').strip("'")
-                        if key and key not in os.environ:
-                            os.environ[key] = val
-        except Exception as e:
-            logger.debug("Failed to load .env file from %s: %s", env_path, e)
-
-
-# Load env variables before setting up default model
-
-if "pytest" not in sys.modules and "PYTEST_CURRENT_TEST" not in os.environ:
-    _load_env()
 
 # Default embedding provider.
 #

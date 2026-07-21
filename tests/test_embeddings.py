@@ -2,10 +2,16 @@
 
 from __future__ import annotations
 
+import inspect
+
+import power_framework.core.embeddings as embeddings
 from power_framework.core.embeddings import get_embedding_manager
 
 
 class TestEmbeddingManager:
+    def test_import_has_no_hardcoded_env_file_side_effect(self):
+        assert "/root/geminicli/.env" not in inspect.getsource(embeddings)
+
     def test_embed_single_text(self):
         manager = get_embedding_manager()
         vec = manager.embed("Hello world")
