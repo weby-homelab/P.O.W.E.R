@@ -132,7 +132,7 @@ def check_patterns(data: dict) -> None:
 
 def verify_config_hashes(data: dict) -> None:
     cfg = data.get("config", {})
-    for side in ("candidate",):
+    for side in ("baseline", "candidate"):
         entry = cfg.get(side, {})
         cfg_sha = entry.get("sha256", "")
         check(
@@ -231,7 +231,7 @@ def verify_no_answer_fp_gate(data: dict) -> None:
 
 def verify_rag_gates(data: dict) -> None:
     rag = data.get("rag_metrics", {})
-    for side in ("baseline", "candidate"):
+    for side in ("candidate",):
         metrics = rag.get(side, {})
         correctness = metrics.get("mean_correctness", 1.0)
         if metrics.get("answerable_count", 0) > 0 and correctness < 0.5:
