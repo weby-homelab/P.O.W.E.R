@@ -347,6 +347,7 @@ class TestMermaidExport:
             encoding="utf-8",
         )
 
-        suggestions = suggest_related(tmp_path, target_path="01_Projects/note1.md", score_threshold=0.1)
+        suggestions = suggest_related(
+            tmp_path, target_path="01_Projects/note1.md", score_threshold=0.1
+        )
         assert isinstance(suggestions, list)
-

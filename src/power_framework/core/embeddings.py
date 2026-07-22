@@ -606,7 +606,6 @@ def get_embedding_manager(
             )
             effective_provider = "fastembed"
 
-
     if effective_provider == "ollama":
         key = f"ollama:{model_name or OLLAMA_EMBED_MODEL}"
         if key not in _EMBED_MANAGER_CACHE:
