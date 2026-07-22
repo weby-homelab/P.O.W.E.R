@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "release": "3.1.0",
+  "canonical_embedding": {
+    "provider": "bge-m3-onnx",
+    "repository": "aapot/bge-m3-onnx",
+    "revision": "76a603396f5eb9f03ed51bbab8f4893fcea7b2fe",
+    "license": "MIT",
+    "upstream": {
+      "repository": "BAAI/bge-m3",
+      "revision": "5617a9f61b028005a4858fdac845db406aefb181",
+      "license": "MIT"
+    },
+    "provenance": "Community ONNX export of BAAI/bge-m3; release profile uses CPUExecutionProvider.",
+    "files": {
+      "model.onnx": {
+        "sha256": "138d09ae2920b7e8731f01cba6b5ad996fd64bdfe34971e2d22ecbcf322e25b1",
+        "size_bytes": 108605
+      },
+      "model.onnx.data": {
+        "sha256": "cfa52ffdb65db76612d6c3ad92130221822f613004113e8c0af18c5eab81a81d",
+        "size_bytes": 2271088656
+      },
+      "tokenizer.json": {
+        "sha256": "6710678b12670bc442b99edc952c4d996ae309a7020c1fa0096dd245c2faf790",
+        "size_bytes": 17082821
+      }
+    }
+  },
+  "optional_reranker": {
+    "repository": "jinaai/jina-reranker-v2-base-multilingual",
+    "revision": "9cfeff2df7d40d1b78e75e5e9cebec92a99813c9",
+    "license": "CC-BY-NC-4.0",
+    "release_default": false,
+    "required_opt_in": "POWER_ALLOW_NONCOMMERCIAL_MODELS=1"
+  }
+}

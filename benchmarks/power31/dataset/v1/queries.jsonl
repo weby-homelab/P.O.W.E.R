@@ -1,0 +1,228 @@
+{"query_id": "QUU0001", "query": "як оптимізувати Docker образи через multi-stage build", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_001"]}
+{"query_id": "QEE0001", "query": "how to optimize Docker images with multi-stage build", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_001"]}
+{"query_id": "QUE0001", "query": "як оптимізувати Docker образи через multi-stage build", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_001"]}
+{"query_id": "QEU0001", "query": "how to optimize Docker images with multi-stage build", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_001"]}
+{"query_id": "QUU0002", "query": "як налаштувати Docker Compose мережі та volumes", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_002"]}
+{"query_id": "QEE0002", "query": "how to configure Docker Compose networks and volumes", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_002"]}
+{"query_id": "QUE0002", "query": "як налаштувати Docker Compose мережі та volumes", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_002"]}
+{"query_id": "QEU0002", "query": "how to configure Docker Compose networks and volumes", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_002"]}
+{"query_id": "QUU0003", "query": "як розгорнути Kubernetes кластер з k3s", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_003"]}
+{"query_id": "QEE0003", "query": "how to deploy Kubernetes cluster with k3s", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_003"]}
+{"query_id": "QUE0003", "query": "як розгорнути Kubernetes кластер з k3s", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_003"]}
+{"query_id": "QEU0003", "query": "how to deploy Kubernetes cluster with k3s", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_003"]}
+{"query_id": "QUU0004", "query": "що таке Kubernetes Networking та Ingress", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_004"]}
+{"query_id": "QEE0004", "query": "what is Kubernetes networking and Ingress", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_004"]}
+{"query_id": "QUE0004", "query": "що таке Kubernetes Networking та Ingress", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_004"]}
+{"query_id": "QEU0004", "query": "what is Kubernetes networking and Ingress", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_004"]}
+{"query_id": "QUU0005", "query": "як налаштувати CI/CD пайплайн з GitHub Actions", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_005"]}
+{"query_id": "QEE0005", "query": "how to set up CI/CD pipeline with GitHub Actions", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_005"]}
+{"query_id": "QUE0005", "query": "як налаштувати CI/CD пайплайн з GitHub Actions", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_005"]}
+{"query_id": "QEU0005", "query": "how to set up CI/CD pipeline with GitHub Actions", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_005"]}
+{"query_id": "QUU0006", "query": "що таке Terraform Infrastructure as Code", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_006"]}
+{"query_id": "QEE0006", "query": "what is Terraform Infrastructure as Code", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_006"]}
+{"query_id": "QUE0006", "query": "що таке Terraform Infrastructure as Code", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_006"]}
+{"query_id": "QEU0006", "query": "what is Terraform Infrastructure as Code", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_006"]}
+{"query_id": "QUU0007", "query": "як автоматизувати конфігурацію серверів з Ansible", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_007"]}
+{"query_id": "QEE0007", "query": "how to automate server configuration with Ansible", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_007"]}
+{"query_id": "QUE0007", "query": "як автоматизувати конфігурацію серверів з Ansible", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_007"]}
+{"query_id": "QEU0007", "query": "how to automate server configuration with Ansible", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_007"]}
+{"query_id": "QUU0008", "query": "як налаштувати резервне копіювання з BorgBackup", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_008"]}
+{"query_id": "QEE0008", "query": "how to set up backup strategy with BorgBackup", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_008"]}
+{"query_id": "QUE0008", "query": "як налаштувати резервне копіювання з BorgBackup", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_008"]}
+{"query_id": "QEU0008", "query": "how to set up backup strategy with BorgBackup", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_008"]}
+{"query_id": "QUU0009", "query": "як налаштувати моніторинг з Prometheus та Grafana", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_009"]}
+{"query_id": "QEE0009", "query": "how to set up monitoring with Prometheus and Grafana", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_009"]}
+{"query_id": "QUE0009", "query": "як налаштувати моніторинг з Prometheus та Grafana", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_009"]}
+{"query_id": "QEU0009", "query": "how to set up monitoring with Prometheus and Grafana", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_009"]}
+{"query_id": "QUU0010", "query": "як налаштувати alerting правила Prometheus", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_010"]}
+{"query_id": "QEE0010", "query": "how to configure Prometheus alerting rules", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_010"]}
+{"query_id": "QUE0010", "query": "як налаштувати alerting правила Prometheus", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_010"]}
+{"query_id": "QEU0010", "query": "how to configure Prometheus alerting rules", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_010"]}
+{"query_id": "QUU0011", "query": "як налаштувати NFTables фаєрвол", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_011"]}
+{"query_id": "QEE0011", "query": "how to configure NFTables firewall", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_011"]}
+{"query_id": "QUE0011", "query": "як налаштувати NFTables фаєрвол", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_011"]}
+{"query_id": "QEU0011", "query": "how to configure NFTables firewall", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_011"]}
+{"query_id": "QUU0012", "query": "як налаштувати Fail2ban для захисту SSH", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_012"]}
+{"query_id": "QEE0012", "query": "how to configure Fail2ban for SSH protection", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_012"]}
+{"query_id": "QUE0012", "query": "як налаштувати Fail2ban для захисту SSH", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_012"]}
+{"query_id": "QEU0012", "query": "how to configure Fail2ban for SSH protection", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_012"]}
+{"query_id": "QUU0013", "query": "як отримати TLS сертифікати Let's Encrypt", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_013"]}
+{"query_id": "QEE0013", "query": "how to obtain Let's Encrypt TLS certificates", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_013"]}
+{"query_id": "QUE0013", "query": "як отримати TLS сертифікати Let's Encrypt", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_013"]}
+{"query_id": "QEU0013", "query": "how to obtain Let's Encrypt TLS certificates", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_013"]}
+{"query_id": "QUU0014", "query": "як налаштувати Tailscale VPN", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_014"]}
+{"query_id": "QEE0014", "query": "how to set up Tailscale VPN", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_014"]}
+{"query_id": "QUE0014", "query": "як налаштувати Tailscale VPN", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_014"]}
+{"query_id": "QEU0014", "query": "how to set up Tailscale VPN", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_014"]}
+{"query_id": "QUU0015", "query": "як провести аудит безпеки інфраструктури", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_015"]}
+{"query_id": "QEE0015", "query": "how to conduct infrastructure security audit", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_015"]}
+{"query_id": "QUE0015", "query": "як провести аудит безпеки інфраструктури", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_015"]}
+{"query_id": "QEU0015", "query": "how to conduct infrastructure security audit", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_015"]}
+{"query_id": "QUU0016", "query": "як посилити безпеку SSH сервера", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_016"]}
+{"query_id": "QEE0016", "query": "how to harden SSH server security", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_016"]}
+{"query_id": "QUE0016", "query": "як посилити безпеку SSH сервера", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_016"]}
+{"query_id": "QEU0016", "query": "how to harden SSH server security", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_016"]}
+{"query_id": "QUU0017", "query": "як створити API Gateway з FastAPI", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_017"]}
+{"query_id": "QEE0017", "query": "how to build API Gateway with FastAPI", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_017"]}
+{"query_id": "QUE0017", "query": "як створити API Gateway з FastAPI", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_017"]}
+{"query_id": "QEU0017", "query": "how to build API Gateway with FastAPI", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_017"]}
+{"query_id": "QUU0018", "query": "як налаштувати rate limiting в API Gateway", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_018"]}
+{"query_id": "QEE0018", "query": "how to configure rate limiting in API Gateway", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_018"]}
+{"query_id": "QUE0018", "query": "як налаштувати rate limiting в API Gateway", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_018"]}
+{"query_id": "QEU0018", "query": "how to configure rate limiting in API Gateway", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_018"]}
+{"query_id": "QUU0019", "query": "як налаштувати JWT автентифікацію в FastAPI", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_019"]}
+{"query_id": "QEE0019", "query": "how to configure JWT authentication in FastAPI", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_019"]}
+{"query_id": "QUE0019", "query": "як налаштувати JWT автентифікацію в FastAPI", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_019"]}
+{"query_id": "QEU0019", "query": "how to configure JWT authentication in FastAPI", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_019"]}
+{"query_id": "QUU0020", "query": "як використовувати Redis для кешування в FastAPI", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_020"]}
+{"query_id": "QEE0020", "query": "how to use Redis caching for FastAPI", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_020"]}
+{"query_id": "QUE0020", "query": "як використовувати Redis для кешування в FastAPI", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_020"]}
+{"query_id": "QEU0020", "query": "how to use Redis caching for FastAPI", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_020"]}
+{"query_id": "QUU0021", "query": "як використовувати asyncio для асинхронного Python", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_021"]}
+{"query_id": "QEE0021", "query": "how to use asyncio for async Python", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_021"]}
+{"query_id": "QUE0021", "query": "як використовувати asyncio для асинхронного Python", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_021"]}
+{"query_id": "QEU0021", "query": "how to use asyncio for async Python", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_021"]}
+{"query_id": "QUU0022", "query": "як використовувати Pydantic для валідації даних", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_022"]}
+{"query_id": "QEE0022", "query": "how to use Pydantic for data validation", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_022"]}
+{"query_id": "QUE0022", "query": "як використовувати Pydantic для валідації даних", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_022"]}
+{"query_id": "QEU0022", "query": "how to use Pydantic for data validation", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_022"]}
+{"query_id": "QUU0023", "query": "як писати асинхронні запити з SQLAlchemy", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_023"]}
+{"query_id": "QEE0023", "query": "how to write async queries with SQLAlchemy", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_023"]}
+{"query_id": "QUE0023", "query": "як писати асинхронні запити з SQLAlchemy", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_023"]}
+{"query_id": "QEU0023", "query": "how to write async queries with SQLAlchemy", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_023"]}
+{"query_id": "QUU0024", "query": "як розробляти веб-додатки з FastAPI", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_024"]}
+{"query_id": "QEE0024", "query": "how to develop web applications with FastAPI", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_024"]}
+{"query_id": "QUE0024", "query": "як розробляти веб-додатки з FastAPI", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_024"]}
+{"query_id": "QEU0024", "query": "how to develop web applications with FastAPI", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_024"]}
+{"query_id": "QUU0025", "query": "як використовувати Pytest для тестування Python", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_025"]}
+{"query_id": "QEE0025", "query": "how to use Pytest for Python testing", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_025"]}
+{"query_id": "QUE0025", "query": "як використовувати Pytest для тестування Python", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_025"]}
+{"query_id": "QEU0025", "query": "how to use Pytest for Python testing", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_025"]}
+{"query_id": "QUU0026", "query": "як переглядати логи через systemd та journalctl", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_026"]}
+{"query_id": "QEE0026", "query": "how to view logs with systemd and journalctl", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_026"]}
+{"query_id": "QUE0026", "query": "як переглядати логи через systemd та journalctl", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_026"]}
+{"query_id": "QEU0026", "query": "how to view logs with systemd and journalctl", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_026"]}
+{"query_id": "QUU0027", "query": "як налаштувати продуктивність PostgreSQL", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_027"]}
+{"query_id": "QEE0027", "query": "how to tune PostgreSQL performance", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_027"]}
+{"query_id": "QUE0027", "query": "як налаштувати продуктивність PostgreSQL", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_027"]}
+{"query_id": "QEU0027", "query": "how to tune PostgreSQL performance", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_027"]}
+{"query_id": "QUU0028", "query": "як мігрувати PostgreSQL з 14 на 16", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_028"]}
+{"query_id": "QEE0028", "query": "how to migrate PostgreSQL from 14 to 16", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_028"]}
+{"query_id": "QUE0028", "query": "як мігрувати PostgreSQL з 14 на 16", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_028"]}
+{"query_id": "QEU0028", "query": "how to migrate PostgreSQL from 14 to 16", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_028"]}
+{"query_id": "QUU0029", "query": "як створити резервну копію PostgreSQL", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_029"]}
+{"query_id": "QEE0029", "query": "how to backup and restore PostgreSQL", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_029"]}
+{"query_id": "QUE0029", "query": "як створити резервну копію PostgreSQL", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_029"]}
+{"query_id": "QEU0029", "query": "how to backup and restore PostgreSQL", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_029"]}
+{"query_id": "QUU0030", "query": "що таке SQLite вбудована база даних", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_030"]}
+{"query_id": "QEE0030", "query": "what is SQLite embedded database", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_030"]}
+{"query_id": "QUE0030", "query": "що таке SQLite вбудована база даних", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_030"]}
+{"query_id": "QEU0030", "query": "what is SQLite embedded database", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_030"]}
+{"query_id": "QUU0031", "query": "як налаштувати ZFS файлову систему", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_031"]}
+{"query_id": "QEE0031", "query": "how to configure ZFS filesystem", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_031"]}
+{"query_id": "QUE0031", "query": "як налаштувати ZFS файлову систему", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_031"]}
+{"query_id": "QEU0031", "query": "how to configure ZFS filesystem", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_031"]}
+{"query_id": "QUU0032", "query": "як адмініструвати Linux сервер", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_032"]}
+{"query_id": "QEE0032", "query": "how to administer Linux server", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_032"]}
+{"query_id": "QUE0032", "query": "як адмініструвати Linux сервер", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_032"]}
+{"query_id": "QEU0032", "query": "how to administer Linux server", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_032"]}
+{"query_id": "QUU0033", "query": "як налаштувати cron планові завдання в Linux", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_033"]}
+{"query_id": "QEE0033", "query": "how to schedule cron tasks in Linux", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_033"]}
+{"query_id": "QUE0033", "query": "як налаштувати cron планові завдання в Linux", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_033"]}
+{"query_id": "QEU0033", "query": "how to schedule cron tasks in Linux", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_033"]}
+{"query_id": "QUU0034", "query": "як налаштувати Docker HEALTHCHECK", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_034"]}
+{"query_id": "QEE0034", "query": "how to configure Docker HEALTHCHECK", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_034"]}
+{"query_id": "QUE0034", "query": "як налаштувати Docker HEALTHCHECK", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_034"]}
+{"query_id": "QEU0034", "query": "how to configure Docker HEALTHCHECK", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_034"]}
+{"query_id": "QUU0035", "query": "що таке BGE-M3 модель ембедінгів", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_035"]}
+{"query_id": "QEE0035", "query": "what is BGE-M3 embedding model", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_035"]}
+{"query_id": "QUE0035", "query": "що таке BGE-M3 модель ембедінгів", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_035"]}
+{"query_id": "QEU0035", "query": "what is BGE-M3 embedding model", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_035"]}
+{"query_id": "QUU0036", "query": "що таке miniLM модель ембедінгів", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_036"]}
+{"query_id": "QEE0036", "query": "what is miniLM embedding model", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_036"]}
+{"query_id": "QUE0036", "query": "що таке miniLM модель ембедінгів", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_036"]}
+{"query_id": "QEU0036", "query": "what is miniLM embedding model", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_036"]}
+{"query_id": "QUU0037", "query": "як працює Cross-Encoder для реранкінгу", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_037"]}
+{"query_id": "QEE0037", "query": "how does Cross-Encoder reranking work", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_037"]}
+{"query_id": "QUE0037", "query": "як працює Cross-Encoder для реранкінгу", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_037"]}
+{"query_id": "QEU0037", "query": "how does Cross-Encoder reranking work", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_037"]}
+{"query_id": "QUU0038", "query": "що таке метрика nDCG для оцінки пошуку", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_038"]}
+{"query_id": "QEE0038", "query": "what is nDCG metric for search evaluation", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_038"]}
+{"query_id": "QUE0038", "query": "що таке метрика nDCG для оцінки пошуку", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_038"]}
+{"query_id": "QEU0038", "query": "what is nDCG metric for search evaluation", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_038"]}
+{"query_id": "QUU0039", "query": "що таке метрика UDCG", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_039"]}
+{"query_id": "QEE0039", "query": "what is UDCG metric", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_039"]}
+{"query_id": "QUE0039", "query": "що таке метрика UDCG", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_039"]}
+{"query_id": "QEU0039", "query": "what is UDCG metric", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_039"]}
+{"query_id": "QUU0040", "query": "що таке FTS5 пошуковий індекс", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_040"]}
+{"query_id": "QEE0040", "query": "what is FTS5 search index", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_040"]}
+{"query_id": "QUE0040", "query": "що таке FTS5 пошуковий індекс", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_040"]}
+{"query_id": "QEU0040", "query": "what is FTS5 search index", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_040"]}
+{"query_id": "QUU0041", "query": "як використовувати Chain-of-Thought промптинг", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_041"]}
+{"query_id": "QEE0041", "query": "how to use Chain-of-Thought prompting", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_041"]}
+{"query_id": "QUE0041", "query": "як використовувати Chain-of-Thought промптинг", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_041"]}
+{"query_id": "QEU0041", "query": "how to use Chain-of-Thought prompting", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_041"]}
+{"query_id": "QUU0042", "query": "як дизайнити ефективні промпти для LLM", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_042"]}
+{"query_id": "QEE0042", "query": "how to design effective LLM prompts", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_042"]}
+{"query_id": "QUE0042", "query": "як дизайнити ефективні промпти для LLM", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_042"]}
+{"query_id": "QEU0042", "query": "how to design effective LLM prompts", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_042"]}
+{"query_id": "QUU0043", "query": "що таке OKF метадані для нотаток", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_043"]}
+{"query_id": "QEE0043", "query": "what is OKF metadata for notes", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_043"]}
+{"query_id": "QUE0043", "query": "що таке OKF метадані для нотаток", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_043"]}
+{"query_id": "QEU0043", "query": "what is OKF metadata for notes", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_043"]}
+{"query_id": "QUU0044", "query": "що таке P.A.R.A. методологія", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_044"]}
+{"query_id": "QEE0044", "query": "what is P.A.R.A. methodology", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_044"]}
+{"query_id": "QUE0044", "query": "що таке P.A.R.A. методологія", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_044"]}
+{"query_id": "QEU0044", "query": "what is P.A.R.A. methodology", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_044"]}
+{"query_id": "QUU0045", "query": "що таке POWER Framework", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_045"]}
+{"query_id": "QEE0045", "query": "what is POWER Framework", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_045"]}
+{"query_id": "QUE0045", "query": "що таке POWER Framework", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_045"]}
+{"query_id": "QEU0045", "query": "what is POWER Framework", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_045"]}
+{"query_id": "QUU0046", "query": "що таке MCP Server для AI агентів", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_046"]}
+{"query_id": "QEE0046", "query": "what is MCP Server for AI agents", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_046"]}
+{"query_id": "QUE0046", "query": "що таке MCP Server для AI агентів", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_046"]}
+{"query_id": "QEU0046", "query": "what is MCP Server for AI agents", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_046"]}
+{"query_id": "QUU0047", "query": "що таке Graph RAG пошук знань", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_047"]}
+{"query_id": "QEE0047", "query": "what is Graph RAG knowledge search", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_047"]}
+{"query_id": "QUE0047", "query": "що таке Graph RAG пошук знань", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_047"]}
+{"query_id": "QEU0047", "query": "what is Graph RAG knowledge search", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_047"]}
+{"query_id": "QUU0048", "query": "порівняння моделей ембедінгів BGE-M3 OpenAI miniLM", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_048"]}
+{"query_id": "QEE0048", "query": "compare embedding models BGE-M3 OpenAI miniLM", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_048"]}
+{"query_id": "QUE0048", "query": "порівняння моделей ембедінгів BGE-M3 OpenAI miniLM", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_048"]}
+{"query_id": "QEU0048", "query": "compare embedding models BGE-M3 OpenAI miniLM", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_048"]}
+{"query_id": "QUU0049", "query": "що таке Service Mesh з Istio", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_049"]}
+{"query_id": "QEE0049", "query": "what is Service Mesh with Istio", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_049"]}
+{"query_id": "QUE0049", "query": "що таке Service Mesh з Istio", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_049"]}
+{"query_id": "QEU0049", "query": "what is Service Mesh with Istio", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_049"]}
+{"query_id": "QUU0050", "query": "що таке Disaster Recovery план", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["topic_050"]}
+{"query_id": "QEE0050", "query": "what is Disaster Recovery plan", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["topic_050"]}
+{"query_id": "QUE0050", "query": "що таке Disaster Recovery план", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "conceptual", "tags": ["topic_050"]}
+{"query_id": "QEU0050", "query": "what is Disaster Recovery plan", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "conceptual", "tags": ["topic_050"]}
+{"query_id": "QNUU0001", "query": "як налаштувати TensorFlow на GPU", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "no_answer", "tags": ["no_answer", "absent_001"]}
+{"query_id": "QNEE0001", "query": "how to configure TensorFlow on GPU", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "no_answer", "tags": ["no_answer", "absent_001"]}
+{"query_id": "QNUE0001", "query": "як налаштувати TensorFlow на GPU", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "no_answer", "tags": ["no_answer", "absent_001"]}
+{"query_id": "QNEU0001", "query": "how to configure TensorFlow on GPU", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "no_answer", "tags": ["no_answer", "absent_001"]}
+{"query_id": "QNUU0002", "query": "як створити S3 сумісне сховище", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "no_answer", "tags": ["no_answer", "absent_002"]}
+{"query_id": "QNEE0002", "query": "how to set up S3 compatible storage", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "no_answer", "tags": ["no_answer", "absent_002"]}
+{"query_id": "QNUE0002", "query": "як створити S3 сумісне сховище", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "no_answer", "tags": ["no_answer", "absent_002"]}
+{"query_id": "QNEU0002", "query": "how to set up S3 compatible storage", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "no_answer", "tags": ["no_answer", "absent_002"]}
+{"query_id": "QNUU0003", "query": "як розробляти React компоненти", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "no_answer", "tags": ["no_answer", "absent_003"]}
+{"query_id": "QNEE0003", "query": "how to develop React components", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "no_answer", "tags": ["no_answer", "absent_003"]}
+{"query_id": "QNUE0003", "query": "як розробляти React компоненти", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "no_answer", "tags": ["no_answer", "absent_003"]}
+{"query_id": "QNEU0003", "query": "how to develop React components", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "no_answer", "tags": ["no_answer", "absent_003"]}
+{"query_id": "QNUU0004", "query": "як налаштувати RabbitMQ черги", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "no_answer", "tags": ["no_answer", "absent_004"]}
+{"query_id": "QNEE0004", "query": "how to configure RabbitMQ queues", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "no_answer", "tags": ["no_answer", "absent_004"]}
+{"query_id": "QNUE0004", "query": "як налаштувати RabbitMQ черги", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "no_answer", "tags": ["no_answer", "absent_004"]}
+{"query_id": "QNEU0004", "query": "how to configure RabbitMQ queues", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "no_answer", "tags": ["no_answer", "absent_004"]}
+{"query_id": "QNUU0005", "query": "як індексувати дані в Elasticsearch", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "no_answer", "tags": ["no_answer", "absent_005"]}
+{"query_id": "QNEE0005", "query": "how to index data in Elasticsearch", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "no_answer", "tags": ["no_answer", "absent_005"]}
+{"query_id": "QNUE0005", "query": "як індексувати дані в Elasticsearch", "language": "uk", "target_language": "en", "stratum": "ua_to_en", "query_class": "no_answer", "tags": ["no_answer", "absent_005"]}
+{"query_id": "QNEU0005", "query": "how to index data in Elasticsearch", "language": "en", "target_language": "uk", "stratum": "en_to_ua", "query_class": "no_answer", "tags": ["no_answer", "absent_005"]}
+{"query_id": "QDD0001", "query": "What is the best embedding model for multilingual search?", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["embedding", "distractor"]}
+{"query_id": "QDD0002", "query": "Яка найкраща модель ембедінгів для багатомовного пошуку?", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["embedding", "distractor"]}
+{"query_id": "QDD0003", "query": "Compare Docker build strategies for production", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["docker", "distractor"]}
+{"query_id": "QDD0004", "query": "Порівняння стратегій збірки Docker для продакшну", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["docker", "distractor"]}
+{"query_id": "QDD0005", "query": "Kubernetes vs Nomad for container orchestration", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["kubernetes", "distractor"]}
+{"query_id": "QDD0006", "query": "Kubernetes чи Nomad для оркестрації контейнерів", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["kubernetes", "distractor"]}
+{"query_id": "QDD0007", "query": "Best monitoring stack for production infrastructure", "language": "en", "target_language": "en", "stratum": "en_to_en", "query_class": "conceptual", "tags": ["monitoring", "distractor"]}
+{"query_id": "QDD0008", "query": "Найкращий стек моніторингу для продакшн інфраструктури", "language": "uk", "target_language": "uk", "stratum": "ua_to_ua", "query_class": "conceptual", "tags": ["monitoring", "distractor"]}

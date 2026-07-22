@@ -1,0 +1,849 @@
+{
+  "schema_version": "3.1.0",
+  "benchmark_version": "3.1.0",
+  "generator": "generate_benchmark.py",
+  "generator_seed": 42,
+  "generated_at": "2026-07-22T00:00:00+00:00",
+  "corpus": {
+    "count": 100,
+    "hash_sha256": "63b1b9ed5590cfad08a718b69cb168bf7b3b7ca5ce40d9f225fa704743da43b6",
+    "files": [
+      {
+        "document_id": "topic-001-en.md",
+        "file": "corpus/topic-001-en.md",
+        "sha256": "0ee66e599019845d9a87b848795342c97d1a686316706c1f6983fe243c722bcd",
+        "type": "Resource",
+        "title": "Docker Multi-Stage Build Optimization",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-001-ua.md",
+        "file": "corpus/topic-001-ua.md",
+        "sha256": "63e688b1a035c610ffba51e9ffd72ea27fa31ee3f616fc72de24b00d7cb60bcf",
+        "type": "Resource",
+        "title": "Оптимізація Docker через Multi-Stage Build",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-002-en.md",
+        "file": "corpus/topic-002-en.md",
+        "sha256": "0c4675e7c24f3f4066ad1dd18e764fb39f9a25422d411f9eac02d1111a298a5a",
+        "type": "Resource",
+        "title": "Docker Compose Networks and Volumes",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-002-ua.md",
+        "file": "corpus/topic-002-ua.md",
+        "sha256": "d2f4fc26072609fa8686f2618fafeb23c802c6a99209d7adfcedbe4d3667d7b1",
+        "type": "Resource",
+        "title": "Docker Compose мережі та volumes",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-003-en.md",
+        "file": "corpus/topic-003-en.md",
+        "sha256": "b2c6d06f1bfd1dd8a5117b52f3db38108e485c0467fc516bfd098904db33e7b6",
+        "type": "Resource",
+        "title": "Kubernetes Deployment with k3s",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-003-ua.md",
+        "file": "corpus/topic-003-ua.md",
+        "sha256": "73b5a84decadd03ed2c88461c910a0cbf1306d21511c64c6f0b8c15bba8548cf",
+        "type": "Resource",
+        "title": "Розгортання Kubernetes з k3s",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-004-en.md",
+        "file": "corpus/topic-004-en.md",
+        "sha256": "e2b24ba954e9517c2352607bc753d82d24d941768dd0615859e415dbde2f3a0e",
+        "type": "Resource",
+        "title": "Kubernetes Networking and Ingress",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-004-ua.md",
+        "file": "corpus/topic-004-ua.md",
+        "sha256": "347bbacc3914d06507421584e26ba8ecb268652706e95054b3640b1b8da79cec",
+        "type": "Resource",
+        "title": "Kubernetes Networking та Ingress",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-005-en.md",
+        "file": "corpus/topic-005-en.md",
+        "sha256": "86e1c092921f288c6b3c147261dd091c8fcc8010157cfab11352d2e715d27b2b",
+        "type": "Resource",
+        "title": "CI/CD Pipeline with GitHub Actions",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-005-ua.md",
+        "file": "corpus/topic-005-ua.md",
+        "sha256": "c5ed748933bcfaa5ad7ce72e63a7740c75cd69a23652846cb0d5f7558a40062b",
+        "type": "Resource",
+        "title": "CI/CD Pipeline з GitHub Actions",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-006-en.md",
+        "file": "corpus/topic-006-en.md",
+        "sha256": "704f1f4d9b2712069fe5bc4464911df48e8f7f940e2ed9aeabefddeaed2a0ba1",
+        "type": "Resource",
+        "title": "Terraform Infrastructure as Code",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-006-ua.md",
+        "file": "corpus/topic-006-ua.md",
+        "sha256": "115744d5a4593ec60c65ea1d9bb25804c95ffbf112a45a10631f9f3d5adb4efc",
+        "type": "Resource",
+        "title": "Terraform Infrastructure as Code",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-007-en.md",
+        "file": "corpus/topic-007-en.md",
+        "sha256": "04d2708b18a416e21331099abcb82416f49410ae7e5541cac7dd9c3e5ebb02fd",
+        "type": "Resource",
+        "title": "Ansible Configuration Automation",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-007-ua.md",
+        "file": "corpus/topic-007-ua.md",
+        "sha256": "36e4e33328804768292b08c9a75434d06fbd16063890ae80f2e289c113d94a76",
+        "type": "Resource",
+        "title": "Ansible автоматизація конфігурацій",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-008-en.md",
+        "file": "corpus/topic-008-en.md",
+        "sha256": "bb93f5a45cee0938873fad45927941815b49d039fb764c79454dc663e43db4db",
+        "type": "Resource",
+        "title": "Backup Strategy with BorgBackup",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-008-ua.md",
+        "file": "corpus/topic-008-ua.md",
+        "sha256": "60392a49ffc7096a020e5cd461a69e49156612a189f7738e79ed783312757c76",
+        "type": "Resource",
+        "title": "Стратегія резервного копіювання BorgBackup",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-009-en.md",
+        "file": "corpus/topic-009-en.md",
+        "sha256": "44d9982366d4011a1f919d55284f820d1346dcdeed2843a474b658c110859dd8",
+        "type": "Resource",
+        "title": "Prometheus and Grafana Monitoring",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-009-ua.md",
+        "file": "corpus/topic-009-ua.md",
+        "sha256": "983f2069207610186ad41ed07b23067f96cbe1ac5fce4d6f36405571cb4588ba",
+        "type": "Resource",
+        "title": "Prometheus та Grafana моніторинг",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-010-en.md",
+        "file": "corpus/topic-010-en.md",
+        "sha256": "07b6b452a0cb707e34ee2e2a809872abf1abccd104dc436742a2dffc0fd4a322",
+        "type": "Resource",
+        "title": "Prometheus Alerting Rules",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-010-ua.md",
+        "file": "corpus/topic-010-ua.md",
+        "sha256": "1d8351a4779a2a0096ae7324a8d2e2b7ba8adef36f2aa042d409d6b83f17393a",
+        "type": "Resource",
+        "title": "Alerting правила Prometheus",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-011-en.md",
+        "file": "corpus/topic-011-en.md",
+        "sha256": "e59fad1667d51d8f6620ac181f1cfdd71b49c5fd559f57e2fc9111952a5e5222",
+        "type": "Resource",
+        "title": "NFTables Firewall Configuration",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-011-ua.md",
+        "file": "corpus/topic-011-ua.md",
+        "sha256": "b5fae090681ad1707bb1b1eb4933e16d1da09d62619d7cecf93d75435d601c06",
+        "type": "Resource",
+        "title": "Налаштування NFTables фаєрвола",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-012-en.md",
+        "file": "corpus/topic-012-en.md",
+        "sha256": "e534c2a377e0c508cc35fd89ebcc2257c1d18c6d15e3c4e7ee332f22fc06c771",
+        "type": "Resource",
+        "title": "SSH Protection with Fail2ban",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-012-ua.md",
+        "file": "corpus/topic-012-ua.md",
+        "sha256": "d53dafb5e1872674cfb712bc65d3f568d2ef5bd1dc79b92308683c03bfb2e4da",
+        "type": "Resource",
+        "title": "Захист SSH з Fail2ban",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-013-en.md",
+        "file": "corpus/topic-013-en.md",
+        "sha256": "ddc23f76cb7a5e5c415d40138dd3d77c63a3e9537d5887f6c1f20c2c1e0b8b51",
+        "type": "Resource",
+        "title": "Let's Encrypt TLS Certificates",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-013-ua.md",
+        "file": "corpus/topic-013-ua.md",
+        "sha256": "a3e2f2eaad867f7d46ab0d82b697879dafe8d41b01d8f9a526700bf8d7e9bf6a",
+        "type": "Resource",
+        "title": "TLS сертифікати Let's Encrypt",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-014-en.md",
+        "file": "corpus/topic-014-en.md",
+        "sha256": "7e04fc8fc4b484403be47874186ac742e8884225b157662c3ba5da31ee644a72",
+        "type": "Resource",
+        "title": "Tailscale VPN Setup",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-014-ua.md",
+        "file": "corpus/topic-014-ua.md",
+        "sha256": "ceb71bf60a60531ea0266eac6f9f6eea690e8b0885c1ab50fb4263c8539eb33a",
+        "type": "Resource",
+        "title": "Tailscale VPN налаштування",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-015-en.md",
+        "file": "corpus/topic-015-en.md",
+        "sha256": "c76448bf3e004f54caf8d97ee15678f7f5c3aea94b05419e2da46bcb8530b6d3",
+        "type": "Resource",
+        "title": "Infrastructure Security Audit",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-015-ua.md",
+        "file": "corpus/topic-015-ua.md",
+        "sha256": "41da88bf497a1bbdf662e95c25a9db79da02101eae00995a250b3eb04f778201",
+        "type": "Resource",
+        "title": "Аудит безпеки інфраструктури",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-016-en.md",
+        "file": "corpus/topic-016-en.md",
+        "sha256": "d63f8998149689242fcbbc149c0099b92dfbb93bff1a045cfb743953c93a1d53",
+        "type": "Resource",
+        "title": "SSH Security Hardening",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-016-ua.md",
+        "file": "corpus/topic-016-ua.md",
+        "sha256": "2b13f976d0af247e9b131226690af4ebaccee7c7f5e0803b14dbd6ffc6d2cb1c",
+        "type": "Resource",
+        "title": "Посилення безпеки SSH",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-017-en.md",
+        "file": "corpus/topic-017-en.md",
+        "sha256": "5135cbfada47da1d10d54d7d5697ec0bfaf4520ad6e7633f81a9013010741e71",
+        "type": "Resource",
+        "title": "API Gateway with FastAPI",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-017-ua.md",
+        "file": "corpus/topic-017-ua.md",
+        "sha256": "b453f314fa2f15162138ca5c7ebde468056fabb4b44f0ab34bd55eb35073e64a",
+        "type": "Resource",
+        "title": "API Gateway з FastAPI",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-018-en.md",
+        "file": "corpus/topic-018-en.md",
+        "sha256": "c9c37c9b8bbae6428dbc1b9f217e0fe50f305e02ef9ccd314a57b2b0da488ad0",
+        "type": "Resource",
+        "title": "Rate Limiting in API Gateway",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-018-ua.md",
+        "file": "corpus/topic-018-ua.md",
+        "sha256": "5a7f88825f65e82fc457f3f1560cb181925a9e3604918a03fe5d4f99382d13fe",
+        "type": "Resource",
+        "title": "Rate Limiting в API Gateway",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-019-en.md",
+        "file": "corpus/topic-019-en.md",
+        "sha256": "5f2bf2d2ecb3c524a456e42c7c61c5a6bac789a86a8f9e92a8950e4a60ccfae9",
+        "type": "Resource",
+        "title": "JWT Authentication in FastAPI",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-019-ua.md",
+        "file": "corpus/topic-019-ua.md",
+        "sha256": "0dd057593fe23ccf3ec48515e29261429762751a57dccb07b043d33dc6e4f278",
+        "type": "Resource",
+        "title": "JWT автентифікація в FastAPI",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-020-en.md",
+        "file": "corpus/topic-020-en.md",
+        "sha256": "eca9c1832003ae81bb08c6f3af762e79be8c4d848fe3cef6464da0cfc3544f95",
+        "type": "Resource",
+        "title": "Redis Caching for FastAPI",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-020-ua.md",
+        "file": "corpus/topic-020-ua.md",
+        "sha256": "92f132601f963fe74621d7b45caf4262bc87c2468e0e42ba1c87826541bf04ec",
+        "type": "Resource",
+        "title": "Redis кешування для FastAPI",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-021-en.md",
+        "file": "corpus/topic-021-en.md",
+        "sha256": "0d1ce66eefa999d7165623ff7e0dedf6793aa0fff3f1d018249d1c5badf63366",
+        "type": "Resource",
+        "title": "Async Python with asyncio",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-021-ua.md",
+        "file": "corpus/topic-021-ua.md",
+        "sha256": "9e9570b91830666ca7ae44d7ed70923c461edf3bab65d5bc991c94aa7e719273",
+        "type": "Resource",
+        "title": "Асинхронний Python з asyncio",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-022-en.md",
+        "file": "corpus/topic-022-en.md",
+        "sha256": "af718f817b05c0d01350db4bf22d8535a9be7c2ffc662e45178692c35fd0aa59",
+        "type": "Resource",
+        "title": "Pydantic Data Validation",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-022-ua.md",
+        "file": "corpus/topic-022-ua.md",
+        "sha256": "a83928854b04a8e496a4bc561cd9bf345f7acbf23819aa21c48907947eaebc8f",
+        "type": "Resource",
+        "title": "Pydantic валідація даних",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-023-en.md",
+        "file": "corpus/topic-023-en.md",
+        "sha256": "c9b6a946dfd81202071cb892d1d7bf452eb611386199e5d3e14474a0214346f2",
+        "type": "Resource",
+        "title": "SQLAlchemy ORM Async Queries",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-023-ua.md",
+        "file": "corpus/topic-023-ua.md",
+        "sha256": "dc2d6e2117841a00b52aca6310c75af01ec7c1f2d0b8a3af01b1548231fc466f",
+        "type": "Resource",
+        "title": "SQLAlchemy ORM асинхронні запити",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-024-en.md",
+        "file": "corpus/topic-024-en.md",
+        "sha256": "26d22c385d579c3a85b034b2d795b334862f19f6dd2fab5a8843a996a6be45d7",
+        "type": "Resource",
+        "title": "FastAPI Web Development",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-024-ua.md",
+        "file": "corpus/topic-024-ua.md",
+        "sha256": "54bb9e8468a3e9796f2c335246ce167f1b61a052d367fbb93a00eb29a7bb41e7",
+        "type": "Resource",
+        "title": "FastAPI розробка веб-додатків",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-025-en.md",
+        "file": "corpus/topic-025-en.md",
+        "sha256": "9edc6dfc503fec2e4e45dc9791b924755977e64c00da0b3b3b649a40f7777923",
+        "type": "Resource",
+        "title": "Testing with Pytest",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-025-ua.md",
+        "file": "corpus/topic-025-ua.md",
+        "sha256": "157b03228d07f6ef1575de21a98a7c0ed2d91087c5c99d549ce841845f6df45d",
+        "type": "Resource",
+        "title": "Тестування з Pytest",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-026-en.md",
+        "file": "corpus/topic-026-en.md",
+        "sha256": "1935eaf59231a11f748ec11b425092c585ecca92dd605d525153133a2410cc70",
+        "type": "Resource",
+        "title": "Logging with systemd and journalctl",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-026-ua.md",
+        "file": "corpus/topic-026-ua.md",
+        "sha256": "f65f345f4463bbd4785b8b71ed4869ff69d3a4d51625e62b525cef8a7436b15e",
+        "type": "Resource",
+        "title": "Логування з systemd та journalctl",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-027-en.md",
+        "file": "corpus/topic-027-en.md",
+        "sha256": "25d41b072e243900e2f7a4221f0f2769efb86da2a6ce7a8b447a751cf26197cc",
+        "type": "Resource",
+        "title": "PostgreSQL Performance Tuning",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-027-ua.md",
+        "file": "corpus/topic-027-ua.md",
+        "sha256": "103a4e7d9f2a6620c8aaf612b5180dc3546addb677a349fc3086ff40e2d7b66e",
+        "type": "Resource",
+        "title": "Налаштування PostgreSQL продуктивності",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-028-en.md",
+        "file": "corpus/topic-028-en.md",
+        "sha256": "231785d4b9c77066d5d915fb5f0a3b7e21ead0cb8d3001dd17043993025a9ed3",
+        "type": "Resource",
+        "title": "PostgreSQL 14 to 16 Migration",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-028-ua.md",
+        "file": "corpus/topic-028-ua.md",
+        "sha256": "e8a0b7a897c5f1920011790b187f03e7fd0fd2edac384bd2c3627e2bb6ab6769",
+        "type": "Resource",
+        "title": "Міграція PostgreSQL 14 на 16",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-029-en.md",
+        "file": "corpus/topic-029-en.md",
+        "sha256": "44c3cb0e9a5ffbf0a692a8d5af304ce8ebdf4e00d69d507360da3abe5c0fbf45",
+        "type": "Resource",
+        "title": "PostgreSQL Backup and Restore",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-029-ua.md",
+        "file": "corpus/topic-029-ua.md",
+        "sha256": "013f2603b7105152a47c7d16fc2ffd0cf227e2a87c1db5030c1b8b77bac46430",
+        "type": "Resource",
+        "title": "Резервне копіювання PostgreSQL",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-030-en.md",
+        "file": "corpus/topic-030-en.md",
+        "sha256": "52305ee22cd971b34a6583661f0771b803ea04ebe3590e3394046b3ee615ba2c",
+        "type": "Resource",
+        "title": "SQLite Embedded Database",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-030-ua.md",
+        "file": "corpus/topic-030-ua.md",
+        "sha256": "09744fba194b6536523fa70a2286396fca48adfcd59427ab15d3226a1a49029d",
+        "type": "Resource",
+        "title": "SQLite вбудована база даних",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-031-en.md",
+        "file": "corpus/topic-031-en.md",
+        "sha256": "9b17b3b71cf94a34efca84bd85c0f5eb12191aa8bb03426c29ecc95e33273e6d",
+        "type": "Resource",
+        "title": "ZFS Filesystem",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-031-ua.md",
+        "file": "corpus/topic-031-ua.md",
+        "sha256": "c3be89d7f77b42f19d126053ab755a5d11ff30ff81268a5fbec4dfdee30c654f",
+        "type": "Resource",
+        "title": "ZFS файлова система",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-032-en.md",
+        "file": "corpus/topic-032-en.md",
+        "sha256": "39a7999294e23f3cf935f5e78475a77eca4e659a1789c2182baf6b6342bd8dfd",
+        "type": "Resource",
+        "title": "Linux Server Administration",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-032-ua.md",
+        "file": "corpus/topic-032-ua.md",
+        "sha256": "27d8c20b5589a49d8b1e8be7c09899a357fb7eda6880ade1c011e5b9aa3afbe1",
+        "type": "Resource",
+        "title": "Linux адміністрування серверів",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-033-en.md",
+        "file": "corpus/topic-033-en.md",
+        "sha256": "b36899deeb623a31135086fe1b92b847accda778c31a7cae230d3badb7545ada",
+        "type": "Resource",
+        "title": "Cron Scheduled Tasks",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-033-ua.md",
+        "file": "corpus/topic-033-ua.md",
+        "sha256": "ed86df62b6d35f96e029ff85e57889c5f875bbca450f57aac33e53ef6f89410e",
+        "type": "Resource",
+        "title": "Cron планові завдання",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-034-en.md",
+        "file": "corpus/topic-034-en.md",
+        "sha256": "d8c79d1764cb9786e138b6336a01752261c6f7f4a697a5a562728061bc6ddb81",
+        "type": "Resource",
+        "title": "Docker Healthcheck Configuration",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-034-ua.md",
+        "file": "corpus/topic-034-ua.md",
+        "sha256": "5f53af9c9eea0d7074fd8720ace83367c32d89cae1d135b7d20596492a0f034f",
+        "type": "Resource",
+        "title": "Docker Healthcheck налаштування",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-035-en.md",
+        "file": "corpus/topic-035-en.md",
+        "sha256": "48aaec84806b9041de59c321f723ae3fb16331b27f185dab5385e319608c683c",
+        "type": "Resource",
+        "title": "BGE-M3 Embedding Model",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-035-ua.md",
+        "file": "corpus/topic-035-ua.md",
+        "sha256": "d99726660a827c4a8aa6159e91bd86a081fafc68f8b4af42edb7141f5c105ff0",
+        "type": "Resource",
+        "title": "BGE-M3 модель ембедінгів",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-036-en.md",
+        "file": "corpus/topic-036-en.md",
+        "sha256": "dbfff83c8bbcb8d43a6c7aff0864e290fbd21ba996a4e2dcd16b832063465ac4",
+        "type": "Resource",
+        "title": "miniLM Embedding Model",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-036-ua.md",
+        "file": "corpus/topic-036-ua.md",
+        "sha256": "90c71df8051358e45d4c971997fecb5e4412e632d445bad8427781982a040b67",
+        "type": "Resource",
+        "title": "miniLM модель ембедінгів",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-037-en.md",
+        "file": "corpus/topic-037-en.md",
+        "sha256": "f32549d3187427e602ebb3ed3dc3601b17666815f2d55e30c1a65c5755cf6ada",
+        "type": "Resource",
+        "title": "Cross-Encoder for Reranking",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-037-ua.md",
+        "file": "corpus/topic-037-ua.md",
+        "sha256": "a4c89e3186b4a1ddf7467348e08687839ab21ffb666931779c25fa1d3e90cba6",
+        "type": "Resource",
+        "title": "Cross-Encoder для реранкінгу",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-038-en.md",
+        "file": "corpus/topic-038-en.md",
+        "sha256": "dedd165dd78b96093f72a1daaa136a12c24c87a783c37c07c685291e337c3c6d",
+        "type": "Resource",
+        "title": "nDCG Metric for Search Evaluation",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-038-ua.md",
+        "file": "corpus/topic-038-ua.md",
+        "sha256": "51d24f534cf2f2d224b738f777b78c8ce1f086ce5ec547774af4876c3f8cb65f",
+        "type": "Resource",
+        "title": "Метрика nDCG для оцінки пошуку",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-039-en.md",
+        "file": "corpus/topic-039-en.md",
+        "sha256": "aa9f1ed7271452e47d7e1433aaf72e27c654925ac555ecb86da6023701915f7e",
+        "type": "Resource",
+        "title": "UDCG Metric for Search",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-039-ua.md",
+        "file": "corpus/topic-039-ua.md",
+        "sha256": "9df4c8752a03efd6b4b27a678245ff841fc13214fa837a384e6821d21170a222",
+        "type": "Resource",
+        "title": "Метрика UDCG for пошуку",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-040-en.md",
+        "file": "corpus/topic-040-en.md",
+        "sha256": "d82fa549b90ddfc4faab29bb97ba08b4b70a6d8acaec84fcb68d4371899ec66d",
+        "type": "Resource",
+        "title": "FTS5 Search Index",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-040-ua.md",
+        "file": "corpus/topic-040-ua.md",
+        "sha256": "f35f581a3729bc060e709e3cc8b5a8b93a6fa2f0973b40fb61e9f879533b3d9c",
+        "type": "Resource",
+        "title": "FTS5 пошуковий індекс",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-041-en.md",
+        "file": "corpus/topic-041-en.md",
+        "sha256": "bcafd046ec87c04123968ab99e50c22854553026fb8274a8891ef16dff1011e1",
+        "type": "Resource",
+        "title": "Chain-of-Thought Prompting",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-041-ua.md",
+        "file": "corpus/topic-041-ua.md",
+        "sha256": "937ba4410275b688921adc12dc82dbd604c17b6fb3a170b87726defab98e9622",
+        "type": "Resource",
+        "title": "Chain-of-Thought промптинг",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-042-en.md",
+        "file": "corpus/topic-042-en.md",
+        "sha256": "c1019bb97c2b0d4bd2bcee450554833cc3cedca28f4898ecc974a79d850d24ce",
+        "type": "Resource",
+        "title": "LLM Prompt Design",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-042-ua.md",
+        "file": "corpus/topic-042-ua.md",
+        "sha256": "6bf01f63ace61dce6e7f53d2d63904b2521a9c7df80dfc359ee8fd25beaebc92",
+        "type": "Resource",
+        "title": "Дизайн промптів для LLM",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-043-en.md",
+        "file": "corpus/topic-043-en.md",
+        "sha256": "f77c75d2fcb20013644bb080312f67af968c0c3ca4c798c5be6763456638f9e7",
+        "type": "Resource",
+        "title": "OKF Metadata for Notes",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-043-ua.md",
+        "file": "corpus/topic-043-ua.md",
+        "sha256": "4ecdf0beb187cadfccf2a0e51df36d9aee8b09d1c0661833d365f2cf47d63177",
+        "type": "Resource",
+        "title": "OKF метадані для нотаток",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-044-en.md",
+        "file": "corpus/topic-044-en.md",
+        "sha256": "81956cdb631d42165b2922c63a9ab98094621b58ea0f303041bcc8f3e552b4af",
+        "type": "Resource",
+        "title": "P.A.R.A. Knowledge Organization",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-044-ua.md",
+        "file": "corpus/topic-044-ua.md",
+        "sha256": "4d9d4308b2dd9b8924e14714576da39555e3824aa540d165f7c9e697bb3c6c95",
+        "type": "Resource",
+        "title": "P.A.R.A. методологія організації знань",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-045-en.md",
+        "file": "corpus/topic-045-en.md",
+        "sha256": "35896921b9e7024f0446ef77776f473565f225a6ecbb71d5c0d40fe8d581f7a4",
+        "type": "Resource",
+        "title": "POWER Framework Management",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-045-ua.md",
+        "file": "corpus/topic-045-ua.md",
+        "sha256": "13decda499613d9106487d08d3074e97fa0f09bdf134d0068de0b32ffb8ea3ae",
+        "type": "Resource",
+        "title": "POWER Framework управління",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-046-en.md",
+        "file": "corpus/topic-046-en.md",
+        "sha256": "9995d48ccd0adc91d01af30f7a89f889299102b13c71ffa935cd55acd2f70e56",
+        "type": "Resource",
+        "title": "MCP Server for AI Agents",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-046-ua.md",
+        "file": "corpus/topic-046-ua.md",
+        "sha256": "d9fa58e4241feed529506d34421ff58a4b98d4d76d5d9f2790b5c364fd288ddb",
+        "type": "Resource",
+        "title": "MCP Server для AI агентів",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-047-en.md",
+        "file": "corpus/topic-047-en.md",
+        "sha256": "fdb65f0f76fa5726e7c0499825907c07b4432c7b27dae36c038791a8d68a0892",
+        "type": "Resource",
+        "title": "Graph RAG Knowledge Search",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-047-ua.md",
+        "file": "corpus/topic-047-ua.md",
+        "sha256": "dc1cc8f377aa5898a2d8b866955986c4759e9b179d25af14bebbd5924ec82a4c",
+        "type": "Resource",
+        "title": "Graph RAG пошук знань",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-048-en.md",
+        "file": "corpus/topic-048-en.md",
+        "sha256": "5151d0ee71f631fcdeff873661d1c91df82375d572e001a2bcb3f1d308747a04",
+        "type": "Resource",
+        "title": "Embedding Models Comparison",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-048-ua.md",
+        "file": "corpus/topic-048-ua.md",
+        "sha256": "fddf96ebb6af0b0ff253a96eafdc51881118ea80dce288db471602844c11490b",
+        "type": "Resource",
+        "title": "Порівняння моделей ембедінгів",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-049-en.md",
+        "file": "corpus/topic-049-en.md",
+        "sha256": "8e3bae69e753cf896db1e4b71c86d8f4808d70fac03c5985a4c44bec5c2fc68a",
+        "type": "Resource",
+        "title": "Service Mesh with Istio",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-049-ua.md",
+        "file": "corpus/topic-049-ua.md",
+        "sha256": "901b00e9818577376e0629e3e5d1bbd597bd3ed6bc0963d872242b62378c19bc",
+        "type": "Resource",
+        "title": "Service Mesh з Istio",
+        "language": "uk"
+      },
+      {
+        "document_id": "topic-050-en.md",
+        "file": "corpus/topic-050-en.md",
+        "sha256": "38b5d01bbaa34fe0894a53d2295b10e1ad4cf30723c7fae324958cc3a235236b",
+        "type": "Resource",
+        "title": "Disaster Recovery Plan",
+        "language": "en"
+      },
+      {
+        "document_id": "topic-050-ua.md",
+        "file": "corpus/topic-050-ua.md",
+        "sha256": "827f053f0e8265a9807cb60053f4541ec4841f5b843b011f043bb6c4d1196dbf",
+        "type": "Resource",
+        "title": "Disaster Recovery план",
+        "language": "uk"
+      }
+    ]
+  },
+  "queries": {
+    "count": 228,
+    "hash_sha256": "52d152e13c039c083eeefcb8066f0ec9c0f100ae1a16e9f9cd5f6fdd57c90d3a",
+    "strata": {
+      "ua_to_ua": 59,
+      "en_to_en": 59,
+      "ua_to_en": 55,
+      "en_to_ua": 55
+    },
+    "answerable_per_stratum": {
+      "ua_to_ua": 54,
+      "en_to_en": 54,
+      "ua_to_en": 50,
+      "en_to_ua": 50
+    }
+  },
+  "qrels": {
+    "count": 416,
+    "hash_sha256": "d91574c0d0c078391fca8f9b4ad41237dd81de78528739ae5cf3631bea868ea8",
+    "annotator": "synthetic-generator-v1",
+    "rubric_version": "1.0",
+    "annotation_type": "synthetic_deterministic"
+  },
+  "expected_answers": {
+    "count": 228,
+    "hash_sha256": "583e444d22a81bda057fa25280a48e05154181cc2a0fbdea268f1f350004d440"
+  },
+  "scope_and_limitations": [
+    "SYNTHETIC BENCHMARK — not human-annotated, not production evidence",
+    "Dataset is topic-driven: 50 frozen topics with explicit bilingual content",
+    "Relevance is rule-assigned by topic membership, not by human judges",
+    "Corpus documents are generated from templates, not real vault data",
+    "No private paths, secrets, or real note content included",
+    "Suitable for regression testing and CI gates only",
+    "Sparse qrels: only positive + distractor entries; missing pair = relevance 0"
+  ]
+}

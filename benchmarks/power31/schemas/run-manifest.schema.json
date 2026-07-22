@@ -1,0 +1,88 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://github.com/weby-homelab/power-framework/benchmarks/power31/schemas/run-manifest.schema.json",
+    "title": "POWER 3.1 Run Manifest",
+    "description": "Metadata for a benchmark run",
+    "type": "object",
+    "required": [
+        "run_id",
+        "benchmark_version",
+        "timestamp",
+        "git_commit",
+        "dirty_tree",
+        "python_version",
+        "platform",
+        "hardware_profile",
+        "config_file",
+        "strata",
+        "total_queries",
+        "corpus_hash",
+        "queries_hash",
+        "qrels_hash"
+    ],
+    "properties": {
+        "run_id": {
+            "type": "string",
+            "pattern": "^run-[0-9a-f]{8}$"
+        },
+        "benchmark_version": {
+            "type": "string",
+            "pattern": "^3\\.1\\.0$"
+        },
+        "timestamp": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "git_commit": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$"
+        },
+        "dirty_tree": {
+            "type": "boolean",
+            "enum": [false]
+        },
+        "python_version": {
+            "type": "string"
+        },
+        "platform": {
+            "type": "string"
+        },
+        "hardware_profile": {
+            "type": "object",
+            "properties": {
+                "cpu": { "type": "string" },
+                "cores": { "type": "integer" },
+                "ram_gb": { "type": "number" }
+            },
+            "required": ["cpu", "cores", "ram_gb"]
+        },
+        "config_file": {
+            "type": "string"
+        },
+        "strata": {
+            "type": "object",
+            "patternProperties": {
+                "^(ua_to_ua|en_to_en|ua_to_en|en_to_ua)$": { "type": "integer" }
+            },
+            "minProperties": 4,
+            "maxProperties": 4
+        },
+        "total_queries": {
+            "type": "integer",
+            "minimum": 200
+        },
+        "corpus_hash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+        },
+        "queries_hash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+        },
+        "qrels_hash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+        }
+    },
+    "additionalProperties": false
+}

@@ -25,7 +25,7 @@ from typing import TYPE_CHECKING
 
 from .chunker import SemanticChunker
 from .db import _init_db
-from .embeddings import get_embedding_manager
+from .embeddings import configured_embedding_identity, get_embedding_manager
 from .ignore import should_skip
 from .index_worker import set_vault_dir
 from .models import OKFMetadata  # noqa: TC001
@@ -93,7 +93,7 @@ RERANK_CANDIDATE_LIMIT = 20
 # Max characters of each candidate doc fed to the reranker (truncated excerpt).
 # Keeps cross-encoder token cost bounded on CPU (Performance Plan §4).
 RERANK_TEXT_CHARS = 800
-DEFAULT_SEARCH_MODE = "reranked"
+DEFAULT_SEARCH_MODE = "semantic"
 CANONICAL_SEARCH_MODES = frozenset({"fts", "vector", "hybrid", "semantic", "reranked"})
 SEARCH_MODE_ALIASES = {"hybrid_reranked": "reranked"}
 
@@ -190,10 +190,13 @@ def validate_dense_index(vault_dir: Path) -> int:
             f"Dense index is empty or inconsistent for {vault_dir}. Run 'power sync {vault_dir}'."
         )
     dimension = min_size // 4
+    expected_provider, expected_model = configured_embedding_identity()
     required_manifest = {
-        "schema_version": "1",
+        "schema_version": "2",
         "embedding_dimension": str(dimension),
         "chunk_count": str(rows),
+        "embedding_provider": expected_provider,
+        "embedding_model": expected_model,
     }
     if any(manifest.get(key) != value for key, value in required_manifest.items()):
         raise DenseIndexUnavailableError(
@@ -523,7 +526,7 @@ def _sync_vault_to_db(
         cursor.executemany(
             "INSERT OR REPLACE INTO dense_index_manifest (manifest_key, manifest_value) VALUES (?, ?)",
             [
-                ("schema_version", "1"),
+                ("schema_version", "2"),
                 ("embedding_dimension", str(embedding_bytes // 4)),
                 ("chunk_count", str(dense_count)),
                 ("embedding_provider", provider),
@@ -1008,12 +1011,11 @@ def search_vault(
         vault_dir: Path to the vault root directory.
         query: Search query string.
         max_results: Maximum number of results to return.
-        mode: Search mode. POWER 3.0 canonical mode is "reranked" (default):
-              FTS5/BM25 -> top-150 -> cross-encoder reranker (Jina v2) -> top-20,
-              with a dense-embedding fallback only when FTS yields < 5 hits.
-              Developer/debug modes: "fts" (BM25), "vector" (TF cosine),
-              "hybrid" (RRF of FTS + vector), "semantic" (dense embedding),
-              "hybrid_reranked" is a deprecated alias of "reranked".
+        mode: Search mode. POWER 3.1 canonical mode is "semantic" (default),
+              backed by the pinned BGE-M3 ONNX revision and a compatible dense
+              index. Other explicit modes are "fts" (BM25), "vector" (TF
+              cosine), "hybrid" (RRF of FTS + TF vector), and "reranked".
+              ``hybrid_reranked`` is a deprecated alias of ``reranked``.
 
     Returns:
         List of SearchResult sorted by relevance (highest first).

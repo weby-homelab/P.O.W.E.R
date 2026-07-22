@@ -1,0 +1,75 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://github.com/weby-homelab/power-framework/benchmarks/power31/schemas/qrels.schema.json",
+    "title": "POWER 3.1 Qrels Entry (Sparse)",
+    "description": "A single positive qrels entry. Missing pairs imply relevance 0.",
+    "type": "object",
+    "required": [
+        "query_id",
+        "document_id",
+        "relevance",
+        "utility",
+        "language_direction",
+        "query_class",
+        "annotator",
+        "rubric_version",
+        "timestamp"
+    ],
+    "properties": {
+        "query_id": {
+            "type": "string",
+            "pattern": "^Q(?:UU|EE|UE|EU|DD)[0-9]{4}$"
+        },
+        "document_id": {
+            "type": "string",
+            "pattern": "^topic-[0-9]{3}-(?:ua|en)\\.md$"
+        },
+        "relevance": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2
+        },
+        "utility": {
+            "type": "number",
+            "minimum": -1.0,
+            "maximum": 1.0
+        },
+        "distractor": {
+            "type": "boolean",
+            "default": false
+        },
+        "distractor_reason": {
+            "type": "string"
+        },
+        "language_direction": {
+            "type": "string",
+            "enum": ["ua_to_ua", "en_to_en", "ua_to_en", "en_to_ua"]
+        },
+        "query_class": {
+            "type": "string",
+            "enum": [
+                "exact_name",
+                "troubleshooting",
+                "conceptual",
+                "multi_hop",
+                "short_ambiguous",
+                "long_natural",
+                "code_config",
+                "no_answer"
+            ]
+        },
+        "annotator": {
+            "type": "string",
+            "enum": ["synthetic-generator-v1"]
+        },
+        "rubric_version": {
+            "type": "string",
+            "pattern": "^1\\.[0-9]+$"
+        },
+        "timestamp": {
+            "type": "string",
+            "format": "date-time"
+        }
+    },
+    "additionalProperties": false
+}

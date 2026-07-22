@@ -72,8 +72,8 @@ async def test_search_vault_uses_canonical_default_mode(
 
     envelope = json.loads(await search_vault_tool(query="Test", vault_path=str(sample_vault)))
 
-    assert captured["mode"] == "reranked"
-    assert envelope["mode"] == "reranked"
+    assert captured["mode"] == "semantic"
+    assert envelope["mode"] == "semantic"
 
 
 async def test_search_vault_keeps_explicit_fts_mode_compatible(

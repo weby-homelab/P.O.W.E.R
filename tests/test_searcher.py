@@ -58,12 +58,12 @@ class TestSearchModeContract:
     """Tests for the shared core/CLI/MCP retrieval mode contract."""
 
     def test_default_mode_is_canonical(self):
-        assert DEFAULT_SEARCH_MODE == "reranked"
+        assert DEFAULT_SEARCH_MODE == "semantic"
         assert DEFAULT_SEARCH_MODE in CANONICAL_SEARCH_MODES
         assert get_search_mode_spec(DEFAULT_SEARCH_MODE) == SearchModeSpec(
-            candidate_sources=("fts", "tf_vector", "dense"),
-            fusion="rrf",
-            reranker=True,
+            candidate_sources=("dense",),
+            fusion=None,
+            reranker=False,
             requires_dense_index=True,
         )
 
@@ -130,6 +130,10 @@ class TestSearchModeContract:
     ):
         db_path = tmp_path / "index.db"
         monkeypatch.setattr("power_framework.core.searcher._db_path", lambda: db_path)
+        monkeypatch.setattr(
+            "power_framework.core.searcher.configured_embedding_identity",
+            lambda: ("PinnedProvider", "example/model@revision"),
+        )
         with sqlite3.connect(db_path) as conn:
             _init_db(conn)
             conn.execute(
@@ -139,9 +143,11 @@ class TestSearchModeContract:
             conn.executemany(
                 "INSERT INTO dense_index_manifest VALUES (?, ?)",
                 [
-                    ("schema_version", "1"),
+                    ("schema_version", "2"),
                     ("embedding_dimension", "4"),
                     ("chunk_count", "1"),
+                    ("embedding_provider", "PinnedProvider"),
+                    ("embedding_model", "example/model@revision"),
                 ],
             )
             conn.commit()

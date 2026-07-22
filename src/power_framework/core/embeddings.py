@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import hashlib
 import logging
 import os
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -54,7 +56,44 @@ QWEN3_EMBED_MODEL = os.getenv("POWER_QWEN3_EMBED_MODEL", "n24q02m/Qwen3-Embeddin
 # `aapot/bge-m3-onnx` ships a co-located model.onnx + model.onnx.data that
 # onnxruntime resolves cleanly (unlike fastembed's registry). Dim is fixed 1024.
 BGE_M3_ONNX_REPO = os.getenv("POWER_BGE_M3_ONNX_REPO", "aapot/bge-m3-onnx")
+BGE_M3_ONNX_REVISION = os.getenv(
+    "POWER_BGE_M3_ONNX_REVISION",
+    "76a603396f5eb9f03ed51bbab8f4893fcea7b2fe",
+)
+BGE_M3_PINNED_REPO = "aapot/bge-m3-onnx"
+BGE_M3_PINNED_REVISION = "76a603396f5eb9f03ed51bbab8f4893fcea7b2fe"
+BGE_M3_FILE_SHA256 = {
+    "model.onnx": "138d09ae2920b7e8731f01cba6b5ad996fd64bdfe34971e2d22ecbcf322e25b1",
+    "model.onnx.data": "cfa52ffdb65db76612d6c3ad92130221822f613004113e8c0af18c5eab81a81d",
+    "tokenizer.json": "6710678b12670bc442b99edc952c4d996ae309a7020c1fa0096dd245c2faf790",
+}
 BGE_M3_DIM = 1024
+
+
+def _env_flag(name: str) -> bool:
+    return os.getenv(name, "").lower() in {"1", "true", "yes"}
+
+
+def _verify_sha256(path: str, expected: str) -> None:
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as model_file:
+        for chunk in iter(lambda: model_file.read(8 * 1024 * 1024), b""):
+            digest.update(chunk)
+    actual = digest.hexdigest()
+    if actual != expected:
+        raise RuntimeError(f"model_sha256_mismatch:{Path(path).name}")
+
+
+def configured_embedding_identity() -> tuple[str, str]:
+    """Return the configured provider/model identity without loading model assets."""
+    provider = os.getenv("POWER_EMBED_PROVIDER", EMBED_PROVIDER).lower()
+    if provider == "bge-m3":
+        return "BGEM3OnnxManager", f"{BGE_M3_ONNX_REPO}@{BGE_M3_ONNX_REVISION}"
+    if provider == "qwen3":
+        return "Qwen3EmbeddingManager", QWEN3_EMBED_MODEL
+    if provider == "ollama":
+        return "OllamaEmbeddingManager", OLLAMA_EMBED_MODEL
+    return "FastEmbedManager", FASTEMBED_MODEL
 
 
 def _get_embedding_dim(model_name: str) -> int:
@@ -371,8 +410,14 @@ class BGEM3OnnxManager:
 
     _MAX_TOKENS = int(os.getenv("POWER_BGE_M3_MAX_TOKENS", "512"))
 
-    def __init__(self, repo: str = BGE_M3_ONNX_REPO) -> None:
+    def __init__(
+        self,
+        repo: str = BGE_M3_ONNX_REPO,
+        revision: str = BGE_M3_ONNX_REVISION,
+    ) -> None:
         self.repo = repo
+        self.revision = revision
+        self.model_name = f"{repo}@{revision}"
         self._session: Any | None = None
         self._tokenizer: Any | None = None
         self._dim = BGE_M3_DIM
@@ -411,16 +456,38 @@ class BGEM3OnnxManager:
                 self.repo,
                 EMBED_NUM_THREADS,
             )
-            model_path = hf_hub_download(self.repo, "model.onnx")
-            # External-data sidecar MUST be co-located next to model.onnx so
-            # ONNXRuntime resolves the initializers. hf_hub_download places it
-            # in the same snapshot dir; missing sidecar is tolerated for repos
-            # that ship a single-file model.
-            try:
-                hf_hub_download(self.repo, "model.onnx.data")
-            except Exception as e:
-                logger.debug("No model.onnx.data sidecar in %s: %s", self.repo, e)
-            tok_path = hf_hub_download(self.repo, "tokenizer.json")
+            offline = _env_flag("POWER_MODEL_OFFLINE")
+            model_path = hf_hub_download(
+                self.repo,
+                "model.onnx",
+                revision=self.revision,
+                local_files_only=offline,
+            )
+            sidecar_path = hf_hub_download(
+                self.repo,
+                "model.onnx.data",
+                revision=self.revision,
+                local_files_only=offline,
+            )
+            tok_path = hf_hub_download(
+                self.repo,
+                "tokenizer.json",
+                revision=self.revision,
+                local_files_only=offline,
+            )
+
+            if self.repo == BGE_M3_PINNED_REPO and self.revision == BGE_M3_PINNED_REVISION:
+                for filename, path in {
+                    "model.onnx": model_path,
+                    "model.onnx.data": sidecar_path,
+                    "tokenizer.json": tok_path,
+                }.items():
+                    _verify_sha256(path, BGE_M3_FILE_SHA256[filename])
+            elif not _env_flag("POWER_ALLOW_UNVERIFIED_MODELS"):
+                raise RuntimeError(
+                    "unverified_model_revision: set POWER_ALLOW_UNVERIFIED_MODELS=1 "
+                    "only for explicit development overrides"
+                )
 
             so = ort.SessionOptions()
             # R2 arena taming: no persistent CPU mem arena; grow only on demand.
@@ -504,27 +571,25 @@ def get_embedding_manager(
 
     effective_provider = provider
 
-    # POWER 3.0 canonical path: BGE-M3 via direct onnxruntime. If the backend
-    # cannot initialize on this host (missing deps / alloc failure), fall back
-    # to fastembed instead of returning a silently empty index (FP-7).
+    # POWER 3.1 canonical path: pinned BGE-M3 via direct onnxruntime. Integrity,
+    # cache, or allocation failures are release-contract failures and must not
+    # silently switch the retrieval model.
     if effective_provider == "bge-m3":
-        key = f"bge-m3:{BGE_M3_ONNX_REPO}"
+        key = f"bge-m3:{BGE_M3_ONNX_REPO}@{BGE_M3_ONNX_REVISION}"
         if key in _EMBED_MANAGER_CACHE:
             return _EMBED_MANAGER_CACHE[key]  # type: ignore[return-value]
         try:
             mgr: (
                 OllamaEmbeddingManager | FastEmbedManager | Qwen3EmbeddingManager | BGEM3OnnxManager
-            ) = BGEM3OnnxManager(BGE_M3_ONNX_REPO)
+            ) = BGEM3OnnxManager(BGE_M3_ONNX_REPO, BGE_M3_ONNX_REVISION)
             mgr._lazy_init()  # eager probe: fail loudly, not silently
             _EMBED_MANAGER_CACHE[key] = mgr
             return mgr
         except Exception as e:
-            logger.error(
-                "BGE-M3 canonical backend failed to initialize (%s); "
-                "falling back to fastembed. Search quality WILL degrade.",
-                type(e).__name__,
-            )
-            effective_provider = "fastembed"
+            raise RuntimeError(
+                "bge_m3_init_failed: verify release/models.lock.json, prefetch the pinned "
+                "snapshot, and rerun 'power sync'"
+            ) from e
 
     # Graceful fallback: if the qwen3 backend is selected but `qwen3-embed`
     # is not installed (e.g. minimal install / CI without the extra), fall

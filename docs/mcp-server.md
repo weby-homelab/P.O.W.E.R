@@ -68,7 +68,7 @@ gateway with an explicit threat model.
 }
 ```
 
-## Error handling (v3.0.0)
+## Error handling (v3.1.0)
 
 All tools raise structured `ToolError` exceptions with descriptive messages. The server uses `mask_error_details=True` and `ErrorHandlingMiddleware` — internal stack traces are hidden from clients, only user-facing messages are exposed.
 

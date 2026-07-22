@@ -57,6 +57,7 @@ nav:
   - Architecture: architecture.md
   - Architecture Decisions:
       - POWER 3.1 Trust-Release Baseline: adr/0001-power-3.1-trust-release-baseline.md
+  - POWER 3.1 Release Evidence: release-3.1.md
   - Changelog: CHANGELOG.md
   - Contributing: contributing.md
 

@@ -1,0 +1,55 @@
+# POWER 3.1 Regression Budgets
+# Pre-registered before candidate runs. Changes invalidate evidence.
+# Budget per stratum, per metric. Absolute regression = candidate < baseline - threshold.
+
+benchmark_version: "3.1.0"
+baseline: "baseline.yaml"
+
+budgets:
+  # Primary: nDCG@10
+  ndcg@10:
+    ua_to_ua:
+      max_absolute_regression: 0.05 # Allow up to 5% regression
+      min_absolute_improvement: null
+    en_to_en:
+      max_absolute_regression: 0.05
+      min_absolute_improvement: null
+    ua_to_en:
+      max_absolute_regression: 0.08 # Cross-lingual has higher variance
+      min_absolute_improvement: null
+    en_to_ua:
+      max_absolute_regression: 0.08
+      min_absolute_improvement: null
+
+  # Secondary: Recall@100
+  recall@5:
+    ua_to_ua:
+      max_absolute_regression: 0.05
+    en_to_en:
+      max_absolute_regression: 0.05
+    ua_to_en:
+      max_absolute_regression: 0.08
+    en_to_ua:
+      max_absolute_regression: 0.08
+
+  # Secondary: MRR@10
+  mrr@10:
+    ua_to_ua:
+      max_absolute_regression: 0.05
+    en_to_en:
+      max_absolute_regression: 0.05
+    ua_to_en:
+      max_absolute_regression: 0.08
+    en_to_ua:
+      max_absolute_regression: 0.08
+
+  # Secondary: Precision@5
+  precision@5:
+    ua_to_ua:
+      max_absolute_regression: 0.05
+    en_to_en:
+      max_absolute_regression: 0.05
+    ua_to_en:
+      max_absolute_regression: 0.08
+    en_to_ua:
+      max_absolute_regression: 0.08

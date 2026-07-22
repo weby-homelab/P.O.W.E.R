@@ -1,0 +1,23 @@
+# POWER 3.1 Baseline Evaluation Configuration
+# Pre-registered before candidate runs. Changes invalidate evidence.
+
+benchmark_version: "3.1.0"
+dataset: "benchmarks/power31/dataset/v1"
+evaluation_mode: "baseline"
+
+metrics:
+  nDCG@10: true
+  Recall@100: true
+  MRR@10: true
+  Precision@5: true
+
+strata:
+  - ua_to_ua
+  - en_to_en
+  - ua_to_en
+  - en_to_ua
+
+retrieval_mode: "fts"
+rag_abstention_threshold: 0.0
+embedding_model: null
+reranker_model: null

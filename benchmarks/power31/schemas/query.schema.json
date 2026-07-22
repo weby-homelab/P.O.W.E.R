@@ -1,0 +1,58 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://github.com/weby-homelab/power-framework/benchmarks/power31/schemas/query.schema.json",
+    "title": "POWER 3.1 Benchmark Query",
+    "description": "A single benchmark query with metadata (E1 topic-driven format)",
+    "type": "object",
+    "required": [
+        "query_id",
+        "query",
+        "language",
+        "target_language",
+        "stratum",
+        "query_class",
+        "tags"
+    ],
+    "properties": {
+        "query_id": {
+            "type": "string",
+            "pattern": "^Q(?:UU|EE|UE|EU|NUU|NEE|NUE|NEU|DD)[0-9]{4}$"
+        },
+        "query": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 500
+        },
+        "language": {
+            "type": "string",
+            "enum": ["uk", "en"]
+        },
+        "target_language": {
+            "type": "string",
+            "enum": ["uk", "en"]
+        },
+        "stratum": {
+            "type": "string",
+            "enum": ["ua_to_ua", "en_to_en", "ua_to_en", "en_to_ua"]
+        },
+        "query_class": {
+            "type": "string",
+            "enum": [
+                "exact_name",
+                "troubleshooting",
+                "conceptual",
+                "multi_hop",
+                "short_ambiguous",
+                "long_natural",
+                "code_config",
+                "no_answer"
+            ]
+        },
+        "tags": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 1
+        }
+    },
+    "additionalProperties": false
+}

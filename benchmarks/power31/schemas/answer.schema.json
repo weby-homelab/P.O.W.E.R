@@ -1,0 +1,45 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://github.com/weby-homelab/power-framework/benchmarks/power31/schemas/answer.schema.json",
+    "title": "POWER 3.1 Expected Answer",
+    "description": "Expected answer with atomic facts for RAG evaluation (E1 topic-driven)",
+    "type": "object",
+    "required": [
+        "query_id",
+        "expected_answer",
+        "atomic_facts",
+        "forbidden_facts",
+        "citation_document_ids",
+        "no_answer"
+    ],
+    "properties": {
+        "query_id": {
+            "type": "string",
+            "pattern": "^Q(?:UU|EE|UE|EU|NUU|NEE|NUE|NEU|DD)[0-9]{4}$"
+        },
+        "expected_answer": {
+            "type": "string",
+            "minLength": 1
+        },
+        "atomic_facts": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 1
+        },
+        "forbidden_facts": {
+            "type": "array",
+            "items": { "type": "string" }
+        },
+        "citation_document_ids": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "pattern": "^topic-[0-9]{3}-(?:ua|en)\\.md$"
+            }
+        },
+        "no_answer": {
+            "type": "boolean"
+        }
+    },
+    "additionalProperties": false
+}

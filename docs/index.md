@@ -18,7 +18,7 @@ Unlike generic knowledge management tools, P.O.W.E.R. is designed from the groun
 - **Markdown Quality Checks** — detects trailing whitespace, inconsistent list markers, header jumps, missing code language
 - **Agent Auto-Ingest** — `synthesize_session` MCP tool lets agents autonomously create permanent knowledge artifacts with governance + graph links + full catalog maintenance
 - **MCP-native** — all 12 tools exposed to any MCP-compatible AI client (Claude, OpenCode, Cursor), powered by FastMCP 3.x
-- **Beta with explicit release gates** — 416 tests, 73%+ coverage, CodeQL scanning, and a tracked [P.O.W.E.R. 3.1 trust-release baseline](adr/0001-power-3.1-trust-release-baseline.md)
+- **3.1 release preparation with explicit gates** — hermetic tests, CodeQL scanning, a pinned model manifest (`release/models.lock.json`), and the tracked [P.O.W.E.R. 3.1 trust-release baseline](adr/0001-power-3.1-trust-release-baseline.md). The project remains beta/research until all P0/P1 gates and reproducible model-backed evidence are closed.
 
 ## Features
 
@@ -39,16 +39,17 @@ Unlike generic knowledge management tools, P.O.W.E.R. is designed from the groun
 - **Governance** — `owner`, `status`, `expiry` fields tracked in sub-indexes
 
 !!! note "Bilingual UA/EN vaults"
-For Ukrainian/English vaults, prefer the `hybrid` search mode over the canonical
-`reranked` mode: the English-centric Jina v2 cross-encoder reranker degrades
-Ukrainian retrieval (UA nDCG@5 ≈ 0.44 vs hybrid ≈ 0.82). The dense `bge-m3`
-backend itself is strong cross-lingually. See the
-[P.O.W.E.R. 3.0.0 search-quality report](https://github.com/weby-homelab/power-framework/blob/main/docs/tests/P.O.W.E.R.3.0.0-TEST.md).
+For Ukrainian/English vaults, benchmark your own corpus before selecting a
+retrieval mode. Historical real-vault scores are diagnostic only and are not
+release evidence. The committed POWER 3.1 benchmark is synthetic and suitable
+for hermetic CI regression gates, not for production-quality claims. See the
+[trust-release baseline](adr/0001-power-3.1-trust-release-baseline.md) and
+[`benchmarks/power31/README.md`](https://github.com/weby-homelab/power-framework/tree/main/benchmarks/power31).
 
 ## Quick start
 
 ```bash
-pip install git+https://github.com/weby-homelab/power-framework.git@v3.0.0
+pip install git+https://github.com/weby-homelab/power-framework.git@v3.1.0
 
 power init ~/my-vault
 power lint ~/my-vault

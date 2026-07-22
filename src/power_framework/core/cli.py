@@ -524,9 +524,10 @@ def main() -> None:
         choices=sorted(CANONICAL_SEARCH_MODES | set(SEARCH_MODE_ALIASES)),
         default=DEFAULT_SEARCH_MODE,
         help=(
-            'Search mode: "reranked" (canonical default), "fts" (BM25), '
+            'Search mode: "semantic" (canonical default, pinned BGE-M3), "fts" (BM25), '
             '"vector" (TF cosine), "hybrid" (RRF merged), or "semantic" '
-            '(dense embedding). "hybrid_reranked" is a deprecated alias.'
+            '(dense embedding); "reranked" is an explicit opt-in. '
+            '"hybrid_reranked" is a deprecated alias.'
         ),
     )
     p_search.set_defaults(func=_cmd_search)

@@ -3,9 +3,20 @@
 from __future__ import annotations
 
 import inspect
+from typing import TYPE_CHECKING
+
+import pytest
 
 import power_framework.core.embeddings as embeddings
-from power_framework.core.embeddings import get_embedding_manager
+from power_framework.core.embeddings import (
+    BGE_M3_ONNX_REVISION,
+    BGE_M3_PINNED_REPO,
+    configured_embedding_identity,
+    get_embedding_manager,
+)
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class TestEmbeddingManager:
@@ -51,3 +62,18 @@ class TestEmbeddingManager:
         vec1 = manager.embed("Kittens are cute")
         vec2 = manager.embed("Rocket science")
         assert vec1 != vec2
+
+    def test_canonical_identity_contains_immutable_revision(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
+        monkeypatch.setenv("POWER_EMBED_PROVIDER", "bge-m3")
+        provider, model = configured_embedding_identity()
+        assert provider == "BGEM3OnnxManager"
+        assert model == f"{BGE_M3_PINNED_REPO}@{BGE_M3_ONNX_REVISION}"
+
+    def test_sha256_verification_fails_closed(self, tmp_path: Path):
+        artifact = tmp_path / "model.onnx"
+        artifact.write_bytes(b"tampered")
+
+        with pytest.raises(RuntimeError, match=r"model_sha256_mismatch:model\.onnx"):
+            embeddings._verify_sha256(str(artifact), "0" * 64)

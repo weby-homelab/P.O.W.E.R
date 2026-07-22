@@ -1,0 +1,24 @@
+# POWER 3.1 Candidate Evaluation Configuration (E1 methodology)
+# Semantic retrieval with pinned BGE-M3 ONNX, no reranker.
+
+benchmark_version: "3.1.0"
+dataset: "benchmarks/power31/dataset/v1"
+evaluation_mode: "candidate"
+
+metrics:
+  nDCG@10: true
+  Recall@100: true
+  MRR@10: true
+  Precision@5: true
+
+strata:
+  - ua_to_ua
+  - en_to_en
+  - ua_to_en
+  - en_to_ua
+
+retrieval_mode: "semantic"
+rag_abstention_threshold: 0.50
+embedding_model: "aapot/bge-m3-onnx"
+embedding_model_revision: "76a603396f5eb9f03ed51bbab8f4893fcea7b2fe"
+reranker_model: null
