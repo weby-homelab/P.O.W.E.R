@@ -86,14 +86,25 @@ from .rot_scoring import (
     LinkRotChecker,
     UsageTracker,
 )
-from .searcher import SearchResult, format_search_results, search_vault
+from .searcher import (
+    CANONICAL_SEARCH_MODES,
+    DEFAULT_SEARCH_MODE,
+    SEARCH_MODE_ALIASES,
+    SearchResult,
+    format_search_results,
+    format_untrusted_search_envelope,
+    normalize_search_mode,
+    search_vault,
+)
 from .utils import (
     RateLimiter,
     __version__,
     atomic_write,
+    atomic_write_in_vault,
     clean_note_name,
     create_backup,
     get_cache_dir,
+    resolve_path_in_vault,
     resolve_vault_path,
     validate_path_in_vault,
     validate_vault_path,
@@ -102,10 +113,13 @@ from .utils import (
 EmbeddingManager = get_embedding_manager  # backward compat alias
 
 __all__ = [
+    "CANONICAL_SEARCH_MODES",
+    "DEFAULT_SEARCH_MODE",
     "MAX_DESCRIPTION_LENGTH",
     "MAX_TITLE_LENGTH",
     "NOTE_TYPE_ORDER",
     "PARA_FOLDERS",
+    "SEARCH_MODE_ALIASES",
     "TYPE_HALF_LIFE_DAYS",
     "VAULT_STRUCTURE",
     "ContentDedupDetector",
@@ -131,6 +145,7 @@ __all__ = [
     "__version__",
     "archive_stale_notes",
     "atomic_write",
+    "atomic_write_in_vault",
     "build_frontmatter",
     "check_all",
     "check_code_block_language",
@@ -146,6 +161,7 @@ __all__ = [
     "fix_trailing_whitespace",
     "format_relation_suggestions",
     "format_search_results",
+    "format_untrusted_search_envelope",
     "generate_index_content",
     "generate_log_initial",
     "generate_main_index_content",
@@ -155,8 +171,10 @@ __all__ = [
     "has_type_field",
     "heal_frontmatter",
     "heal_vault",
+    "normalize_search_mode",
     "parse_frontmatter",
     "read_file_content",
+    "resolve_path_in_vault",
     "resolve_vault_path",
     "run_generate_hierarchical_index",
     "run_generate_index",

@@ -7,7 +7,6 @@
 Validate, index, search, and manage your knowledge base from the command line — or let AI agents do it through MCP. Built for knowledge workers who want machine-readable notes, automated quality checks, and token-efficient AI access to their Second Brain.
 
 [![CI](https://github.com/weby-homelab/power-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/weby-homelab/power-framework/actions/workflows/ci.yml)
-[![Coverage](https://img.shields.io/badge/coverage-73%25-yellow?logo=pytest)](https://github.com/weby-homelab/power-framework/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/weby-homelab/power-framework?logo=github)](https://github.com/weby-homelab/power-framework/releases)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
@@ -28,7 +27,7 @@ Unlike generic knowledge management tools, P.O.W.E.R. is designed from the groun
 - **Freshness Monitoring** — linter detects stale/expired notes based on `expiry` metadata field
 - **Agent Auto-Ingest** — `synthesize_session` MCP tool lets agents autonomously create permanent knowledge artifacts with governance + graph links + full catalog maintenance
 - **MCP-native** — expose all 12 tools to any MCP-compatible AI client (Claude, OpenCode, Cursor) with zero glue code, powered by FastMCP 3.x
-- **Production-grade** — 416 tests, 73%+ coverage (CI `fail-under=70`), CodeQL scanning, Automated GitHub Releases
+- **Beta with explicit release gates** — hermetic tests and security checks are tracked in CI; the [P.O.W.E.R. 3.1 trust-release baseline](docs/adr/0001-power-3.1-trust-release-baseline.md) records the remaining gates.
 
 ## Quick Start
 
@@ -99,15 +98,20 @@ pip install --user --break-system-packages -e ".[dev]"
 | **Markdown Checks**             | Detects trailing whitespace, inconsistent list markers, header jumps, missing code language — `power markdown-check <path>`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | **Relation Suggestions**        | Keyword & tag overlap analysis for Graph RAG enrichment — `power suggest-related <path>`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | **Cron Maintenance**            | Runs lint + index + rot audit in one command — `power cron <path>`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| **Advanced Hybrid Search**      | FTS5 (BM25), Dense Vector Semantic, Hybrid (RRF fusion), Semantic, and **Reranked** (canonical, default) modes. **POWER 3.0 canonical mode is `reranked`**: FTS5/BM25 → top-150 candidates → cross-encoder reranker → top-20, with a dense-embedding fallback only when FTS yields < 5 hits. **Canonical dense backend: `BAAI/bge-m3` (1024d)** served via **direct ONNX Runtime** (no fastembed, no PyTorch) — the only backend with strong UA↔EN retrieval (vector MAR@5 ≈ 0.573 UA→EN, isolated cross-lingual cosine ≈ 0.771 UA→EN, nDCG@5 ≈ 0.80 on the real vault), peak RSS ≈ 1.6 GB. Includes synonym query expansion and Contextual Retrieval chunking (`SemanticChunker`). Legacy `fastembed`/`qwen3` backends remain opt-in via `POWER_EMBED_PROVIDER`. **Note (3.0.0 benchmark):** for bilingual UA/EN vaults, **`hybrid`** (no reranker) is recommended — the English-centric cross-encoder reranker degrades Ukrainian (UA ndcg@5 ≈ 0.44 vs hybrid ≈ 0.82); see `docs/tests/P.O.W.E.R.3.0.0-TEST.md`. |
-| **Cross-Encoder Reranker**      | `reranked` mode uses the multilingual **`jinaai/jina-reranker-v2-base-multilingual`** by default. Fixes the old MiniLM reranker which degraded mix-lingual quality (MAR@5 −22%, ×8 latency). With `POWER_EMBED_PROVIDER=qwen3` it uses `Qwen3-Reranker-0.6B-ONNX`; `fastembed` falls back to `ms-marco-MiniLM-L-6-v2`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| **Retrieval modes**             | FTS5 (BM25), local TF vector, Hybrid (RRF), Semantic and **Reranked** modes. The canonical default is `reranked`; it requires a compatible dense index and a configured reranker. Missing or incompatible dense assets fail with a `power sync` remediation message rather than silently running FTS. Use explicit `fts`, `vector`, or `hybrid` modes when that contract is intended. `bge-m3`, `fastembed`, and `qwen3` providers are configurable. Quality and resource figures require a versioned benchmark before they can support a release claim. |
+| **Cross-Encoder Reranker**      | Local `jinaai/jina-reranker-v2-base-multilingual` is CC-BY-NC-4.0 and requires explicit `POWER_ALLOW_NONCOMMERCIAL_MODELS=1` for permitted non-commercial use. It is not a production default; choose a licensed reranker before commercial deployment. |
 | **Hierarchical Index**          | `index.md` (navigation map) + per-folder `_index.md` (detailed catalogs) for token-efficient AI reading (~75-94% token savings)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | **Graph RAG v2**                | Phase 3 relation suggester: explicit OKF `related` links contribute a strong curated signal, fused with keyword/tag overlap into a **weighted, bidirectional similarity graph** with weighted BFS and degree/weight centrality (`power suggest-related --v2`). Confident predictions only, no fabricated links.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | **ColBERT Opt-In Reranker**     | Phase 3 `POWER_RERANKER=colbert` enables late-interaction ColBERT reranking (requires ≥16 GB RAM, otherwise skipped); it is **off by default** and the canonical Jina v2 reranker remains the fallback.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | **Synthesize Auto-Ingest**      | Phase 3 `power synthesize <path>` CLI (mirrors the MCP `synthesize_session` tool) auto-classifies OKF metadata, writes atomically, regenerates the hierarchical index, appends to `log.md`, and runs the lint report — the Auto-Ingest Feedback Loop.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| **UDCG Search-Quality Gate**    | Phase 3 search-quality CI uses **UDCG@5** (primary gate) plus **nDCG@5** (secondary). On the real vault: nDCG@5 ≈ 0.80, UDCG@5 ≈ 0.99 (PASS).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **Search-quality metric status** | The former `UDCG@5` value is a legacy normalized discounted lexical proxy, not EACL-2026 UDCG, and is diagnostic only. No release-quality claim is made until true UDCG has paper-backed reference vectors. |
 | **CI/CD**                       | 416 tests, 73%+ coverage, CodeQL SAST, Automated GitHub Releases                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | **Documentation**               | Full [mkdocs-material site](https://weby-homelab.github.io/power-framework/) with API reference and guides                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+
+> **POWER 3.1 evidence status:** historical feature-table figures, model
+> comparisons, resource limits and benchmark recommendations are not current
+> release evidence. The framework remains beta/research until the P0/P1 gates
+> in the 3.1 remediation plan are closed with versioned artifacts.
 
 ## Migration Report
 
@@ -355,7 +359,7 @@ flowchart TD
 | `core/searcher.py`        | Full-text search with relevance scoring (FTS5/Vector/Hybrid/Reranked); WAL mode + `busy_timeout` for parallel access                                                                                                               |
 | `core/embeddings.py`      | Pluggable dense embedding manager: **BGE-M3 (default, 1024d, direct ONNX Runtime — `BGEM3OnnxManager`)** / Qwen3-0.6B / MiniLM-L12-v2 (light) via `POWER_EMBED_PROVIDER`, lazy init, tamed BFCArena, adaptive batch halving on OOM |
 | `core/reranker.py`        | Cross-Encoder reranker: **`jina-reranker-v2-base-multilingual`** (default) / `Qwen3-Reranker-0.6B-ONNX` (provider=qwen3) / `ms-marco-MiniLM-L-6-v2` fallback                                                                       |
-| `core/metrics/udcg.py`    | UDCG retrieval metric (EACL 2026) — utility-aware replacement for MRR/nDCG for LLM RAG evaluation                                                                                                                                  |
+| `core/metrics/discounted_lexical_gain.py` | Legacy normalized discounted lexical proxy; `udcg.py` is a deprecated compatibility alias, not EACL-2026 UDCG |
 | `core/query_expansion.py` | Synonym map (EN/UK) & OpenRouter Multi-Query expansion                                                                                                                                                                             |
 | `core/chunker.py`         | Semantic & contextual note splitter (Anthropic Contextual Retrieval)                                                                                                                                                               |
 | `core/healer.py`          | Auto-fix missing/invalid frontmatter fields                                                                                                                                                                                        |
@@ -379,7 +383,7 @@ cd power-framework
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 
-# Run tests (416 tests, 73%+ coverage)
+# Run tests
 pytest tests/ -v
 
 # Lint & format
@@ -397,36 +401,29 @@ For detailed analysis and benchmarks of the P.O.W.E.R. framework:
 - [P.O.W.E.R. v2.0.1 Test Report & Speed Benchmarks](docs/tests/P.O.W.E.R.2.0.1-TEST-1.md) — Multi-lingual (UA/EN) embeddings via `BAAI/bge-m3`, test run outputs, and memory overhead optimization.
 - [Vector Search Degradation & Scalability Limits Analysis](docs/tests/P.O.W.E.R.2.0.1-TEST-2.md) — Comparison of linear NumPy search vs SIMD C `sqlite-vec`, graph-based HNSW, and Qdrant database.
 - [AI Agent Memory Benchmark & SOTA Competency Report (v2.0.3-TEST)](docs/tests/P.O.W.E.R.2.0.3-TEST.md) — Multi-turn incremental evaluations covering MemoryAgentBench (ICLR 2026), LoCoMo, LongMemEval, and BEAM.
-- [P.O.W.E.R. v3.0.0 — Extended UA↔EN Search-Quality Report](docs/tests/P.O.W.E.R.3.0.0-TEST.md) — POWER 3.0.0 stack (BGE-M3 canonical, reranked/hybrid modes, UDCG@5 primary gate, Graph RAG v2, ColBERT opt-in), per-language breakdown, version/architecture evolution, and DRAPAS vs POWER 3.0.0 comparison.
+- [P.O.W.E.R. v3.0.0 — Extended UA↔EN Search-Quality Report](docs/tests/P.O.W.E.R.3.0.0-TEST.md) — historical report; its UDCG naming and real-vault quality claims are not current release evidence.
 
 ## Low-RAM Deployment (8–12 GB)
 
-`power sync` builds dense embeddings for the whole vault. To stay safely under
-RAM limits on small hosts, v2.2.0 batches embeddings and degrades gracefully
-instead of crashing. Key knobs (see [`OOM_RECOVERY_PROTOCOL.md`](OOM_RECOVERY_PROTOCOL.md)):
+`power sync` builds dense embeddings for the whole vault. Batch and thread
+controls are configurable; validate them on the target hardware before treating
+them as a memory or latency guarantee. Key knobs (see [`OOM_RECOVERY_PROTOCOL.md`](OOM_RECOVERY_PROTOCOL.md)):
 
 ```bash
-export POWER_EMBED_PROVIDER=bge-m3           # default: BAAI/bge-m3 (1024d, direct ONNX, ~1.6 GB peak RSS)
-export POWER_EMBED_NUM_THREADS=2             # cap CPU threads on low-core boxes (also tames the ONNX arena)
-export POWER_EMBED_BATCH_SIZE=8              # peak RAM bound; halves automatically on pressure
-# export POWER_SYNC_VMEM_LIMIT_MB=6144       # opt-in hard backstop (0 = disabled; recommended on large hosts)
+export POWER_EMBED_PROVIDER=bge-m3           # default configured provider
+export POWER_EMBED_NUM_THREADS=2             # cap CPU threads
+export POWER_EMBED_BATCH_SIZE=8              # batch size for embedding sync
+# export POWER_SYNC_VMEM_LIMIT_MB=6144       # opt-in virtual-memory limit
 ```
 
-The **POWER 3.0 canonical backend** is **`BAAI/bge-m3`** (1024d) served through
-**direct ONNX Runtime + `tokenizers`** (`BGEM3OnnxManager`) — deliberately NOT
-through fastembed, whose custom-model registry cannot resolve BGE-M3's ONNX
-external-data files (it broke the embedder across 15 releases). BGE-M3 is the
-only backend with strong UA↔EN retrieval (MAR@5 ≈ 0.573, cross-lingual cosine
-≈ 0.771 UA→EN) and, with the tamed BFCArena
-(`enable_cpu_mem_arena=False`, `arena_extend_strategy=kSameAsRequested`), keeps
-peak RSS ≈ 1.6 GB — inside the POWER 3.0 **≤2 GB** contract. On very tight hosts
-fall back to `POWER_EMBED_PROVIDER=fastembed` (MiniLM-L12, 384d, lower quality).
+The configured default provider is **`bge-m3`** through direct ONNX Runtime +
+`tokenizers` (`BGEM3OnnxManager`). Sync and dense search require compatible
+provider/model assets; if they are unavailable, use an explicit retrieval mode
+or repair the index with `power sync` instead of relying on an implicit fallback.
 
-> **⚠️ `POWER_EMBED_NUM_THREADS` is mandatory on big hosts.** fastembed's
-> `parallel=0` spawns one model subprocess **per CPU core**. On a 20-core box
-> that loaded 20 copies of the model → **~32 GB RSS**. POWER now caps this to
-> `POWER_EMBED_NUM_THREADS` (default 2, peak ~700 MB). Never raise it above
-> what your RAM allows (cores × ~1.5 GB).
+> **⚠️ Resource note:** choose `POWER_EMBED_NUM_THREADS` and batch size for the
+> available hardware. Current releases do not claim a universal RSS limit;
+> performance and offline behavior remain release-gated evidence.
 
 ## License
 

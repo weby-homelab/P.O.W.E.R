@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 import pytest
 
+from power_framework.core import DEFAULT_SEARCH_MODE
 from power_framework.core.cli import main
 
 if TYPE_CHECKING:
@@ -162,7 +163,7 @@ def test_search_returns_results(sample_vault: Path) -> None:
         patch.object(
             sys,
             "argv",
-            ["power", "search", str(sample_vault), "Test"],
+            ["power", "search", str(sample_vault), "Test", "--mode", "fts"],
         ),
         pytest.raises(SystemExit) as exc,
     ):
@@ -170,12 +171,25 @@ def test_search_returns_results(sample_vault: Path) -> None:
     assert exc.value.code == 0
 
 
+def test_search_uses_canonical_default_mode(sample_vault: Path) -> None:
+    with (
+        patch("power_framework.core.cli.format_search_results", return_value="No results"),
+        patch("power_framework.core.cli.search_vault", return_value=[]) as search,
+        patch.object(sys, "argv", ["power", "search", str(sample_vault), "Test"]),
+        pytest.raises(SystemExit) as exc,
+    ):
+        main()
+
+    assert exc.value.code == 0
+    assert search.call_args.kwargs["mode"] == DEFAULT_SEARCH_MODE
+
+
 def test_search_no_results(sample_vault: Path) -> None:
     with (
         patch.object(
             sys,
             "argv",
-            ["power", "search", str(sample_vault), "XyzzyNonExistent"],
+            ["power", "search", str(sample_vault), "XyzzyNonExistent", "--mode", "fts"],
         ),
         pytest.raises(SystemExit) as exc,
     ):

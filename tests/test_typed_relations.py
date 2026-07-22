@@ -161,7 +161,9 @@ class TestKnowledgeGraph:
             "01_Projects/A.md",
             related=["02_Areas/B.md", "03_Resources/C.md"],
         )
-        kg = KnowledgeGraph.from_notes([note_a])
+        note_b = self.make_note("02_Areas/B.md")
+        note_c = self.make_note("03_Resources/C.md")
+        kg = KnowledgeGraph.from_notes([note_a, note_b, note_c])
         edges = kg.bfs("01_Projects/A.md", max_hops=1)
         assert len(edges) == 2
         sources = {e[0] for e in edges}
@@ -173,7 +175,8 @@ class TestKnowledgeGraph:
         note_a = self.make_note("01_Projects/A.md", related=["02_Areas/B.md"])
         note_b = self.make_note("02_Areas/B.md", related=["03_Resources/C.md"])
         note_c = self.make_note("03_Resources/C.md", related=["04_Archive/D.md"])
-        kg = KnowledgeGraph.from_notes([note_a, note_b, note_c])
+        note_d = self.make_note("04_Archive/D.md")
+        kg = KnowledgeGraph.from_notes([note_a, note_b, note_c, note_d])
 
         edges_1hop = kg.bfs("01_Projects/A.md", max_hops=1)
         assert len(edges_1hop) == 1
@@ -206,7 +209,8 @@ class TestKnowledgeGraph:
                 ],
             ),
         )
-        kg = KnowledgeGraph.from_notes([note])
+        target = self.make_note("02_Areas/B.md")
+        kg = KnowledgeGraph.from_notes([note, target])
         edges = kg.bfs("01_Projects/A.md")
         assert len(edges) == 1
         assert edges[0][1] == "02_Areas/B.md"
@@ -264,7 +268,8 @@ class TestMermaidExport:
             "01_Projects/A.md",
             related=["02_Areas/B.md"],
         )
-        kg = KnowledgeGraph.from_notes([note])
+        target = self.make_note("02_Areas/B.md")
+        kg = KnowledgeGraph.from_notes([note, target])
         result = kg.to_mermaid()
 
         assert "```mermaid" in result
@@ -299,7 +304,8 @@ class TestMermaidExport:
                 ],
             ),
         )
-        kg = KnowledgeGraph.from_notes([note])
+        target = self.make_note("B.md")
+        kg = KnowledgeGraph.from_notes([note, target])
         result = kg.to_mermaid()
         assert 'N0["A"]' in result
         assert 'N1["B"]' in result
@@ -317,7 +323,9 @@ class TestMermaidExport:
             "01_Projects/A.md",
             related=["02_Areas/B.md", "03_Resources/C.md"],
         )
-        kg = KnowledgeGraph.from_notes([note])
+        note_b = self.make_note("02_Areas/B.md")
+        note_c = self.make_note("03_Resources/C.md")
+        kg = KnowledgeGraph.from_notes([note, note_b, note_c])
         result = kg.to_mermaid()
         assert "N0 -->|related_to| N1" in result
         assert "N0 -->|related_to| N2" in result

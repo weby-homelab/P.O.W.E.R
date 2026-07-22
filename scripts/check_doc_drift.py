@@ -54,14 +54,14 @@ _STALE_DEFAULT_MARKERS = {
 
 def _load_code_facts() -> dict[str, str]:
     """Import the code and read the canonical stack constants."""
+    import inspect
+
     sys.path.insert(0, str(REPO_ROOT / "src"))
     from power_framework.core import reranker
     from power_framework.core.embeddings import EMBED_PROVIDER
     from power_framework.core.searcher import search_vault
 
     # The canonical search mode is the default argument of search_vault.
-    import inspect
-
     sig = inspect.signature(search_vault)
     default_mode = sig.parameters["mode"].default
 
@@ -88,12 +88,12 @@ def check_embedder(readme: str, provider: str) -> list[str]:
             f"'{provider}' (expected one of {aliases}). "
             f"Update README's search/embedding sections."
         )
-    for pat in _STALE_DEFAULT_MARKERS.get(provider, []):
-        if re.search(pat, readme):
-            errors.append(
-                f"README still describes a SUPERSEDED default embedder "
-                f"(matched /{pat}/) while code default is '{provider}'."
-            )
+    errors.extend(
+        f"README still describes a SUPERSEDED default embedder "
+        f"(matched /{pat}/) while code default is '{provider}'."
+        for pat in _STALE_DEFAULT_MARKERS.get(provider, [])
+        if re.search(pat, readme)
+    )
     return errors
 
 
