@@ -119,7 +119,6 @@ _STOPWORDS: set[str] = {
     "both",
     "each",
     "its",
-    "their",
     "there",
     "here",
     "will",
@@ -138,7 +137,6 @@ _STOPWORDS: set[str] = {
     "etc",
     # ukrainian
     "та",
-    "i",
     "й",
     "в",
     "у",
@@ -200,7 +198,6 @@ _STOPWORDS: set[str] = {
     "свою",
     "своє",
     "свої",
-    "це",
     "цих",
     "цим",
     "цій",
@@ -216,22 +213,14 @@ _STOPWORDS: set[str] = {
     "моє",
     "я",
     "ти",
-    "він",
-    "вона",
-    "ми",
-    "ви",
-    "вони",
     "мене",
     "тебе",
     "нас",
     "вас",
-    "їх",
     "йому",
     "їй",
     "ним",
     "нею",
-    "цьому",
-    "цій",
     "цьому",
     "один",
     "одна",
@@ -244,7 +233,6 @@ _STOPWORDS: set[str] = {
     "була",
     "було",
     "були",
-    "це",
     "то",
     "такий",
     "така",
@@ -252,17 +240,11 @@ _STOPWORDS: set[str] = {
     "такі",
     "цей",
     "ця",
-    "це",
     "ці",
     "с",
     "п",
-    "з",
-    "що",
-    "чи",
-    "же",
     "би",
     "б",
-    "же",
     "наче",
     "мов",
     "нібито",
@@ -323,7 +305,7 @@ def _ensure_ranx() -> Any:
 
 def _tokenize_query(query: str) -> list[str]:
     """Tokenize a query into lowercase non-stopword content terms."""
-    raw = re.findall(r"[a-z0-9а-яєіїґ']+", query.lower())  # noqa: RUF001
+    raw = re.findall(r"[a-z0-9а-яєіїґ']+", query.lower())
     return [t for t in raw if t not in _STOPWORDS and len(t) > 1]
 
 
@@ -368,8 +350,8 @@ def build_qrels(
 
     qrels: dict[str, dict[str, int]] = {}
     for q in queries:
-        if q in overrides and overrides[q]:
-            qrels[q] = {d: 1 for d in overrides[q]}
+        if overrides.get(q):
+            qrels[q] = dict.fromkeys(overrides[q], 1)
             continue
         terms = _tokenize_query(q)
         if not terms:
@@ -450,7 +432,7 @@ def evaluate(
     for f in _iter_md_files(Path(vault)):
         try:
             contents[_rel(f, Path(vault))] = f.read_text(encoding="utf-8", errors="ignore").lower()
-        except OSError:
+        except OSError:  # noqa: PERF203 - unreadable vault files must not abort the benchmark
             continue
 
     # ranx wants qrels/run as dict[str, dict[str, int]].
@@ -489,7 +471,7 @@ def evaluate(
         for doc in ranked_docs:
             text = contents.get(doc, "")
             matched = sum(1 for t in terms if t in text)
-            grade = int(round(matched / n_terms * 3))  # 0..3 graded relevance
+            grade = round(matched / n_terms * 3)  # 0..3 graded relevance
             utilities.extend(utilities_from_relevance([grade], max_relevance=3))
         per_query_udcg.append(normalized_discounted_lexical_gain(utilities, k=5))
     udcg5 = sum(per_query_udcg) / len(per_query_udcg) if per_query_udcg else 0.0

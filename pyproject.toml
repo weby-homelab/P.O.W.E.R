@@ -159,5 +159,6 @@ disable_error_code = [
 "__init__.py" = ["F405"]
 "tests/*" = ["S101", "T20", "DTZ001"]
 "scripts/*" = ["T20", "S310"]
+"scripts/check_search_quality.py" = ["T20", "S310", "RUF001"]
 "src/power_framework/core/cli.py" = ["T201"]
 "src/power_framework/mcp/power_server.py" = ["S104"]
