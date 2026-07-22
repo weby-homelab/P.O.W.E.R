@@ -98,8 +98,9 @@ class TestRerankerManager:
             ColBERTUnavailableError,
         )
 
-        with patch.dict("os.environ", {"POWER_RERANKER": ""}), pytest.raises(
-            ColBERTUnavailableError, match="opt-in"
+        with (
+            patch.dict("os.environ", {"POWER_RERANKER": ""}),
+            pytest.raises(ColBERTUnavailableError, match="opt-in"),
         ):
             ColBERTLateInteractionReranker()
 
@@ -198,10 +199,3 @@ class TestRerankerManager:
 
             scores = reranker.rerank("q", ["doc1"])
             assert scores == [2.5]
-
-
-
-
-
-
-

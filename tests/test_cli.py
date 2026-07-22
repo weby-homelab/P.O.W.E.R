@@ -244,7 +244,17 @@ def test_ingest_duplicate_returns_1(tmp_path: Path) -> None:
         patch.object(
             sys,
             "argv",
-            ["power", "ingest", str(vault), "--title", "Duplicate Test", "--type", "Project", "--description", "Desc"],
+            [
+                "power",
+                "ingest",
+                str(vault),
+                "--title",
+                "Duplicate Test",
+                "--type",
+                "Project",
+                "--description",
+                "Desc",
+            ],
         ),
         pytest.raises(SystemExit) as exc1,
     ):
@@ -256,10 +266,19 @@ def test_ingest_duplicate_returns_1(tmp_path: Path) -> None:
         patch.object(
             sys,
             "argv",
-            ["power", "ingest", str(vault), "--title", "Duplicate Test", "--type", "Project", "--description", "Desc"],
+            [
+                "power",
+                "ingest",
+                str(vault),
+                "--title",
+                "Duplicate Test",
+                "--type",
+                "Project",
+                "--description",
+                "Desc",
+            ],
         ),
         pytest.raises(SystemExit) as exc2,
     ):
         main()
     assert exc2.value.code == 1
-
