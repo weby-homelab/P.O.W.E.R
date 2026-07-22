@@ -63,9 +63,7 @@ class TestEmbeddingManager:
         vec2 = manager.embed("Rocket science")
         assert vec1 != vec2
 
-    def test_canonical_identity_contains_immutable_revision(
-        self, monkeypatch: pytest.MonkeyPatch
-    ):
+    def test_canonical_identity_contains_immutable_revision(self, monkeypatch: pytest.MonkeyPatch):
         monkeypatch.setenv("POWER_EMBED_PROVIDER", "bge-m3")
         provider, model = configured_embedding_identity()
         assert provider == "BGEM3OnnxManager"

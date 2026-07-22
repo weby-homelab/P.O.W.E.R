@@ -108,12 +108,8 @@ def check_patterns(data: dict) -> None:
     hw = data.get("hardware", {})
     for f in REQUIRED_HARDWARE_FIELDS:
         check(f in hw, f"Missing hardware field: {f}")
-    check(
-        isinstance(hw.get("logical_cores"), int), "hardware.logical_cores must be int"
-    )
-    check(
-        isinstance(hw.get("physical_cores"), int), "hardware.physical_cores must be int"
-    )
+    check(isinstance(hw.get("logical_cores"), int), "hardware.logical_cores must be int")
+    check(isinstance(hw.get("physical_cores"), int), "hardware.physical_cores must be int")
     check(isinstance(hw.get("ram_gb"), (int, float)), "hardware.ram_gb must be numeric")
 
     check(isinstance(data.get("total_queries"), int), "total_queries must be int")
@@ -122,9 +118,7 @@ def check_patterns(data: dict) -> None:
         f"total_queries < 228: {data.get('total_queries')}",
     )
 
-    check(
-        isinstance(data.get("peak_rss_mb"), (int, float)), "peak_rss_mb must be numeric"
-    )
+    check(isinstance(data.get("peak_rss_mb"), (int, float)), "peak_rss_mb must be numeric")
 
 
 # ── Hash verification ─────────────────────────────────────────────────────
@@ -220,9 +214,7 @@ def verify_no_answer_fp_gate(data: dict) -> None:
     # Threshold: no more than 50% false positive for no-answer queries
     threshold = 0.5
     if baseline_rate > threshold:
-        fail(
-            f"NO-ANSWER FALSE POSITIVE GATE: baseline rate {baseline_rate:.2%} > {threshold:.0%}"
-        )
+        fail(f"NO-ANSWER FALSE POSITIVE GATE: baseline rate {baseline_rate:.2%} > {threshold:.0%}")
     if candidate_rate > threshold:
         fail(
             f"NO-ANSWER FALSE POSITIVE GATE: candidate rate {candidate_rate:.2%} > {threshold:.0%}"
@@ -274,9 +266,7 @@ def verify(evidence_path: str) -> int:
     check_required_fields(data, REQUIRED_TOPLEVEL_FIELDS)
     check_patterns(data)
     check_required_nested(data, "config", ["baseline", "candidate"])
-    check_required_nested(
-        data, "dataset", ["corpus_hash", "queries_hash", "qrels_hash"]
-    )
+    check_required_nested(data, "dataset", ["corpus_hash", "queries_hash", "qrels_hash"])
     check_required_nested(
         data,
         "aggregates",

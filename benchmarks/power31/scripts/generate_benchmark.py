@@ -1141,9 +1141,7 @@ def generate_expected_answers(
                 {
                     "query_id": qid,
                     "expected_answer": "This query cannot be answered from the available documents.",
-                    "atomic_facts": [
-                        "No relevant information available in the corpus."
-                    ],
+                    "atomic_facts": ["No relevant information available in the corpus."],
                     "forbidden_facts": [],
                     "citation_document_ids": [],
                     "no_answer": True,

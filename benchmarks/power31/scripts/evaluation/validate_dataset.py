@@ -99,9 +99,7 @@ def validate_queries(queries: list[dict]) -> None:
             )
             no_answer_per_stratum[q["stratum"]] += 1
         elif is_qdd:
-            check(
-                q["query_class"] != "no_answer", f"QDD query {qid} cannot be no_answer"
-            )
+            check(q["query_class"] != "no_answer", f"QDD query {qid} cannot be no_answer")
             distractor_qids.add(qid)
         else:
             check(
@@ -178,9 +176,7 @@ def validate_qrels(qrels: list[dict], query_ids: set[str], doc_ids: set[str]) ->
                 f"Distractor {qid}/{did} should have relevance >= 2",
             )
         else:
-            check(
-                qr["utility"] >= 0, f"Non-distractor {qid}/{did} has negative utility"
-            )
+            check(qr["utility"] >= 0, f"Non-distractor {qid}/{did} has negative utility")
 
     # Every base answerable query must have primary qrel
     for qid in query_ids:
@@ -188,9 +184,7 @@ def validate_qrels(qrels: list[dict], query_ids: set[str], doc_ids: set[str]) ->
             continue
         qid_qrels = [qr for qr in qrels if qr["query_id"] == qid]
         primaries = [
-            qr
-            for qr in qid_qrels
-            if qr["relevance"] >= 2 and not qr.get("distractor", False)
+            qr for qr in qid_qrels if qr["relevance"] >= 2 and not qr.get("distractor", False)
         ]
         check(
             len(primaries) >= 1,
@@ -232,9 +226,7 @@ def validate_content_support(
         primary_docs = [
             qr["document_id"]
             for qr in qrels
-            if qr["query_id"] == qid
-            and qr["relevance"] >= 2
-            and not qr.get("distractor", False)
+            if qr["query_id"] == qid and qr["relevance"] >= 2 and not qr.get("distractor", False)
         ]
         check(len(primary_docs) >= 1, f"{qid}: no primary document")
         for doc_id in primary_docs:
@@ -319,18 +311,14 @@ def validate_hash_consistency(
     check(corpus_hash == manifest["corpus"]["hash_sha256"], "Corpus hash mismatch")
 
 
-def validate_expected_answers(
-    answers: list[dict], query_ids: set[str], doc_ids: set[str]
-) -> None:
+def validate_expected_answers(answers: list[dict], query_ids: set[str], doc_ids: set[str]) -> None:
     for a in answers:
         qid = a["query_id"]
         check(qid in query_ids, f"Answer references unknown query_id: {qid}")
         check(isinstance(a["no_answer"], bool), f"no_answer must be bool in {qid}")
 
         if a["no_answer"]:
-            check(
-                len(a["citation_document_ids"]) == 0, f"No-answer {qid} has citations"
-            )
+            check(len(a["citation_document_ids"]) == 0, f"No-answer {qid} has citations")
         else:
             check(
                 len(a.get("atomic_facts", [])) >= 1,
@@ -410,9 +398,7 @@ def main() -> int:
         errors.append(f"Answers load failed: {e}")
 
     try:
-        corpus = {
-            f.name: f.read_text(encoding="utf-8") for f in CORPUS_DIR.glob("*.md")
-        }
+        corpus = {f.name: f.read_text(encoding="utf-8") for f in CORPUS_DIR.glob("*.md")}
         print(f"  [PASS] Loaded {len(corpus)} corpus documents")
     except Exception as e:
         errors.append(f"Corpus load: {e}")
@@ -425,18 +411,12 @@ def main() -> int:
     query_ids = {q["query_id"] for q in queries}
 
     run_check("Qrels validation", validate_qrels, qrels, query_ids, doc_ids)
-    run_check(
-        "Expected answers", validate_expected_answers, answers, query_ids, doc_ids
-    )
+    run_check("Expected answers", validate_expected_answers, answers, query_ids, doc_ids)
     run_check("Content support", validate_content_support, qrels, answers, corpus)
     run_check("Absent topics", validate_absent_topics, queries, corpus)
-    run_check(
-        "Absent tokens not in corpus", validate_empty_corpus_absent_tokens, corpus
-    )
+    run_check("Absent tokens not in corpus", validate_empty_corpus_absent_tokens, corpus)
     run_check("QDD distractor queries", validate_qdd_queries, qrels, query_ids)
-    run_check(
-        "Hash consistency", validate_hash_consistency, queries, qrels, answers, manifest
-    )
+    run_check("Hash consistency", validate_hash_consistency, queries, qrels, answers, manifest)
 
     if errors:
         print(f"\nFAILED ({len(errors)} errors):")

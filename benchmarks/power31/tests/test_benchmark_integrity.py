@@ -67,10 +67,7 @@ def manifest() -> dict:
 
 @pytest.fixture(scope="module")
 def corpus() -> dict[str, str]:
-    return {
-        f.name: f.read_text(encoding="utf-8")
-        for f in (DATASET_V1 / "corpus").glob("*.md")
-    }
+    return {f.name: f.read_text(encoding="utf-8") for f in (DATASET_V1 / "corpus").glob("*.md")}
 
 
 @pytest.fixture(scope="module")
@@ -114,9 +111,7 @@ class TestQueryCounts:
                 and q["query_class"] != "no_answer"
                 and not q["query_id"].startswith("QDD")
             )
-            assert (
-                base == BASE_ANSWERABLE_PER_STRATUM
-            ), f"stratum {s}: {base} base answerable"
+            assert base == BASE_ANSWERABLE_PER_STRATUM, f"stratum {s}: {base} base answerable"
 
     def test_exactly_8_qdd(self, queries: list[dict]) -> None:
         qdd = [q for q in queries if q["query_id"].startswith("QDD")]
@@ -128,11 +123,7 @@ class TestQueryCounts:
 
     def test_5_no_answer_per_stratum(self, queries: list[dict]) -> None:
         for s in STRATA:
-            na = sum(
-                1
-                for q in queries
-                if q["stratum"] == s and q["query_class"] == "no_answer"
-            )
+            na = sum(1 for q in queries if q["stratum"] == s and q["query_class"] == "no_answer")
             assert na == N_ABSENT, f"stratum {s}: {na} no-answer"
 
     def test_no_no_answer_in_qdd(self, queries: list[dict]) -> None:
@@ -153,9 +144,9 @@ class TestQueryCounts:
         }
         for q in queries:
             expected = mapping.get((q["language"], q["target_language"]))
-            assert (
-                q["stratum"] == expected
-            ), f"stratum mismatch {q['query_id']}: ({q['language']}->{q['target_language']})"
+            assert q["stratum"] == expected, (
+                f"stratum mismatch {q['query_id']}: ({q['language']}->{q['target_language']})"
+            )
 
 
 # ── Qrels (sparse) ────────────────────────────────────────────────────────
@@ -164,24 +155,18 @@ class TestQueryCounts:
 class TestQrelsSparse:
     def test_no_zero_relevance_entries(self, qrels: list[dict]) -> None:
         for qr in qrels:
-            assert (
-                qr["relevance"] > 0
-            ), f"sparse violation: {qr['query_id']}/{qr['document_id']}"
+            assert qr["relevance"] > 0, f"sparse violation: {qr['query_id']}/{qr['document_id']}"
 
     def test_no_no_answer_qrels(self, qrels: list[dict], query_ids: set[str]) -> None:
         na_qids = {qid for qid in query_ids if qid.startswith("QN")}
         for qr in qrels:
-            assert (
-                qr["query_id"] not in na_qids
-            ), f"no-answer {qr['query_id']} has qrels"
+            assert qr["query_id"] not in na_qids, f"no-answer {qr['query_id']} has qrels"
 
     def test_no_duplicate_pairs(self, qrels: list[dict]) -> None:
         pairs = [(qr["query_id"], qr["document_id"]) for qr in qrels]
         assert len(set(pairs)) == len(pairs)
 
-    def test_all_answerable_have_primary(
-        self, qrels: list[dict], query_ids: set[str]
-    ) -> None:
+    def test_all_answerable_have_primary(self, qrels: list[dict], query_ids: set[str]) -> None:
         for qid in query_ids:
             if qid.startswith("QN"):
                 continue
@@ -198,9 +183,7 @@ class TestQrelsSparse:
         for qr in qrels:
             assert qr["document_id"] in doc_ids, f"unknown doc: {qr['document_id']}"
 
-    def test_all_query_ids_referenced(
-        self, qrels: list[dict], query_ids: set[str]
-    ) -> None:
+    def test_all_query_ids_referenced(self, qrels: list[dict], query_ids: set[str]) -> None:
         qrel_qids = {qr["query_id"] for qr in qrels}
         answerable = {qid for qid in query_ids if not qid.startswith("QN")}
         missing = answerable - qrel_qids
@@ -217,9 +200,7 @@ class TestQrelsSparse:
     def test_distractor_negative_utility(self, qrels: list[dict]) -> None:
         for qr in qrels:
             if qr.get("distractor", False):
-                assert (
-                    qr["utility"] < 0
-                ), f"distractor {qr['query_id']}/{qr['document_id']}"
+                assert qr["utility"] < 0, f"distractor {qr['query_id']}/{qr['document_id']}"
 
 
 # ── QDD distractor queries ────────────────────────────────────────────────
@@ -237,16 +218,12 @@ class TestQDDQueries:
             assert len(primaries) >= 1, f"{qid}: no primary"
             assert len(distractors) >= 1, f"{qid}: no distractor"
 
-    def test_qdd_distractor_relevance_ge2(
-        self, qrels: list[dict], query_ids: set[str]
-    ) -> None:
+    def test_qdd_distractor_relevance_ge2(self, qrels: list[dict], query_ids: set[str]) -> None:
         qdd_qids = {qid for qid in query_ids if qid.startswith("QDD")}
         for qid in qdd_qids:
             for qr in qrels:
                 if qr["query_id"] == qid and qr.get("distractor", False):
-                    assert (
-                        qr["relevance"] >= 2
-                    ), f"{qid}: distractor relevance={qr['relevance']}"
+                    assert qr["relevance"] >= 2, f"{qid}: distractor relevance={qr['relevance']}"
 
 
 # ── Corpus ────────────────────────────────────────────────────────────────
@@ -266,9 +243,7 @@ class TestCorpus:
         for entry in manifest["corpus"]["files"]:
             path = DATASET_V1 / "corpus" / entry["document_id"]
             actual = hashlib.sha256(path.read_bytes()).hexdigest()
-            assert (
-                actual == entry["sha256"]
-            ), f"SHA256 mismatch for {entry['document_id']}"
+            assert actual == entry["sha256"], f"SHA256 mismatch for {entry['document_id']}"
 
     def test_no_duplicate_doc_ids(self, manifest: dict) -> None:
         doc_ids = [e["document_id"] for e in manifest["corpus"]["files"]]
@@ -278,9 +253,7 @@ class TestCorpus:
         for entry in manifest["corpus"]["files"]:
             did = entry["document_id"]
             expected_lang = "uk" if did.endswith("-ua.md") else "en"
-            assert (
-                entry["language"] == expected_lang
-            ), f"{did}: lang={entry['language']}"
+            assert entry["language"] == expected_lang, f"{did}: lang={entry['language']}"
 
     def test_hash_manifest_integrity(self, manifest: dict) -> None:
         corpus_text = json.dumps(manifest["corpus"]["files"], sort_keys=True)
@@ -310,9 +283,7 @@ class TestContentSupport:
             for doc_id in primaries:
                 content = corpus.get(doc_id, "")
                 for fact in a.get("atomic_facts", []):
-                    assert (
-                        fact.lower() in content.lower()
-                    ), f"{qid}: atomic fact not in {doc_id}"
+                    assert fact.lower() in content.lower(), f"{qid}: atomic fact not in {doc_id}"
 
 
 # ── Absent topics ──────────────────────────────────────────────────────────
@@ -322,21 +293,15 @@ class TestAbsentTopics:
     def test_absent_tokens_not_in_corpus(self, corpus: dict[str, str]) -> None:
         all_text = " ".join(corpus.values()).lower()
         for token in ABSENT_TOKENS:
-            assert (
-                token.lower() not in all_text
-            ), f"absent token '{token}' found in corpus"
+            assert token.lower() not in all_text, f"absent token '{token}' found in corpus"
 
-    def test_no_answer_queries_reference_absent_topics(
-        self, queries: list[dict]
-    ) -> None:
+    def test_no_answer_queries_reference_absent_topics(self, queries: list[dict]) -> None:
         for q in queries:
             if q["query_class"] != "no_answer":
                 continue
             q_lower = q["query"].lower()
             has_absent = any(token.lower() in q_lower for token in ABSENT_TOKENS)
-            assert (
-                has_absent
-            ), f"no-answer {q['query_id']} doesn't reference absent topic"
+            assert has_absent, f"no-answer {q['query_id']} doesn't reference absent topic"
 
 
 # ── Hash consistency ──────────────────────────────────────────────────────
@@ -400,9 +365,7 @@ class TestManifest:
 
 
 class TestExpectedAnswers:
-    def test_all_queries_have_answers(
-        self, answers: list[dict], queries: list[dict]
-    ) -> None:
+    def test_all_queries_have_answers(self, answers: list[dict], queries: list[dict]) -> None:
         qids = {q["query_id"] for q in queries}
         aid_qids = {a["query_id"] for a in answers}
         assert qids == aid_qids
@@ -421,14 +384,10 @@ class TestExpectedAnswers:
             if not a["no_answer"]:
                 assert len(a.get("citation_document_ids", [])) >= 1
 
-    def test_citation_ids_exist_in_corpus(
-        self, answers: list[dict], doc_ids: set[str]
-    ) -> None:
+    def test_citation_ids_exist_in_corpus(self, answers: list[dict], doc_ids: set[str]) -> None:
         for a in answers:
             for cid in a.get("citation_document_ids", []):
-                assert (
-                    cid in doc_ids
-                ), f"answer {a['query_id']} cites unknown doc: {cid}"
+                assert cid in doc_ids, f"answer {a['query_id']} cites unknown doc: {cid}"
 
     def test_citation_ids_are_primary_relevant(
         self, answers: list[dict], qrels: list[dict]
@@ -441,9 +400,9 @@ class TestExpectedAnswers:
             if a["no_answer"]:
                 continue
             for cid in a.get("citation_document_ids", []):
-                assert cid in primary_map.get(
-                    a["query_id"], set()
-                ), f"answer {a['query_id']} cites non-primary doc: {cid}"
+                assert cid in primary_map.get(a["query_id"], set()), (
+                    f"answer {a['query_id']} cites non-primary doc: {cid}"
+                )
 
 
 # ── Byte-identical regeneration ──────────────────────────────────────────

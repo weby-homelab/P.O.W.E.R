@@ -50,10 +50,7 @@ sys.path.insert(
 import importlib.util
 
 verify_path = (
-    Path(__file__).resolve().parent.parent
-    / "scripts"
-    / "evaluation"
-    / "verify_evidence.py"
+    Path(__file__).resolve().parent.parent / "scripts" / "evaluation" / "verify_evidence.py"
 )
 spec = importlib.util.spec_from_file_location("verify_evidence", str(verify_path))
 verify_mod = importlib.util.module_from_spec(spec)

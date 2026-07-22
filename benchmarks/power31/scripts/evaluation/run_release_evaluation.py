@@ -183,9 +183,7 @@ def _db_path_for_vault(vault_dir: Path) -> Path:
     return vault_dir / ".power_search.db"
 
 
-def _sync_vault(
-    vault_dir: Path, sync_embeddings: bool, force_rebuild: bool = False
-) -> None:
+def _sync_vault(vault_dir: Path, sync_embeddings: bool, force_rebuild: bool = False) -> None:
     db_path = _db_path_for_vault(vault_dir)
     os.environ["POWER_SEARCH_DB"] = str(db_path)
 
@@ -197,9 +195,7 @@ def _sync_vault(
 
     from power_framework.core.searcher import _sync_vault_to_db
 
-    _sync_vault_to_db(
-        vault_dir, conn, sync_embeddings=sync_embeddings, force_rebuild=force_rebuild
-    )
+    _sync_vault_to_db(vault_dir, conn, sync_embeddings=sync_embeddings, force_rebuild=force_rebuild)
     conn.close()
 
 
@@ -266,9 +262,7 @@ def precision_at_k(retrieved: list[str], relevant: set[str], k: int) -> float:
     return len(set(retrieved[:k]) & relevant) / len(retrieved[:k])
 
 
-def compute_query_metrics(
-    retrieved: list[dict], relevant_docs: set[str]
-) -> dict[str, float]:
+def compute_query_metrics(retrieved: list[dict], relevant_docs: set[str]) -> dict[str, float]:
     doc_ids = [r["doc_id"] for r in retrieved]
     return {
         "ndcg@10": ndcg_at_k(doc_ids, relevant_docs, 10),
@@ -323,18 +317,12 @@ def paired_bootstrap_ci(
     }
 
 
-def exact_sign_test_pvalue(
-    baseline_scores: list[float], candidate_scores: list[float]
-) -> float:
+def exact_sign_test_pvalue(baseline_scores: list[float], candidate_scores: list[float]) -> float:
     n = len(baseline_scores)
     if n == 0:
         return 1.0
-    wins = sum(
-        1 for b, c in zip(baseline_scores, candidate_scores, strict=True) if c > b
-    )
-    ties = sum(
-        1 for b, c in zip(baseline_scores, candidate_scores, strict=True) if c == b
-    )
+    wins = sum(1 for b, c in zip(baseline_scores, candidate_scores, strict=True) if c > b)
+    ties = sum(1 for b, c in zip(baseline_scores, candidate_scores, strict=True) if c == b)
     effective = n - ties
     if effective == 0:
         return 1.0
@@ -436,9 +424,7 @@ def run_extractive_rag(
 
     distractor_sensitivity = None
     if distractor_doc_ids:
-        distractor_sensitivity = (
-            0.0 if set(retrieved_doc_ids) <= distractor_doc_ids else 1.0
-        )
+        distractor_sensitivity = 0.0 if set(retrieved_doc_ids) <= distractor_doc_ids else 1.0
 
     if not all_facts_found:
         return {
@@ -469,12 +455,8 @@ def compute_rag_aggregates(rag_results: list[dict]) -> dict[str, Any]:
     answerable = [r for r in rag_results if r.get("retrieval_mode") != "no-answer"]
     no_answer_qs = [r for r in rag_results if r.get("retrieval_mode") == "no-answer"]
 
-    correctness_vals = [
-        r["correctness"] for r in answerable if r["correctness"] is not None
-    ]
-    groundedness_vals = [
-        r["groundedness"] for r in answerable if r["groundedness"] is not None
-    ]
+    correctness_vals = [r["correctness"] for r in answerable if r["correctness"] is not None]
+    groundedness_vals = [r["groundedness"] for r in answerable if r["groundedness"] is not None]
     citation_vals = [
         r["citation_accuracy"] for r in answerable if r["citation_accuracy"] is not None
     ]
@@ -488,9 +470,7 @@ def compute_rag_aggregates(rag_results: list[dict]) -> dict[str, Any]:
             sum(correctness_vals) / len(correctness_vals) if correctness_vals else 0.0
         ),
         "mean_groundedness": (
-            sum(groundedness_vals) / len(groundedness_vals)
-            if groundedness_vals
-            else 0.0
+            sum(groundedness_vals) / len(groundedness_vals) if groundedness_vals else 0.0
         ),
         "mean_citation_accuracy": (
             sum(citation_vals) / len(citation_vals) if citation_vals else 0.0
@@ -542,9 +522,7 @@ def run_evaluation(args: argparse.Namespace) -> dict[str, Any]:
 
     # ── Materialise vault ─────────────────────────────────────────────────
     vault_dir = (
-        Path(args.vault_dir)
-        if args.vault_dir
-        else Path(tempfile.mkdtemp(prefix="power31-vault-"))
+        Path(args.vault_dir) if args.vault_dir else Path(tempfile.mkdtemp(prefix="power31-vault-"))
     )
 
     if args.vault_dir:
@@ -553,9 +531,7 @@ def run_evaluation(args: argparse.Namespace) -> dict[str, Any]:
         vault_dir.mkdir(parents=True, exist_ok=True)
 
     materialise_vault(vault_dir)
-    logger.info(
-        "Vault materialised at %s with %d documents", vault_dir, len(corpus_content)
-    )
+    logger.info("Vault materialised at %s with %d documents", vault_dir, len(corpus_content))
 
     # ── Sync vault ────────────────────────────────────────────────────────
     db_path = _db_path_for_vault(vault_dir)
@@ -608,9 +584,7 @@ def run_evaluation(args: argparse.Namespace) -> dict[str, Any]:
         b_retrieved = _search_and_collect(vault_dir, query_text, baseline_mode)
         latency_baseline.append((time.monotonic() - t0) * 1000)
 
-        b_metrics = (
-            compute_query_metrics(b_retrieved, relevant) if not is_no_answer else {}
-        )
+        b_metrics = compute_query_metrics(b_retrieved, relevant) if not is_no_answer else {}
 
         b_rag = run_extractive_rag(
             b_retrieved,
@@ -626,9 +600,7 @@ def run_evaluation(args: argparse.Namespace) -> dict[str, Any]:
         c_retrieved = _search_and_collect(vault_dir, query_text, candidate_mode)
         latency_candidate.append((time.monotonic() - t0) * 1000)
 
-        c_metrics = (
-            compute_query_metrics(c_retrieved, relevant) if not is_no_answer else {}
-        )
+        c_metrics = compute_query_metrics(c_retrieved, relevant) if not is_no_answer else {}
 
         c_rag = run_extractive_rag(
             c_retrieved,
@@ -693,9 +665,7 @@ def run_evaluation(args: argparse.Namespace) -> dict[str, Any]:
     overall_candidate_agg = _aggregate_metrics_list(candidate_per_query_metrics)
 
     # ── No-answer false-positive rate ─────────────────────────────────────
-    no_answer_entries = [
-        r for r in per_query_results if r["query_class"] == "no_answer"
-    ]
+    no_answer_entries = [r for r in per_query_results if r["query_class"] == "no_answer"]
     baseline_fp = sum(1 for r in no_answer_entries if not r["baseline"]["rag"].get("abstained"))
     candidate_fp = sum(1 for r in no_answer_entries if not r["candidate"]["rag"].get("abstained"))
     no_answer_count = len(no_answer_entries) or 1
@@ -782,9 +752,7 @@ def run_evaluation(args: argparse.Namespace) -> dict[str, Any]:
         "models_lock": {
             "hash": _sha256_file(MODELS_LOCK) if MODELS_LOCK.exists() else None,
             "revision": MODELS_LOCK.exists()
-            and json.loads(MODELS_LOCK.read_text())
-            .get("canonical_embedding", {})
-            .get("revision"),
+            and json.loads(MODELS_LOCK.read_text()).get("canonical_embedding", {}).get("revision"),
         },
         "python_version": sys.version,
         "platform": platform.platform(),
@@ -809,9 +777,7 @@ def run_evaluation(args: argparse.Namespace) -> dict[str, Any]:
         },
         "paired_stats": {
             "overall": paired_stats,
-            "per_stratum": {
-                stratum: strata_agg[stratum]["paired_stats"] for stratum in strata_agg
-            },
+            "per_stratum": {stratum: strata_agg[stratum]["paired_stats"] for stratum in strata_agg},
         },
         "rag_metrics": rag_aggregates,
         "latency": latency_profile,
