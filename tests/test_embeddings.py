@@ -57,11 +57,16 @@ class TestEmbeddingManager:
         vec2 = manager.embed("Rocket science")
         assert vec1 != vec2
 
-    def test_canonical_identity_contains_immutable_revision(self, monkeypatch: pytest.MonkeyPatch):
+    def test_canonical_identity_contains_immutable_revision(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         monkeypatch.setenv("POWER_EMBED_PROVIDER", "bge-m3")
         provider, model = embeddings.configured_embedding_identity()
         assert provider == "BGEM3OnnxManager"
-        assert model == f"{embeddings.BGE_M3_PINNED_REPO}@{embeddings.BGE_M3_ONNX_REVISION}"
+        assert (
+            model
+            == f"{embeddings.BGE_M3_PINNED_REPO}@{embeddings.BGE_M3_ONNX_REVISION}"
+        )
 
     def test_sha256_verification_fails_closed(self, tmp_path: Path):
         artifact = tmp_path / "model.onnx"
@@ -69,3 +74,10 @@ class TestEmbeddingManager:
 
         with pytest.raises(RuntimeError, match=r"model_sha256_mismatch:model\.onnx"):
             embeddings._verify_sha256(str(artifact), "0" * 64)
+
+    def test_unknown_provider_fails_closed(self, monkeypatch: pytest.MonkeyPatch):
+        """WTF #3 remediation: an unknown POWER_EMBED_PROVIDER must raise
+        RuntimeError instead of silently falling back to a default backend."""
+        monkeypatch.setenv("POWER_EMBED_PROVIDER", "totally-unknown-backend")
+        with pytest.raises(RuntimeError, match=r"unknown_embed_provider"):
+            embeddings.get_embedding_manager()

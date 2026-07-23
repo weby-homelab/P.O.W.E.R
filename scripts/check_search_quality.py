@@ -33,7 +33,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CACHE_DIR = REPO_ROOT / ".cache"
@@ -291,7 +291,7 @@ DEFAULT_QUERIES: list[str] = [
 def _ensure_ranx() -> Any:
     """Import ranx, installing it if missing. Returns the ranx module."""
     try:
-        import ranx  # type: ignore
+        import ranx
 
         return ranx
     except ModuleNotFoundError:
@@ -376,13 +376,15 @@ def load_or_build_qrels(
         try:
             cached = json.loads(QRELS_CACHE.read_text(encoding="utf-8"))
             if cached.get("vault") == str(Path(vault).resolve()) and "qrels" in cached:
-                return cached["qrels"]
+                return cast("dict[str, dict[str, int]]", cached["qrels"])
         except (json.JSONDecodeError, OSError):
             # An unreadable or stale cache is intentionally rebuilt below.
             pass
     qrels = build_qrels(vault, overrides=overrides)
     QRELS_CACHE.write_text(
-        json.dumps({"vault": str(Path(vault).resolve()), "qrels": qrels}, ensure_ascii=False),
+        json.dumps(
+            {"vault": str(Path(vault).resolve()), "qrels": qrels}, ensure_ascii=False
+        ),
         encoding="utf-8",
     )
     return qrels
@@ -393,11 +395,11 @@ def run_search(
     queries: list[str],
     mode: str,
     max_results: int = 20,
-) -> dict[str, dict[str, int]]:
+) -> dict[str, dict[str, float]]:
     """Run search_vault for each query, returning query -> {doc: score}."""
     from power_framework.core.searcher import search_vault
 
-    run: dict[str, dict[str, int]] = {}
+    run: dict[str, dict[str, float]] = {}
     for q in queries:
         results = search_vault(Path(vault), q, max_results=max_results, mode=mode)
         run[q] = {r.rel_path: float(r.score) for r in results}
@@ -412,12 +414,125 @@ def evaluate(
     max_results: int = 20,
     overrides: dict[str, list[str]] | None = None,
     force_qrels: bool = False,
+    gt_mode: str = "semantic",
 ) -> dict[str, float]:
     """Build qrels + run, compute metrics, print, and return the metric dict.
 
-    The legacy lexical proxy is diagnostic only; it is not EACL-2026 UDCG and
-    must not be used as a release-quality gate. nDCG@5 remains historical.
+    When gt_mode='semantic' (default), uses the curated semantic_gt.json with
+    graded relevance (EACL-2026 UDCG). When gt_mode='lexical', uses the legacy
+    term-AND proxy (deprecated, diagnostic only).
     """
+    from power_framework.core.metrics.udcg_real import (
+        SEMANTIC_GT_PATH,
+        _load_semantic_gt,
+        compute_semantic_udcg,
+    )
+
+    if not SEMANTIC_GT_PATH.exists():
+        print(f"ERROR: semantic GT not found at {SEMANTIC_GT_PATH}", file=sys.stderr)
+        return {}
+
+    if gt_mode == "lexical":
+        import warnings
+
+        warnings.warn(
+            "gt_mode='lexical' is deprecated; use --gt-mode=semantic for EACL-2026 UDCG",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return _evaluate_lexical(
+            vault=vault,
+            mode=mode,
+            gate=gate,
+            udcg_gate=udcg_gate,
+            max_results=max_results,
+            overrides=overrides,
+            force_qrels=force_qrels,
+        )
+
+    if gt_mode != "semantic":
+        print(
+            f"ERROR: unknown gt_mode={gt_mode!r}; use 'semantic' or 'lexical'",
+            file=sys.stderr,
+        )
+        return {}
+
+    # Use the curated GT query set (not DEFAULT_QUERIES)
+    gt_qrels = _load_semantic_gt(SEMANTIC_GT_PATH)
+    queries = list(gt_qrels.keys())
+
+    run = run_search(vault, queries, mode=mode, max_results=max_results)
+    run_ranked = {q: dict(list(run[q].items())[:5]) for q in run}
+
+    metrics = compute_semantic_udcg(run_ranked, k=5)
+    nd = metrics["ndcg@5"]
+
+    # Compute ranx metrics for secondary info (recall, mrr)
+    ranx = _ensure_ranx()
+    ranx_qrels = {
+        q: {k: min(v, 1) for k, v in docs.items()} for q, docs in gt_qrels.items()
+    }
+    eval_queries = [q for q in queries if ranx_qrels.get(q)]
+    if not eval_queries:
+        print(
+            "ERROR: no GT-relevant documents found for any query; cannot compute metrics.",
+            file=sys.stderr,
+        )
+        return {}
+
+    ranx_qrels = {q: ranx_qrels[q] for q in eval_queries}
+    ranx_run = {q: run[q] for q in eval_queries}
+
+    qrels_obj = ranx.Qrels(ranx_qrels)
+    run_obj = ranx.Run(ranx_run)
+    ranx_metrics = ranx.evaluate(
+        qrels_obj, run_obj, ["ndcg@5", "recall@5", "mrr@5"], make_comparable=True
+    )
+
+    rc = float(ranx_metrics["recall@5"])
+    mr = float(ranx_metrics["mrr@5"])
+
+    passed = nd >= udcg_gate
+
+    print(f"vault   : {vault}")
+    print("gt_mode : semantic (curated, bilingual)")
+    print(f"mode    : {mode}")
+    print(f"queries : {len(eval_queries)} (with GT relevance)")
+    print(f"ndcg@5  : {nd:.4f}   (PRIMARY gate >= {udcg_gate:.2f})")
+    print(f"recall@5: {rc:.4f}   (secondary)")
+    print(f"mrr@5   : {mr:.4f}   (secondary)")
+    print(f"gate    : -> {'PASS' if passed else 'FAIL'}")
+    return {
+        "ndcg@5": nd,
+        "recall@5": rc,
+        "mrr@5": mr,
+        "passed": passed,
+    }
+
+
+def _load_semantic_gt_for_ranx(
+    gt_path: Path,
+    queries: list[str],
+) -> dict[str, dict[str, int]]:
+    data = json.loads(gt_path.read_text(encoding="utf-8"))
+    qrels: dict[str, dict[str, int]] = {}
+    for entry in data["queries"]:
+        if entry["query"] in queries:
+            # ranx expects binary relevance for nDCG/recall/mrr
+            qrels[entry["query"]] = {k: min(v, 1) for k, v in entry["relevant"].items()}
+    return qrels
+
+
+def _evaluate_lexical(
+    vault: Path,
+    mode: str = "reranked",
+    gate: float = 0.50,
+    udcg_gate: float = 0.45,
+    max_results: int = 20,
+    overrides: dict[str, list[str]] | None = None,
+    force_qrels: bool = False,
+) -> dict[str, float]:
+    """Legacy lexical-mode evaluation (deprecated)."""
     ranx = _ensure_ranx()
     from power_framework.core.metrics.discounted_lexical_gain import (
         normalized_discounted_lexical_gain,
@@ -428,19 +543,18 @@ def evaluate(
     qrels = load_or_build_qrels(vault, force=force_qrels, overrides=overrides)
     run = run_search(vault, queries, mode=mode, max_results=max_results)
 
-    # Pre-load doc contents once (for graded-utility / UDCG computation).
     contents: dict[str, str] = {}
     for f in _iter_md_files(Path(vault)):
         try:
-            contents[_rel(f, Path(vault))] = f.read_text(encoding="utf-8", errors="ignore").lower()
-        except OSError:  # noqa: PERF203 - unreadable vault files must not abort the benchmark
+            contents[_rel(f, Path(vault))] = f.read_text(
+                encoding="utf-8", errors="ignore"
+            ).lower()
+        except OSError:  # noqa: PERF203
             continue
 
-    # ranx wants qrels/run as dict[str, dict[str, int]].
     ranx_qrels = {q: qrels.get(q, {}) for q in queries}
     ranx_run = {q: run.get(q, {}) for q in queries}
 
-    # Drop queries with no GT relevant docs (undefined ndcg/recall/mrr -> skip).
     eval_queries = [q for q in queries if ranx_qrels[q]]
     if not eval_queries:
         print(
@@ -461,8 +575,6 @@ def evaluate(
     rc = float(metrics["recall@5"])
     mr = float(metrics["mrr@5"])
 
-    # UDCG@5: per-doc utility = graded relevance (fraction of query terms present)
-    # mapped to [0,1]; normalized against the ideal ordering of retrieved utils.
     per_query_udcg: list[float] = []
     for q in eval_queries:
         terms = _tokenize_query(q)
@@ -472,7 +584,7 @@ def evaluate(
         for doc in ranked_docs:
             text = contents.get(doc, "")
             matched = sum(1 for t in terms if t in text)
-            grade = round(matched / n_terms * 3)  # 0..3 graded relevance
+            grade = round(matched / n_terms * 3)
             utilities.extend(utilities_from_relevance([grade], max_relevance=3))
         per_query_udcg.append(normalized_discounted_lexical_gain(utilities, k=5))
     udcg5 = sum(per_query_udcg) / len(per_query_udcg) if per_query_udcg else 0.0
@@ -480,6 +592,7 @@ def evaluate(
     passed = nd >= gate and udcg5 >= udcg_gate
 
     print(f"vault   : {vault}")
+    print("gt_mode : lexical (DEPRECATED)")
     print(f"mode    : {mode}")
     print(f"queries : {len(eval_queries)} (with GT relevance)")
     print(f"ndcg@5  : {nd:.4f}   (secondary gate >= {gate:.2f})")
@@ -500,8 +613,12 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="POWER search-quality gate.")
     parser.add_argument("--vault", default="/root/gemma/brain", type=str)
     parser.add_argument("--mode", default="reranked", type=str)
-    parser.add_argument("--gate", default=0.50, type=float, help="ndcg@5 secondary gate.")
-    parser.add_argument("--udcg-gate", default=0.45, type=float, help="UDCG@5 primary gate.")
+    parser.add_argument(
+        "--gate", default=0.50, type=float, help="ndcg@5 secondary gate."
+    )
+    parser.add_argument(
+        "--udcg-gate", default=0.45, type=float, help="UDCG@5 primary gate."
+    )
     parser.add_argument("--max-results", default=20, type=int)
     parser.add_argument(
         "--queries",
@@ -510,7 +627,15 @@ def main(argv: list[str] | None = None) -> int:
         help="Optional JSON file: query -> [rel_doc_rel_paths] overrides.",
     )
     parser.add_argument(
-        "--force-qrels", action="store_true", help="Rebuild the qrels cache even if present."
+        "--force-qrels",
+        action="store_true",
+        help="Rebuild the qrels cache even if present.",
+    )
+    parser.add_argument(
+        "--gt-mode",
+        default="semantic",
+        choices=["semantic", "lexical"],
+        help="Ground-truth mode: 'semantic' (curated, default) or 'lexical' (deprecated term-AND).",
     )
     args = parser.parse_args(argv)
 
@@ -526,6 +651,7 @@ def main(argv: list[str] | None = None) -> int:
         max_results=args.max_results,
         overrides=overrides,
         force_qrels=args.force_qrels,
+        gt_mode=args.gt_mode,
     )
     if not metrics:
         return 1

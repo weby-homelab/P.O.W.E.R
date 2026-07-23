@@ -5,6 +5,7 @@ Tests for P.O.W.E.R. MCP Server tool calls using FastMCP functions directly.
 from __future__ import annotations
 
 import json
+import sqlite3
 from typing import TYPE_CHECKING
 from unittest.mock import Mock
 
@@ -169,6 +170,30 @@ async def test_ingest_note_tool(sample_vault: Path) -> None:
             content="Hello world",
             vault_path=str(sample_vault),
         )
+
+
+async def test_synthesize_session_serializes_write_and_stores_triplets(
+    sample_vault: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    db_path = tmp_path / "power-search.db"
+    monkeypatch.setenv("POWER_SEARCH_DB", str(db_path))
+
+    result = await synthesize_session(
+        name="06_Daily_Logs/McpSynthesis.md",
+        title="MCP synthesis",
+        description="A synthesis created through the MCP write queue.",
+        content="POWER is a knowledge management framework.",
+        vault_path=str(sample_vault),
+    )
+
+    assert "synthesized and ingested" in result
+    assert (sample_vault / "06_Daily_Logs" / "McpSynthesis.md").exists()
+    with sqlite3.connect(db_path) as conn:
+        rows = conn.execute(
+            "SELECT source_path, relation FROM relations WHERE source_path = ?",
+            ("06_Daily_Logs/McpSynthesis.md",),
+        ).fetchall()
+    assert ("06_Daily_Logs/McpSynthesis.md", "is_a") in rows
 
 
 @pytest.mark.parametrize("tool_name", ["ingest", "synthesize"])

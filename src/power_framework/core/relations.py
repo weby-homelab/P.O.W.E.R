@@ -9,12 +9,15 @@ Auto-discovers knowledge graph connections between notes using:
 
 from __future__ import annotations
 
+import logging
 import re
 from collections import deque
 from typing import TYPE_CHECKING
 
 from .ignore import should_skip
 from .parser import read_file_content, validate_metadata
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -191,7 +194,11 @@ def suggest_related(
         checked: set[tuple[str, str]] = set()
         for i in range(len(paths)):
             for j in range(i + 1, len(paths)):
-                pair = (paths[i], paths[j]) if paths[i] < paths[j] else (paths[j], paths[i])
+                pair = (
+                    (paths[i], paths[j])
+                    if paths[i] < paths[j]
+                    else (paths[j], paths[i])
+                )
                 if pair in checked:
                     continue
                 checked.add(pair)
@@ -326,7 +333,9 @@ class KnowledgeGraph:
             for src, tgt, _rel, _conf, _depth in reachable_edges:
                 included_nodes.add(src)
                 included_nodes.add(tgt)
-            edges = [(src, tgt, rel, conf) for src, tgt, rel, conf, _depth in reachable_edges]
+            edges = [
+                (src, tgt, rel, conf) for src, tgt, rel, conf, _depth in reachable_edges
+            ]
         else:
             edges = self._edges
             included_nodes = self._nodes
@@ -468,10 +477,14 @@ def suggest_related_v2(
     def _emit(src: str, tgt: str) -> None:
         if src == tgt:
             return
-        explicit = tgt in explicit_links.get(src, set()) or src in explicit_links.get(tgt, set())
+        explicit = tgt in explicit_links.get(src, set()) or src in explicit_links.get(
+            tgt, set()
+        )
         kw_a, tags_a, _ = notes[src]
         kw_b, tags_b, _ = notes[tgt]
-        score = _compute_overlap_score_v2(kw_a, tags_a, kw_b, tags_b, explicit_link=explicit)
+        score = _compute_overlap_score_v2(
+            kw_a, tags_a, kw_b, tags_b, explicit_link=explicit
+        )
         if score >= score_threshold:
             reason = (
                 "Explicit OKF 'related' link"
@@ -528,13 +541,17 @@ class WeightedKnowledgeGraph:
         self._adj.setdefault(target, []).append((source, float(weight)))
 
     @classmethod
-    def from_suggestions(cls, suggestions: list[RelationSuggestion]) -> WeightedKnowledgeGraph:
+    def from_suggestions(
+        cls, suggestions: list[RelationSuggestion]
+    ) -> WeightedKnowledgeGraph:
         g = cls()
         for s in suggestions:
             g.add_weighted_relation(s.source_path, s.target_path, s.score)
         return g
 
-    def weighted_bfs(self, start: str, max_hops: int = 2) -> list[tuple[str, float, int]]:
+    def weighted_bfs(
+        self, start: str, max_hops: int = 2
+    ) -> list[tuple[str, float, int]]:
         """BFS returning (node, accumulated_weight, depth) within max_hops.
 
         ``accumulated_weight`` is the product of edge weights along the path
@@ -566,3 +583,94 @@ class WeightedKnowledgeGraph:
                 scores[src] += w
         ranked = sorted(scores.items(), key=lambda kv: -kv[1])
         return ranked[:top_k]
+
+
+def _cosine(a: list[float], b: list[float]) -> float:
+    """Cosine similarity between two equal-length vectors."""
+    if not a or not b:
+        return 0.0
+    dot: float = sum(x * y for x, y in zip(a, b, strict=True))
+    na = sum(x * x for x in a) ** 0.5
+    nb = sum(x * x for x in b) ** 0.5
+    if na == 0 or nb == 0:
+        return 0.0
+    return float(dot / (na * nb))
+
+
+def suggest_related_semantic(
+    vault_dir: Path,
+    target_path: str | None = None,
+    max_results: int = SUGGEST_MAX_RESULTS,
+    score_threshold: float = 0.0,
+) -> list[RelationSuggestion]:
+    """Semantic relation suggester using dense embeddings (WTF #5).
+
+    Replaces keyword/tag Jaccard overlap with true semantic cosine similarity
+    over BGE-M3 (UA↔EN) embeddings, so lexically-distant but semantically-close
+    notes surface. Falls back to the keyword suggester (with a warning) when the
+    embedding backend or dense index is unavailable, so the tool never fails
+    closed to an empty result set.
+    """
+    from .embeddings import get_embedding_manager
+
+    if target_path is None:
+        # Semantic ranking needs a focal note; without one, degrade to keyword.
+        logger.warning(
+            "suggest_related_semantic called without target_path; using keyword fallback."
+        )
+        return suggest_related(
+            vault_dir, target_path=target_path, max_results=max_results
+        )
+
+    try:
+        manager = get_embedding_manager()
+    except Exception as e:
+        logger.warning("Embedding backend unavailable (%s); keyword fallback.", e)
+        return suggest_related(
+            vault_dir, target_path=target_path, max_results=max_results
+        )
+
+    target_text = ""
+    notes: dict[str, str] = {}
+    for filepath in vault_dir.rglob("*.md"):
+        rel = filepath.relative_to(vault_dir)
+        if should_skip(vault_dir, str(rel)):
+            continue
+        if filepath.name in ("index.md", "log.md", "_index.md"):
+            continue
+        try:
+            content = read_file_content(filepath)
+        except Exception:  # noqa: S112
+            continue
+        rel_path = str(rel)
+        if rel_path == target_path:
+            target_text = content
+            continue
+        notes[rel_path] = content
+
+    if not target_text or not notes:
+        return []
+
+    try:
+        target_vec = manager.embed(target_text[:2000])
+        cand_vecs = {p: manager.embed(c[:2000]) for p, c in notes.items()}
+    except Exception as e:
+        logger.warning("Embedding failed (%s); keyword fallback.", e)
+        return suggest_related(
+            vault_dir, target_path=target_path, max_results=max_results
+        )
+
+    suggestions: list[RelationSuggestion] = []
+    for rel_path, vec in cand_vecs.items():
+        score = _cosine(target_vec, vec)
+        if score >= score_threshold:
+            suggestions.append(
+                RelationSuggestion(
+                    source_path=target_path,
+                    target_path=rel_path,
+                    score=score,
+                    reason=f"Semantic cosine similarity ({int(score * 100)}%)",
+                )
+            )
+    suggestions.sort(key=lambda s: (-s.score, s.source_path, s.target_path))
+    return suggestions[:max_results]

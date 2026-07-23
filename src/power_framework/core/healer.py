@@ -44,7 +44,15 @@ FOLDER_TO_TYPE: dict[str, str] = {
 }
 
 DEFAULT_EXCLUDED = frozenset(
-    {*SKIP_FILES, ".git", ".backups", "05_Templates", "scratch", ".system_generated", ".agents"}
+    {
+        *SKIP_FILES,
+        ".git",
+        ".backups",
+        "05_Templates",
+        "scratch",
+        ".system_generated",
+        ".agents",
+    }
 )
 
 
@@ -122,7 +130,9 @@ def _format_frontmatter(
             else:
                 parts.append(f'{field}: "{_escape_yaml(str(val))}"')
     if timestamp:
-        ts_str = timestamp.isoformat() if isinstance(timestamp, datetime) else str(timestamp)
+        ts_str = (
+            timestamp.isoformat() if isinstance(timestamp, datetime) else str(timestamp)
+        )
         parts.append(f"timestamp: {ts_str}")
     parts.append("---")
     return "\n".join(parts)
@@ -160,7 +170,9 @@ def heal_frontmatter(
         tl = str(note_type).strip().lower()
         if tl in valid_types_lower:
             if str(note_type) != valid_types_lower[tl]:
-                changes.append(f"Fixed type casing: '{note_type}' → '{valid_types_lower[tl]}'")
+                changes.append(
+                    f"Fixed type casing: '{note_type}' → '{valid_types_lower[tl]}'"
+                )
                 note_type = valid_types_lower[tl]
         elif vault_dir:
             inferred = _infer_type_from_folder(filepath, vault_dir)
@@ -181,12 +193,10 @@ def heal_frontmatter(
             changes.append(f"Added missing title: '{inferred}'")
             title = inferred
 
-    # 3. Description healing (missing or too long > 150 chars)
-    if description and len(description) > 150:
-        truncated = description[:147].strip() + "..."
-        changes.append("Truncated long description to 150 chars")
-        description = truncated
-    elif not description:
+    # 3. Description healing (missing only — long descriptions are now allowed;
+    #    truncation to MAX_DESCRIPTION_LENGTH happens only at catalog render time
+    #    in indexer.truncate_for_catalog, not in the stored note.)
+    if not description:
         inferred = _extract_first_paragraph(content)
         if inferred:
             changes.append(f"Added missing description: '{inferred[:60]}...'")
@@ -315,7 +325,9 @@ def propagate_rename(
 
     for filepath in vault_dir.rglob("*.md"):
         rel = str(filepath.relative_to(vault_dir)).replace("\\", "/")
-        if any(part in DEFAULT_EXCLUDED for part in filepath.relative_to(vault_dir).parts):
+        if any(
+            part in DEFAULT_EXCLUDED for part in filepath.relative_to(vault_dir).parts
+        ):
             continue
         if filepath.name in DEFAULT_EXCLUDED:
             continue
@@ -368,9 +380,13 @@ def propagate_rename(
                 parsed_timestamp = raw_timestamp
             elif isinstance(raw_timestamp, str):
                 with contextlib.suppress(ValueError):
-                    parsed_timestamp = datetime.fromisoformat(raw_timestamp.replace("Z", "+00:00"))
+                    parsed_timestamp = datetime.fromisoformat(
+                        raw_timestamp.replace("Z", "+00:00")
+                    )
 
-            new_fm = _format_frontmatter(fm_data, note_type, title, description, parsed_timestamp)
+            new_fm = _format_frontmatter(
+                fm_data, note_type, title, description, parsed_timestamp
+            )
             healed = re.sub(
                 r"^---.*?\n---\n?",
                 new_fm + "\n",
@@ -379,7 +395,9 @@ def propagate_rename(
                 flags=re.DOTALL,
             )
 
-            changes_log.append(f"  {rel}: updated related path '{old_rel}' -> '{new_rel}'")
+            changes_log.append(
+                f"  {rel}: updated related path '{old_rel}' -> '{new_rel}'"
+            )
             if not dry_run:
                 create_backup(filepath)
                 atomic_write(filepath, healed)

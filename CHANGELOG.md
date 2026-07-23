@@ -5,6 +5,29 @@ All notable changes to the P.O.W.E.R. Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.0] - 2026-07-23
+
+### Added
+
+- Curated bilingual semantic ground truth and graded ranking evaluation.
+- Deterministic local triplet extraction persisted in the SQLite `relations`
+  table, plus semantic related-note suggestions.
+- A serialized MCP write queue and regression coverage for concurrent writes.
+
+### Changed
+
+- Removed the OKF `description` schema cap; catalog rendering remains compact.
+- Dense retrieval is fail-closed by default and marks an explicitly allowed FTS
+  downgrade in result metadata.
+- The default reranker uses the SHA-pinned Apache-2.0
+  `onnx-community/bge-reranker-v2-m3-ONNX` snapshot; CC-BY-NC Jina remains an
+  explicit opt-in.
+
+### Release status
+
+- This is a beta/research release. A target-hardware RSS measurement and a
+  validated EACL-2026 UDCG implementation remain required for production claims.
+
 ## [2.3.0] - 2026-07-20
 
 ### Changed

@@ -76,6 +76,7 @@ from .relations import (
     RelationSuggestion,
     format_relation_suggestions,
     suggest_related,
+    suggest_related_semantic,
 )
 from .reranker import RerankerManager
 from .rot_scoring import (
@@ -109,6 +110,7 @@ from .utils import (
     validate_path_in_vault,
     validate_vault_path,
 )
+from .write_queue import enqueue_write, run_blocking
 
 EmbeddingManager = get_embedding_manager  # backward compat alias
 
@@ -155,6 +157,7 @@ __all__ = [
     "clean_note_name",
     "cli_main",
     "create_backup",
+    "enqueue_write",
     "extract_frontmatter_raw",
     "fix_all",
     "fix_list_markers",
@@ -176,6 +179,7 @@ __all__ = [
     "read_file_content",
     "resolve_path_in_vault",
     "resolve_vault_path",
+    "run_blocking",
     "run_generate_hierarchical_index",
     "run_generate_index",
     "run_generate_sub_index",
@@ -188,6 +192,7 @@ __all__ = [
     "scan_vault_notes",
     "search_vault",
     "suggest_related",
+    "suggest_related_semantic",
     "validate_metadata",
     "validate_path_in_vault",
     "validate_vault_path",

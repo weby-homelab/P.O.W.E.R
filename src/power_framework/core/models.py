@@ -96,7 +96,6 @@ class OKFMetadata(BaseModel):
     )
     description: str = Field(
         min_length=1,
-        max_length=MAX_DESCRIPTION_LENGTH,
         description="Single-line summary for the catalog index",
     )
     resource: str | None = Field(default=None, description="External source URL")
