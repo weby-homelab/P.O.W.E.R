@@ -15,6 +15,7 @@ report — exactly mirroring the MCP behavior.
 from __future__ import annotations
 
 import datetime
+import logging
 from pathlib import Path
 
 from .indexer import run_generate_hierarchical_index
@@ -22,6 +23,8 @@ from .linter import run_lint_report
 from .models import NoteType, OKFMetadata, TypedRelation
 from .parser import build_frontmatter
 from .utils import atomic_write
+
+logger = logging.getLogger(__name__)
 
 _DEFAULT_TZ = datetime.timezone.utc
 
@@ -70,6 +73,14 @@ def synthesize_session_ingest(
 
     target_file.parent.mkdir(parents=True, exist_ok=True)
     atomic_write(target_file, full_content)
+
+    # WTF #5 remediation: grow the auto knowledge graph from the note body.
+    try:
+        from .graph_extraction import store_note_triplets
+
+        store_note_triplets(vault, name, content)
+    except Exception as exc:
+        logger.warning("Triplet extraction failed for %s: %s", name, exc)
 
     index_result = run_generate_hierarchical_index(vault)
 

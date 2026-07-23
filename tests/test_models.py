@@ -137,15 +137,29 @@ class TestOKFMetadata:
                 timestamp=datetime(2026, 1, 1),
             )
 
-    def test_description_too_long(self):
+    def test_description_long_accepted(self):
+        """WTF #4 remediation: descriptions longer than MAX_DESCRIPTION_LENGTH are
+        now accepted (truncation happens only at catalog render time)."""
         long_desc = "x" * (MAX_DESCRIPTION_LENGTH + 1)
-        with pytest.raises(ValidationError):
-            OKFMetadata(
-                type="Project",
-                title="Test",
-                description=long_desc,
-                timestamp=datetime(2026, 1, 1),
-            )
+        meta = OKFMetadata(
+            type="Project",
+            title="Test",
+            description=long_desc,
+            timestamp=datetime(2026, 1, 1),
+        )
+        assert meta.description == long_desc
+        assert len(meta.description) == MAX_DESCRIPTION_LENGTH + 1
+
+    def test_description_very_long_accepted(self):
+        """A multi-line / paragraph description must not raise ValidationError."""
+        long_desc = "A" * 500
+        meta = OKFMetadata(
+            type="Project",
+            title="Test",
+            description=long_desc,
+            timestamp=datetime(2026, 1, 1),
+        )
+        assert meta.description == long_desc
 
     def test_title_too_long(self):
         long_title = "x" * (MAX_TITLE_LENGTH + 1)
@@ -257,7 +271,9 @@ class TestOKFMetadata:
             timestamp=datetime(2026, 1, 1),
             related=[
                 "01_Projects/StringRef.md",
-                TypedRelation(path="02_Areas/TypedRef.md", relation="references", confidence=0.9),
+                TypedRelation(
+                    path="02_Areas/TypedRef.md", relation="references", confidence=0.9
+                ),
             ],
         )
         assert len(meta.related) == 2

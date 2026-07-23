@@ -13,6 +13,7 @@ from power_framework.core.indexer import (
     run_generate_sub_index,
     scan_folder_notes,
     scan_vault_notes,
+    truncate_for_catalog,
 )
 
 
@@ -284,3 +285,47 @@ class TestRunGenerateHierarchicalIndex:
 
         sub_content = sub_index.read_text(encoding="utf-8")
         assert "Old sub content" not in sub_content
+
+
+class TestTruncateForCatalog:
+    """WTF #4 remediation: long descriptions are stored in full, truncated only
+    at catalog (index.md / _index.md) render time."""
+
+    def test_short_description_unchanged(self):
+        assert truncate_for_catalog("short") == "short"
+
+    def test_empty_description(self):
+        assert truncate_for_catalog("") == ""
+
+    def test_long_description_truncated_with_ellipsis(self):
+        from power_framework.core.models import MAX_DESCRIPTION_LENGTH
+
+        long_desc = "A" * (MAX_DESCRIPTION_LENGTH + 50)
+        truncated = truncate_for_catalog(long_desc)
+        assert len(truncated) == MAX_DESCRIPTION_LENGTH
+        assert truncated.endswith("...")
+        assert truncated[:-3] == "A" * (MAX_DESCRIPTION_LENGTH - 3)
+
+    def test_custom_max_length(self):
+        assert len(truncate_for_catalog("A" * 200, max_length=100)) == 100
+
+    def test_long_description_preserved_in_note_but_truncated_in_catalog(
+        self, sample_vault: Path
+    ):
+        """Integration: a note with a >150 char description is stored verbatim,
+        but the rendered _index.md truncates it to MAX_DESCRIPTION_LENGTH."""
+        from power_framework.core.models import MAX_DESCRIPTION_LENGTH
+
+        long_desc = "B" * (MAX_DESCRIPTION_LENGTH + 50)
+        note = sample_vault / "01_Projects" / "LongDesc.md"
+        note.write_text(
+            f"---\ntype: Project\ntitle: Long Desc\n"
+            f'description: "{long_desc}"\n'
+            f"timestamp: 2026-01-01T00:00:00\n---\n\nBody.\n"
+        )
+        run_generate_hierarchical_index(sample_vault)
+        sub_index = sample_vault / "01_Projects" / "_index.md"
+        content = sub_index.read_text(encoding="utf-8")
+        # Catalog row is truncated to MAX_DESCRIPTION_LENGTH (with ellipsis).
+        assert f"**Description:** {'B' * (MAX_DESCRIPTION_LENGTH - 3)}..." in content
+        assert len(long_desc) not in [len(line) for line in content.splitlines()]

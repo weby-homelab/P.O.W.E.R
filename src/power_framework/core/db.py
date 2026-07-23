@@ -69,4 +69,20 @@ def _init_db(conn: sqlite3.Connection) -> None:
             mtime REAL
         )
     """)
+    # WTF #5 remediation: auto-extracted knowledge-graph triplets
+    # (subject -> relation -> object) stored from synthesize_session.
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS relations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            source_path TEXT NOT NULL,
+            subject TEXT NOT NULL,
+            relation TEXT NOT NULL,
+            object TEXT NOT NULL,
+            confidence REAL DEFAULT 1.0,
+            created_at TEXT NOT NULL
+        )
+    """)
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_relations_source ON relations(source_path)"
+    )
     conn.commit()

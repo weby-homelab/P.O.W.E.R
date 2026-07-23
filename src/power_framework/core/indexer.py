@@ -12,9 +12,24 @@ from datetime import datetime, timezone
 from pathlib import Path  # noqa: TC003
 
 from .ignore import should_skip
-from .models import NOTE_TYPE_ORDER, PARA_FOLDERS, OKFMetadata
+from .models import MAX_DESCRIPTION_LENGTH, NOTE_TYPE_ORDER, PARA_FOLDERS, OKFMetadata
 from .parser import read_file_content, validate_metadata
 from .utils import atomic_write
+
+
+def truncate_for_catalog(
+    description: str, max_length: int = MAX_DESCRIPTION_LENGTH
+) -> str:
+    """Truncate a note description to ``max_length`` for catalog (index.md) rendering only.
+
+    The stored note keeps its full description; truncation is applied solely when
+    rendering the hierarchical index so the catalog row stays compact.
+    """
+    if not description:
+        return ""
+    if len(description) <= max_length:
+        return description
+    return description[: max_length - 3].rstrip() + "..."
 
 
 def scan_vault_notes(vault_dir: Path) -> dict[str, list[tuple[str, str, str]]]:
@@ -136,7 +151,7 @@ def generate_index_content(concepts: dict[str, list[tuple[str, str, str]]]) -> s
         lines.append(f"## {note_type}s")
         items = sorted(concepts[note_type], key=lambda x: x[1])
         for rel_path, title, desc in items:
-            lines.append(f"- **[{title}]({rel_path})** - {desc}")
+            lines.append(f"- **[{title}]({rel_path})** - {truncate_for_catalog(desc)}")
         lines.append("")
 
     return "\n".join(lines)
@@ -174,8 +189,12 @@ def generate_main_index_content(folder_notes: dict[str, list[dict]]) -> str:
     lines.append("## Agent Protocol")
     lines.append("")
     lines.append("1. **Read this file** — identify the relevant category.")
-    lines.append("2. **Read the sub-index** — load `folder/_index.md` for detailed entries.")
-    lines.append("3. **Read specific notes** — only when the sub-index indicates relevance.")
+    lines.append(
+        "2. **Read the sub-index** — load `folder/_index.md` for detailed entries."
+    )
+    lines.append(
+        "3. **Read specific notes** — only when the sub-index indicates relevance."
+    )
     lines.append("4. **NEVER glob all `.md` files** — use sub-indexes as a map.")
     lines.append("")
 
@@ -211,7 +230,9 @@ def generate_sub_index_content(folder: str, notes: list[dict]) -> str:
             lines.append(f"## {note['title']}")
             lines.append(f"- **Path:** `{note['rel_path']}`")
             lines.append(f"- **Type:** {note['note_type']}")
-            lines.append(f"- **Description:** {note['description']}")
+            lines.append(
+                f"- **Description:** {truncate_for_catalog(note['description'])}"
+            )
             if note.get("tags"):
                 tags_str = ", ".join(note["tags"])
                 lines.append(f"- **Tags:** [{tags_str}]")

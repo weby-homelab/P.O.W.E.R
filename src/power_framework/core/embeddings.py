@@ -48,7 +48,9 @@ FASTEMBED_MODEL = os.getenv(
 )
 
 # Qwen3 ONNX backend (qwen3-embed, no torch / no Ollama) — legacy opt-in.
-QWEN3_EMBED_MODEL = os.getenv("POWER_QWEN3_EMBED_MODEL", "n24q02m/Qwen3-Embedding-0.6B-ONNX")
+QWEN3_EMBED_MODEL = os.getenv(
+    "POWER_QWEN3_EMBED_MODEL", "n24q02m/Qwen3-Embedding-0.6B-ONNX"
+)
 # q4f16 ONNX by default; set to "n24q02m/Qwen3-Embedding-0.6B-ONNX" with
 # POWER_QWEN3_EMBED_VARIANT to control which onnx file is used if needed.
 
@@ -113,7 +115,11 @@ def _get_embedding_dim(model_name: str) -> int:
             import ollama
 
             result = ollama.show(OLLAMA_EMBED_MODEL)
-            mi = result.modelinfo if hasattr(result, "modelinfo") else result.get("model_info", {})
+            mi = (
+                result.modelinfo
+                if hasattr(result, "modelinfo")
+                else result.get("model_info", {})
+            )
             if "general.embedding_dim" in mi:
                 return int(mi["general.embedding_dim"])
             if "qwen3.embedding_length" in mi:
@@ -303,7 +309,9 @@ class FastEmbedManager:
         # query embedding spawn many short-lived ONNX subprocesses, adding
         # 10-30s of fork/startup latency to every semantic/hybrid_reranked call.
         parallel = max(1, EMBED_NUM_THREADS)
-        return [float(v) for v in next(iter(self._model.embed([text], parallel=parallel)))]
+        return [
+            float(v) for v in next(iter(self._model.embed([text], parallel=parallel)))
+        ]
 
     def embed_batch(self, texts: list[str], batch_size: int = 32) -> list[list[float]]:
         self._lazy_init()
@@ -315,7 +323,9 @@ class FastEmbedManager:
         parallel = max(1, EMBED_NUM_THREADS)
         return [
             [float(v) for v in vec]
-            for vec in self._model.embed(texts, batch_size=batch_size, parallel=parallel)
+            for vec in self._model.embed(
+                texts, batch_size=batch_size, parallel=parallel
+            )
         ]
 
 
@@ -384,7 +394,8 @@ class Qwen3EmbeddingManager:
         # zero vector so callers (e.g. sync) never crash on a blank note.
         cleaned: list[str] = [t if t and t.strip() else " " for t in texts]
         vecs = [
-            [float(v) for v in vec] for vec in self._model.embed(cleaned, batch_size=batch_size)
+            [float(v) for v in vec]
+            for vec in self._model.embed(cleaned, batch_size=batch_size)
         ]
         return [
             ([0.0] * self._dim) if not t or not t.strip() else v
@@ -476,7 +487,10 @@ class BGEM3OnnxManager:
                 local_files_only=offline,
             )
 
-            if self.repo == BGE_M3_PINNED_REPO and self.revision == BGE_M3_PINNED_REVISION:
+            if (
+                self.repo == BGE_M3_PINNED_REPO
+                and self.revision == BGE_M3_PINNED_REVISION
+            ):
                 for filename, path in {
                     "model.onnx": model_path,
                     "model.onnx.data": sidecar_path,
@@ -500,7 +514,9 @@ class BGEM3OnnxManager:
                     {"arena_extend_strategy": "kSameAsRequested"},
                 )
             ]
-            self._session = ort.InferenceSession(model_path, providers=providers, sess_options=so)
+            self._session = ort.InferenceSession(
+                model_path, providers=providers, sess_options=so
+            )
             self._tokenizer = Tokenizer.from_file(tok_path)
             self._tokenizer.enable_truncation(max_length=self._MAX_TOKENS)
             # Probe: eagerly verify the backend can allocate and produce a
@@ -520,7 +536,9 @@ class BGEM3OnnxManager:
         encs = self._tokenizer.encode_batch(texts)
         ids = np.array([e.ids for e in encs], dtype=np.int64)
         mask = np.array([e.attention_mask for e in encs], dtype=np.int64)
-        out = self._session.run(["dense_vecs"], {"input_ids": ids, "attention_mask": mask})[0]
+        out = self._session.run(
+            ["dense_vecs"], {"input_ids": ids, "attention_mask": mask}
+        )[0]
         arr = np.asarray(out, dtype=np.float32)
         # BGE-M3 dense_vecs are already L2-normalized by the exported graph, but
         # normalize defensively so cosine == dot downstream.
@@ -558,7 +576,9 @@ _EMBED_MANAGER_CACHE: dict[str, object] = {}
 
 def get_embedding_manager(
     model_name: str | None = None,
-) -> OllamaEmbeddingManager | FastEmbedManager | Qwen3EmbeddingManager | BGEM3OnnxManager:
+) -> (
+    OllamaEmbeddingManager | FastEmbedManager | Qwen3EmbeddingManager | BGEM3OnnxManager
+):
     # Respect the module-level default (POWER 3.0: bge-m3) unless explicitly
     # overridden via the environment variable.
     provider = os.getenv("POWER_EMBED_PROVIDER", EMBED_PROVIDER).lower()
@@ -574,7 +594,10 @@ def get_embedding_manager(
             return _EMBED_MANAGER_CACHE[key]  # type: ignore[return-value]
         try:
             mgr: (
-                OllamaEmbeddingManager | FastEmbedManager | Qwen3EmbeddingManager | BGEM3OnnxManager
+                OllamaEmbeddingManager
+                | FastEmbedManager
+                | Qwen3EmbeddingManager
+                | BGEM3OnnxManager
             ) = BGEM3OnnxManager(BGE_M3_ONNX_REPO, BGE_M3_ONNX_REVISION)
             mgr._lazy_init()  # eager probe: fail loudly, not silently
             _EMBED_MANAGER_CACHE[key] = mgr
@@ -603,7 +626,9 @@ def get_embedding_manager(
     if effective_provider == "ollama":
         key = f"ollama:{model_name or OLLAMA_EMBED_MODEL}"
         if key not in _EMBED_MANAGER_CACHE:
-            _EMBED_MANAGER_CACHE[key] = OllamaEmbeddingManager(model_name or OLLAMA_EMBED_MODEL)
+            _EMBED_MANAGER_CACHE[key] = OllamaEmbeddingManager(
+                model_name or OLLAMA_EMBED_MODEL
+            )
         return _EMBED_MANAGER_CACHE[key]  # type: ignore[return-value]
     if effective_provider == "qwen3":
         key = f"qwen3:{model_name or QWEN3_EMBED_MODEL}"
@@ -614,7 +639,9 @@ def get_embedding_manager(
                 _EMBED_MANAGER_CACHE[key] = mgr
             except RuntimeError as e:
                 if "qwen3_onnx_alloc_failed" in str(e):
-                    logger.warning("Qwen3 ONNX allocation failed; falling back to fastembed.")
+                    logger.warning(
+                        "Qwen3 ONNX allocation failed; falling back to fastembed."
+                    )
                     effective_provider = "fastembed"
                 else:
                     raise
@@ -623,7 +650,11 @@ def get_embedding_manager(
         if key not in _EMBED_MANAGER_CACHE:
             _EMBED_MANAGER_CACHE[key] = FastEmbedManager(model_name or FASTEMBED_MODEL)
         return _EMBED_MANAGER_CACHE[key]  # type: ignore[return-value]
-    key = f"fastembed:{model_name or FASTEMBED_MODEL}"
-    if key not in _EMBED_MANAGER_CACHE:
-        _EMBED_MANAGER_CACHE[key] = FastEmbedManager(model_name or FASTEMBED_MODEL)
-    return _EMBED_MANAGER_CACHE[key]  # type: ignore[return-value]
+
+    # WTF #3 remediation: never silently fall back to an unintended embedding
+    # backend. An unknown POWER_EMBED_PROVIDER is a configuration error and must
+    # fail closed (ADR 0001 decision 3), not quietly degrade retrieval quality.
+    raise RuntimeError(
+        f"unknown_embed_provider:{effective_provider}. Set POWER_EMBED_PROVIDER to one of "
+        "bge-m3, qwen3, ollama, fastembed, or keep it unset (defaults to bge-m3)."
+    )

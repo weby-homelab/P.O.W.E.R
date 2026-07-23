@@ -5,12 +5,31 @@ from __future__ import annotations
 from unittest.mock import MagicMock
 
 import pytest
+from huggingface_hub import try_to_load_from_cache
 
 from power_framework.core.reranker import (
     ALLOW_NONCOMMERCIAL_MODELS_ENV,
+    BGE_RERANKER_FILE_SHA256,
+    BGE_RERANKER_PINNED_REPO,
+    BGE_RERANKER_PINNED_REVISION,
+    BGEM3Reranker,
+    LexicalReranker,
     NonCommercialModelDisabledError,
     RerankerManager,
+    get_reranker,
 )
+
+
+def _bge_reranker_available() -> bool:
+    """True only if the BGE reranker ONNX snapshot is already cached locally."""
+    return (
+        try_to_load_from_cache(
+            BGE_RERANKER_PINNED_REPO,
+            "onnx/model.onnx",
+            revision=BGE_RERANKER_PINNED_REVISION,
+        )
+        is not None
+    )
 
 
 class TestRerankerManager:
@@ -59,7 +78,9 @@ class TestRerankerManager:
         manager = RerankerManager()
         assert manager._model is None
 
-    def test_jina_requires_explicit_noncommercial_opt_in(self, monkeypatch: pytest.MonkeyPatch):
+    def test_jina_requires_explicit_noncommercial_opt_in(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         monkeypatch.delenv(ALLOW_NONCOMMERCIAL_MODELS_ENV, raising=False)
         manager = RerankerManager()
 
@@ -78,7 +99,10 @@ class TestRerankerManager:
     def test_colbert_helpers(self):
         from unittest.mock import patch
 
-        from power_framework.core.colbert_reranker import _available_ram_gb, is_colbert_enabled
+        from power_framework.core.colbert_reranker import (
+            _available_ram_gb,
+            is_colbert_enabled,
+        )
 
         ram = _available_ram_gb()
         assert isinstance(ram, float)
@@ -106,14 +130,20 @@ class TestRerankerManager:
 
         with (
             patch.dict("os.environ", {"POWER_RERANKER": "colbert"}),
-            patch("power_framework.core.colbert_reranker._available_ram_gb", return_value=1.0),
+            patch(
+                "power_framework.core.colbert_reranker._available_ram_gb",
+                return_value=1.0,
+            ),
             pytest.raises(ColBERTUnavailableError, match="requires >="),
         ):
             ColBERTLateInteractionReranker()
 
         with (
             patch.dict("os.environ", {"POWER_RERANKER": "colbert"}),
-            patch("power_framework.core.colbert_reranker._available_ram_gb", return_value=16.0),
+            patch(
+                "power_framework.core.colbert_reranker._available_ram_gb",
+                return_value=16.0,
+            ),
         ):
             colbert = ColBERTLateInteractionReranker()
             assert colbert.model_name is not None
@@ -124,21 +154,81 @@ class TestRerankerManager:
         manager._model = mock_model
         manager._lazy_init()
 
-    def test_get_reranker_fallback(self):
+    def test_get_reranker_default_is_bge(self):
         from unittest.mock import patch
 
-        from power_framework.core.reranker import RerankerManager, get_reranker
+        from power_framework.core.reranker import BGEM3Reranker
 
-        with patch("power_framework.core.colbert_reranker.is_colbert_enabled", return_value=False):
-            r = get_reranker()
-            assert isinstance(r, RerankerManager)
-
-        with (
-            patch("power_framework.core.colbert_reranker.is_colbert_enabled", return_value=True),
-            patch("power_framework.core.colbert_reranker._available_ram_gb", return_value=1.0),
+        # POWER 3.2: canonical default reranker is the MIT/Apache BGEM3Reranker.
+        with patch(
+            "power_framework.core.colbert_reranker.is_colbert_enabled",
+            return_value=False,
         ):
             r = get_reranker()
-            assert isinstance(r, RerankerManager)
+            assert isinstance(r, BGEM3Reranker)
+
+        with (
+            patch(
+                "power_framework.core.colbert_reranker.is_colbert_enabled",
+                return_value=True,
+            ),
+            patch(
+                "power_framework.core.colbert_reranker._available_ram_gb",
+                return_value=1.0,
+            ),
+        ):
+            r = get_reranker()
+            assert isinstance(r, BGEM3Reranker)
+
+    def test_bge_default_uses_a_pinned_snapshot_and_complete_file_hashes(self):
+        assert BGE_RERANKER_PINNED_REPO == "onnx-community/bge-reranker-v2-m3-ONNX"
+        assert len(BGE_RERANKER_PINNED_REVISION) == 40
+        assert set(BGE_RERANKER_FILE_SHA256) == {
+            "model.onnx",
+            "model.onnx_data",
+            "tokenizer.json",
+        }
+        assert all(len(digest) == 64 for digest in BGE_RERANKER_FILE_SHA256.values())
+
+    def test_jina_opt_in_requires_both_flags(self, monkeypatch: pytest.MonkeyPatch):
+        """Jina is only reachable when POWER_RERANKER=jina AND the NC flag is set."""
+        monkeypatch.delenv(ALLOW_NONCOMMERCIAL_MODELS_ENV, raising=False)
+        monkeypatch.delenv("POWER_RERANKER", raising=False)
+        with pytest.raises(NonCommercialModelDisabledError, match=r"CC-BY-NC-4\.0"):
+            RerankerManager()._lazy_init()
+
+        monkeypatch.setenv(ALLOW_NONCOMMERCIAL_MODELS_ENV, "1")
+        monkeypatch.delenv("POWER_RERANKER", raising=False)
+        with pytest.raises(NonCommercialModelDisabledError, match=r"CC-BY-NC-4\.0"):
+            RerankerManager()._lazy_init()
+
+    def test_lexical_reranker_ranks_by_overlap(self):
+        """License-clean fallback reranker needs no model download."""
+        reranker = LexicalReranker()
+        docs = [
+            "Cats are small domesticated mammals",
+            "A completely unrelated paragraph about rocket propulsion and orbitals",
+            "The cat sat on the mat near the kitten",
+        ]
+        scores = reranker.rerank("cat kitten", docs)
+        assert scores[0] > scores[1]
+        assert scores[2] > scores[1]
+        assert all(0.0 <= s <= 1.0 for s in scores)
+
+    def test_bgem3_reranker_ranks_relevant_first(self):
+        """Real BGE reranker ranking (skipped if the ONNX snapshot is not cached)."""
+        if not _bge_reranker_available():
+            pytest.skip("BGE reranker ONNX snapshot not available in this environment")
+        reranker = BGEM3Reranker()
+        docs = [
+            "P.O.W.E.R. — AI-native Second Brain toolkit з підтримкою української мови",
+            "Recipe for banana bread with walnuts and cinnamon",
+            "BGE-M3 dense embeddings enable multilingual semantic retrieval",
+        ]
+        scores = reranker.rerank("українська мова semantic retrieval", docs)
+        assert scores[0] + scores[2] > 0
+        # The UA↔EN semantic query should favor the knowledge-base passages.
+        assert scores[0] > scores[1]
 
     def test_qwen3_reranker_import_error(self):
         import sys
@@ -149,7 +239,14 @@ class TestRerankerManager:
         from power_framework.core.reranker import RerankerManager
 
         with (
-            patch.dict("os.environ", {"POWER_EMBED_PROVIDER": "qwen3"}),
+            patch.dict(
+                "os.environ",
+                {
+                    "POWER_EMBED_PROVIDER": "qwen3",
+                    "POWER_RERANKER": "jina",
+                    ALLOW_NONCOMMERCIAL_MODELS_ENV: "1",
+                },
+            ),
             patch.dict(sys.modules, {"qwen3_embed": None}),
         ):
             mgr = RerankerManager()
@@ -162,10 +259,16 @@ class TestRerankerManager:
 
         import pytest
 
-        from power_framework.core.reranker import ALLOW_NONCOMMERCIAL_MODELS_ENV, RerankerManager
+        from power_framework.core.reranker import (
+            ALLOW_NONCOMMERCIAL_MODELS_ENV,
+            RerankerManager,
+        )
 
         with (
-            patch.dict("os.environ", {ALLOW_NONCOMMERCIAL_MODELS_ENV: "1"}),
+            patch.dict(
+                "os.environ",
+                {ALLOW_NONCOMMERCIAL_MODELS_ENV: "1", "POWER_RERANKER": "jina"},
+            ),
             patch.dict(sys.modules, {"fastembed.rerank.cross_encoder": None}),
         ):
             mgr = RerankerManager()
@@ -179,7 +282,10 @@ class TestRerankerManager:
 
         with (
             patch.dict("os.environ", {"POWER_RERANKER": "colbert"}),
-            patch("power_framework.core.colbert_reranker._available_ram_gb", return_value=16.0),
+            patch(
+                "power_framework.core.colbert_reranker._available_ram_gb",
+                return_value=16.0,
+            ),
         ):
             reranker = ColBERTLateInteractionReranker()
             mock_model = MagicMock()

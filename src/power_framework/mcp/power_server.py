@@ -21,7 +21,6 @@ Supports stdio transport (local) and HTTP transport (Docker, with /health endpoi
 
 from __future__ import annotations
 
-import asyncio
 import logging
 import os
 from datetime import datetime, timezone
@@ -40,10 +39,10 @@ from power_framework.core import (
     NoteType,
     OKFMetadata,
     RateLimiter,
-    TypedRelation,
     archive_stale_notes,
     atomic_write_in_vault,
     build_frontmatter,
+    enqueue_write,
     format_relation_suggestions,
     format_untrusted_search_envelope,
     heal_vault,
@@ -51,6 +50,7 @@ from power_framework.core import (
     read_file_content,
     resolve_path_in_vault,
     resolve_vault_path,
+    run_blocking,
     run_generate_hierarchical_index,
     run_generate_sub_index,
     run_lint_report,
@@ -65,6 +65,8 @@ from power_framework.core import (
 )
 from power_framework.core.constants import SKIP_FILES
 from power_framework.core.ignore import should_skip
+from power_framework.core.relations import suggest_related_semantic
+from power_framework.core.synthesize import synthesize_session_ingest
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +86,7 @@ _MAX_MCP_SEARCH_RESULTS = 20
 
 def _get_vault_path(vault_path: str | None = None) -> Path:
     """Resolve a tool vault path without allowing configured-root substitution."""
-    configured_root = os.getenv("POWER_VAULT_DIR")
+    configured_root = os.getenv("POWER_VAULT_DIR") or os.getenv("POWER_VAULT_PATH")
     if configured_root:
         try:
             root = validate_vault_path(configured_root)
@@ -93,7 +95,9 @@ def _get_vault_path(vault_path: str | None = None) -> Path:
                 if requested != root:
                     raise ValueError("MCP tools may only use the configured vault root")
         except (FileNotFoundError, NotADirectoryError, ValueError) as exc:
-            raise ToolError("Vault path must match the configured POWER_VAULT_DIR root.") from exc
+            raise ToolError(
+                "Vault path must match the configured POWER_VAULT_DIR root."
+            ) from exc
         return root
 
     args = {"vault_path": vault_path} if vault_path else {}
@@ -102,13 +106,17 @@ def _get_vault_path(vault_path: str | None = None) -> Path:
 
 def _require_configured_vault_root() -> Path:
     """Require a canonical vault root before the MCP server accepts clients."""
-    configured_root = os.getenv("POWER_VAULT_DIR")
+    configured_root = os.getenv("POWER_VAULT_DIR") or os.getenv("POWER_VAULT_PATH")
     if not configured_root:
-        raise RuntimeError("POWER_VAULT_DIR must be configured before starting the MCP server")
+        raise RuntimeError(
+            "POWER_VAULT_DIR (or POWER_VAULT_PATH) must be configured before starting the MCP server"
+        )
     try:
         return validate_vault_path(configured_root)
     except (FileNotFoundError, NotADirectoryError, ValueError) as exc:
-        raise RuntimeError("POWER_VAULT_DIR must reference an existing vault directory") from exc
+        raise RuntimeError(
+            "POWER_VAULT_DIR must reference an existing vault directory"
+        ) from exc
 
 
 def _resolve_note_target(vault_path: Path, name: str) -> Path:
@@ -132,7 +140,9 @@ def _get_http_transport_config() -> tuple[str, int]:
     try:
         port = int(os.getenv("POWER_MCP_PORT", "8000"))
     except ValueError as exc:
-        raise ValueError("POWER_MCP_PORT must be an integer between 1 and 65535") from exc
+        raise ValueError(
+            "POWER_MCP_PORT must be an integer between 1 and 65535"
+        ) from exc
     if not 1 <= port <= 65535:
         raise ValueError("POWER_MCP_PORT must be an integer between 1 and 65535")
 
@@ -143,7 +153,7 @@ def _get_http_transport_config() -> tuple[str, int]:
 async def lint_vault(vault_path: str | None = None) -> str:
     """Run the P.O.W.E.R. health check / linter to verify note metadata, link integrity, and check for orphans."""
     path = _get_vault_path(vault_path)
-    return await asyncio.to_thread(run_lint_report, path)
+    return await run_blocking(lambda: run_lint_report(path))
 
 
 @mcp.tool
@@ -156,7 +166,8 @@ async def generate_index(vault_path: str | None = None) -> str:
         )
 
     path = _get_vault_path(vault_path)
-    return await asyncio.to_thread(run_generate_hierarchical_index, path)
+    # Serialize index regeneration through the single-writer queue (WTF #6).
+    return await enqueue_write(lambda: run_generate_hierarchical_index(path))
 
 
 @mcp.tool
@@ -165,7 +176,9 @@ async def read_sub_index(category: str, vault_path: str | None = None) -> str:
     path = _get_vault_path(vault_path)
 
     if category not in PARA_FOLDERS:
-        raise ToolError(f"Invalid category: {category}. Must be one of: {', '.join(PARA_FOLDERS)}")
+        raise ToolError(
+            f"Invalid category: {category}. Must be one of: {', '.join(PARA_FOLDERS)}"
+        )
 
     category_path = path / category
     if not category_path.is_dir():
@@ -184,13 +197,15 @@ async def ensure_sub_index(category: str, vault_path: str | None = None) -> str:
     path = _get_vault_path(vault_path)
 
     if category not in PARA_FOLDERS:
-        raise ToolError(f"Invalid category: {category}. Must be one of: {', '.join(PARA_FOLDERS)}")
+        raise ToolError(
+            f"Invalid category: {category}. Must be one of: {', '.join(PARA_FOLDERS)}"
+        )
 
     category_path = path / category
     if not category_path.is_dir():
         raise ToolError(f"Category folder not found: {category}")
 
-    folder_notes = await asyncio.to_thread(scan_folder_notes, path)
+    folder_notes = await run_blocking(lambda: scan_folder_notes(path))
     notes = folder_notes.get(category, [])
 
     if not notes:
@@ -201,7 +216,7 @@ async def ensure_sub_index(category: str, vault_path: str | None = None) -> str:
         sub_path = category_path / "_index.md"
         return f"{result}\n\n{sub_path.read_text(encoding='utf-8')}"
 
-    return await asyncio.to_thread(_gen_and_read)
+    return await run_blocking(_gen_and_read)
 
 
 @mcp.tool
@@ -247,7 +262,9 @@ async def ingest_note(
     full_content = f"{frontmatter}\n\n{content}\n"
 
     def _write_and_index() -> str:
-        atomic_write_in_vault(path, name, full_content, allowed_directories=PARA_FOLDERS)
+        atomic_write_in_vault(
+            path, name, full_content, allowed_directories=PARA_FOLDERS
+        )
         index_result = run_generate_hierarchical_index(path)
 
         log_file = path / "log.md"
@@ -269,7 +286,8 @@ async def ingest_note(
             f"Linting Check:\n{lint_result}"
         )
 
-    return await asyncio.to_thread(_write_and_index)
+    # Serialize the write/index/log through the single-writer queue (WTF #6).
+    return await enqueue_write(_write_and_index)
 
 
 @mcp.tool
@@ -297,9 +315,11 @@ async def search_vault_tool(
 
     def _do_search() -> str:
         results = search_vault(path, query, max_results=max_results, mode=search_mode)
-        return format_untrusted_search_envelope(results, query, mode=search_mode, vault_dir=path)
+        return format_untrusted_search_envelope(
+            results, query, mode=search_mode, vault_dir=path
+        )
 
-    return await asyncio.to_thread(_do_search)
+    return await run_blocking(_do_search)
 
 
 @mcp.tool
@@ -331,7 +351,6 @@ async def synthesize_session(
     path = _get_vault_path(vault_path)
     tags = tags or []
     related_list = related or []
-    related_typed = [TypedRelation(path=r) for r in related_list]
 
     if not name.endswith(".md"):
         name += ".md"
@@ -341,79 +360,64 @@ async def synthesize_session(
         raise ToolError(f"Note already exists at {name}")
 
     timestamp = datetime.now(timezone.utc)
-    metadata = OKFMetadata(
-        type=NoteType(note_type),
-        title=title,
-        description=description,
-        tags=tags,
-        related=related_typed,
-        owner=owner,
-        timestamp=timestamp,
-    )
-
-    frontmatter = build_frontmatter(metadata)
-    full_content = f"{frontmatter}\n\n{content}\n"
 
     def _write_and_index() -> str:
-        atomic_write_in_vault(path, name, full_content, allowed_directories=PARA_FOLDERS)
-        index_result = run_generate_hierarchical_index(path)
-
-        log_file = path / "log.md"
-        if log_file.exists():
-            date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-            log_entry = (
-                f"\n## [{date_str}] synthesize | {title}\n"
-                f"- **Action:** Created session note '{name}' of type {note_type}.\n"
-                f"- **Related:** {', '.join(related) if related else 'none'}\n"
-                f"- **Owner:** {owner or 'unassigned'}\n"
-                f"- **Result:** Saved to {name} and compiled hierarchical index.\n"
-            )
-            with open(log_file, "a", encoding="utf-8") as f:
-                f.write(log_entry)
-
-        lint_result = run_lint_report(path)
-        return (
-            f"Session note '{name}' has been synthesized and ingested!\n"
-            f"{index_result}\n"
-            f"Action appended to log.md.\n\n"
-            f"Linting Check:\n{lint_result}"
+        return synthesize_session_ingest(
+            name=name,
+            title=title,
+            description=description,
+            content=content,
+            note_type=note_type,
+            tags=tags,
+            related=related_list,
+            owner=owner,
+            vault_path=path,
+            timestamp=timestamp,
         )
 
-    return await asyncio.to_thread(_write_and_index)
+    # Serialize the write/index/log through the single-writer queue (WTF #6).
+    return await enqueue_write(_write_and_index)
 
 
 @mcp.tool
 async def rot_audit(vault_path: str | None = None, extended: bool = False) -> str:
     """Run the P.O.W.E.R. ROT audit: find Redundant, Outdated, and Trivial notes across the vault. Use extended=True for A2 scoring (content dedup, link rot, freshness, usage)."""
     path = _get_vault_path(vault_path)
-    return await asyncio.to_thread(run_rot_report, path, extended=extended)
+    return await run_blocking(lambda: run_rot_report(path, extended=extended))
 
 
 @mcp.tool
 async def archive_notes(dry_run: bool = True, vault_path: str | None = None) -> str:
     """Move stale/expired notes to 04_Archive. Use dry_run=True (default) to preview first."""
     path = _get_vault_path(vault_path)
-    return await asyncio.to_thread(archive_stale_notes, path, dry_run=dry_run)
+    return await run_blocking(lambda: archive_stale_notes(path, dry_run=dry_run))
 
 
 @mcp.tool
 async def suggest_related_tool(
     target_path: str | None = None,
     max_results: int = 5,
+    method: str = "semantic",
     vault_path: str | None = None,
 ) -> str:
-    """Auto-suggest related notes based on keyword and tag overlap. Optionally scope to a specific note by path."""
+    """Suggest related notes. ``method`` is 'semantic' (dense cosine over BGE-M3)
+    or 'keyword' (legacy Jaccard overlap). Semantic degrades to keyword with a
+    warning when the embedding backend is unavailable."""
     path = _get_vault_path(vault_path)
+    chosen = method if method in ("semantic", "keyword") else "semantic"
 
     def _do_suggest() -> str:
-        suggestions = suggest_related(
-            path,
-            target_path=target_path,
-            max_results=max_results,
-        )
+        if chosen == "semantic":
+            suggestions = suggest_related_semantic(
+                path, target_path=target_path, max_results=max_results
+            )
+        else:
+            suggestions = suggest_related(
+                path, target_path=target_path, max_results=max_results
+            )
         return format_relation_suggestions(suggestions, path)
 
-    return await asyncio.to_thread(_do_suggest)
+    return await run_blocking(_do_suggest)
 
 
 @mcp.tool
@@ -423,7 +427,7 @@ async def heal_frontmatter_tool(
 ) -> str:
     """Scan and heal missing/invalid frontmatter fields across vault notes. Use dry_run=True (default) to preview first."""
     path = _get_vault_path(vault_path)
-    return await asyncio.to_thread(heal_vault, path, dry_run=dry_run)
+    return await run_blocking(lambda: heal_vault(path, dry_run=dry_run))
 
 
 @mcp.tool
@@ -471,7 +475,7 @@ async def check_markdown_tool(
 
         return "\n".join(lines)
 
-    return await asyncio.to_thread(_do_check)
+    return await run_blocking(_do_check)
 
 
 def run() -> None:
