@@ -405,25 +405,18 @@ mypy src/power_framework/
 
 ## Низько-RAM розгортання (8–12 GB)
 
-`power sync` будує dense-ембеддінги для всього vault. Batch і thread controls
-конфігуруються; перевіряйте їх на target hardware, перш ніж трактувати як
-memory або latency guarantee. Ключові перемикачі (див. [`OOM_RECOVERY_PROTOCOL.md`](OOM_RECOVERY_PROTOCOL.md)):
+Команда `power sync` будує плотні (dense) векторні ембеддінги для всієї бази знань. Ліміти потоків та розмір батчу конфігуруються; валідуйте їх на цільовому апаратному забезпеченні перед використанням у продакшні. Ключові налаштування (див. [`OOM_RECOVERY_PROTOCOL.md`](OOM_RECOVERY_PROTOCOL.md)):
 
 ```bash
-export POWER_EMBED_PROVIDER=bge-m3           # default configured provider
-export POWER_EMBED_NUM_THREADS=2             # обмежити потоки CPU
-export POWER_EMBED_BATCH_SIZE=8              # batch size для embedding sync
-# export POWER_SYNC_VMEM_LIMIT_MB=6144       # opt-in virtual-memory limit
+export POWER_EMBED_PROVIDER=bge-m3           # Провайдер за замовчуванням (aapot/bge-m3-onnx)
+export POWER_EMBED_NUM_THREADS=2             # Обмеження кількості потоків CPU
+export POWER_EMBED_BATCH_SIZE=8              # Розмір батчу для генерації ембеддінгів
+# export POWER_SYNC_VMEM_LIMIT_MB=6144       # Опціональний ліміт віртуальної пам'яті (RLIMIT_AS)
 ```
 
-Configured default provider — **`bge-m3`** через direct ONNX Runtime +
-`tokenizers` (`BGEM3OnnxManager`). Sync і dense search потребують сумісних
-provider/model assets; якщо їх немає, використовуйте explicit retrieval mode
-або відновіть індекс через `power sync`, а не розраховуйте на implicit fallback.
+Канонічним провайдером за замовчуванням є **`bge-m3`** через прямий ONNX Runtime + `tokenizers` (`BGEM3OnnxManager`), який працює в парі з реранкером Apache-2.0 `onnx-community/bge-reranker-v2-m3-ONNX`. Синхронізація та плотний пошук вимагають наявності сумісних моделей; якщо артефакти відсутні або пошкоджені, пошук працює за принципом fail-closed. Для завантаження та перевірки зафіксованих моделей виконайте `power sync`.
 
-> **⚠️ Resource note:** обирайте `POWER_EMBED_NUM_THREADS` і batch size за
-> наявним hardware. Поточний release не заявляє universal RSS limit;
-> performance та offline behavior лишаються release-gated evidence.
+> **⚠️ Примітка щодо ресурсів:** Налаштовуйте `POWER_EMBED_NUM_THREADS` та `POWER_EMBED_BATCH_SIZE` відповідно до можливостей хоста. Поточний реліз гарантує суворий контроль контракту fail-closed; пікове використання RAM та затримка залежать від цільового заліза.
 
 ## Ліцензія
 

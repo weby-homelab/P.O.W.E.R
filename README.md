@@ -406,25 +406,18 @@ For detailed analysis and benchmarks of the P.O.W.E.R. framework:
 
 ## Low-RAM Deployment (8–12 GB)
 
-`power sync` builds dense embeddings for the whole vault. Batch and thread
-controls are configurable; validate them on the target hardware before treating
-them as a memory or latency guarantee. Key knobs (see [`OOM_RECOVERY_PROTOCOL.md`](OOM_RECOVERY_PROTOCOL.md)):
+`power sync` builds dense vector embeddings for the knowledge vault. Threading and batching limits are fully configurable; test them on target hardware before relying on RAM or latency guarantees. Key configuration knobs (see [`OOM_RECOVERY_PROTOCOL.md`](OOM_RECOVERY_PROTOCOL.md)):
 
 ```bash
-export POWER_EMBED_PROVIDER=bge-m3           # default configured provider
-export POWER_EMBED_NUM_THREADS=2             # cap CPU threads
-export POWER_EMBED_BATCH_SIZE=8              # batch size for embedding sync
-# export POWER_SYNC_VMEM_LIMIT_MB=6144       # opt-in virtual-memory limit
+export POWER_EMBED_PROVIDER=bge-m3           # Default provider (aapot/bge-m3-onnx)
+export POWER_EMBED_NUM_THREADS=2             # Cap CPU execution threads
+export POWER_EMBED_BATCH_SIZE=8              # Batch size for embedding generation
+# export POWER_SYNC_VMEM_LIMIT_MB=6144       # Opt-in virtual-memory limit (RLIMIT_AS)
 ```
 
-The configured default provider is **`bge-m3`** through direct ONNX Runtime +
-`tokenizers` (`BGEM3OnnxManager`). Sync and dense search require compatible
-provider/model assets; if they are unavailable, use an explicit retrieval mode
-or repair the index with `power sync` instead of relying on an implicit fallback.
+The canonical default provider is **`bge-m3`** via direct ONNX Runtime + `tokenizers` (`BGEM3OnnxManager`), paired with the Apache-2.0 `onnx-community/bge-reranker-v2-m3-ONNX` reranker. Sync and dense search require validated model assets; if assets are missing or corrupted, retrieval fails closed. Run `power sync` to fetch or repair pinned model artifacts.
 
-> **⚠️ Resource note:** choose `POWER_EMBED_NUM_THREADS` and batch size for the
-> available hardware. Current releases do not claim a universal RSS limit;
-> performance and offline behavior remain release-gated evidence.
+> **⚠️ Resource note:** Adjust `POWER_EMBED_NUM_THREADS` and `POWER_EMBED_BATCH_SIZE` for host hardware constraints. Current releases enforce strict fail-closed contract checks; peak memory usage and latency remain hardware-dependent.
 
 ## License
 
