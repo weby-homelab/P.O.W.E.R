@@ -576,9 +576,7 @@ _EMBED_MANAGER_CACHE: dict[str, object] = {}
 
 def get_embedding_manager(
     model_name: str | None = None,
-) -> (
-    OllamaEmbeddingManager | FastEmbedManager | Qwen3EmbeddingManager | BGEM3OnnxManager
-):
+) -> OllamaEmbeddingManager | FastEmbedManager | Qwen3EmbeddingManager | BGEM3OnnxManager:
     # Respect the module-level default (POWER 3.0: bge-m3) unless explicitly
     # overridden via the environment variable.
     provider = os.getenv("POWER_EMBED_PROVIDER", EMBED_PROVIDER).lower()
