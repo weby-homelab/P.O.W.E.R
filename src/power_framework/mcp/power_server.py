@@ -95,9 +95,7 @@ def _get_vault_path(vault_path: str | None = None) -> Path:
                 if requested != root:
                     raise ValueError("MCP tools may only use the configured vault root")
         except (FileNotFoundError, NotADirectoryError, ValueError) as exc:
-            raise ToolError(
-                "Vault path must match the configured POWER_VAULT_DIR root."
-            ) from exc
+            raise ToolError("Vault path must match the configured POWER_VAULT_DIR root.") from exc
         return root
 
     args = {"vault_path": vault_path} if vault_path else {}
@@ -114,9 +112,7 @@ def _require_configured_vault_root() -> Path:
     try:
         return validate_vault_path(configured_root)
     except (FileNotFoundError, NotADirectoryError, ValueError) as exc:
-        raise RuntimeError(
-            "POWER_VAULT_DIR must reference an existing vault directory"
-        ) from exc
+        raise RuntimeError("POWER_VAULT_DIR must reference an existing vault directory") from exc
 
 
 def _resolve_note_target(vault_path: Path, name: str) -> Path:
@@ -140,9 +136,7 @@ def _get_http_transport_config() -> tuple[str, int]:
     try:
         port = int(os.getenv("POWER_MCP_PORT", "8000"))
     except ValueError as exc:
-        raise ValueError(
-            "POWER_MCP_PORT must be an integer between 1 and 65535"
-        ) from exc
+        raise ValueError("POWER_MCP_PORT must be an integer between 1 and 65535") from exc
     if not 1 <= port <= 65535:
         raise ValueError("POWER_MCP_PORT must be an integer between 1 and 65535")
 
@@ -176,9 +170,7 @@ async def read_sub_index(category: str, vault_path: str | None = None) -> str:
     path = _get_vault_path(vault_path)
 
     if category not in PARA_FOLDERS:
-        raise ToolError(
-            f"Invalid category: {category}. Must be one of: {', '.join(PARA_FOLDERS)}"
-        )
+        raise ToolError(f"Invalid category: {category}. Must be one of: {', '.join(PARA_FOLDERS)}")
 
     category_path = path / category
     if not category_path.is_dir():
@@ -197,9 +189,7 @@ async def ensure_sub_index(category: str, vault_path: str | None = None) -> str:
     path = _get_vault_path(vault_path)
 
     if category not in PARA_FOLDERS:
-        raise ToolError(
-            f"Invalid category: {category}. Must be one of: {', '.join(PARA_FOLDERS)}"
-        )
+        raise ToolError(f"Invalid category: {category}. Must be one of: {', '.join(PARA_FOLDERS)}")
 
     category_path = path / category
     if not category_path.is_dir():
@@ -262,9 +252,7 @@ async def ingest_note(
     full_content = f"{frontmatter}\n\n{content}\n"
 
     def _write_and_index() -> str:
-        atomic_write_in_vault(
-            path, name, full_content, allowed_directories=PARA_FOLDERS
-        )
+        atomic_write_in_vault(path, name, full_content, allowed_directories=PARA_FOLDERS)
         index_result = run_generate_hierarchical_index(path)
 
         log_file = path / "log.md"
@@ -315,9 +303,7 @@ async def search_vault_tool(
 
     def _do_search() -> str:
         results = search_vault(path, query, max_results=max_results, mode=search_mode)
-        return format_untrusted_search_envelope(
-            results, query, mode=search_mode, vault_dir=path
-        )
+        return format_untrusted_search_envelope(results, query, mode=search_mode, vault_dir=path)
 
     return await run_blocking(_do_search)
 
@@ -412,9 +398,7 @@ async def suggest_related_tool(
                 path, target_path=target_path, max_results=max_results
             )
         else:
-            suggestions = suggest_related(
-                path, target_path=target_path, max_results=max_results
-            )
+            suggestions = suggest_related(path, target_path=target_path, max_results=max_results)
         return format_relation_suggestions(suggestions, path)
 
     return await run_blocking(_do_suggest)

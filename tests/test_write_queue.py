@@ -30,9 +30,7 @@ async def test_jobs_execute_sequentially_and_complete():
         order.append(i)
         return i * 10
 
-    results = await asyncio.gather(
-        *(enqueue_write(lambda i=i: make_job(i)) for i in range(10))
-    )
+    results = await asyncio.gather(*(enqueue_write(lambda i=i: make_job(i)) for i in range(10)))
     await drain()
 
     assert results == [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
@@ -66,9 +64,7 @@ async def test_concurrent_writes_never_race_on_shared_resource():
         counter["value"] = cur + 1
         return counter["value"]
 
-    results = await asyncio.gather(
-        *(enqueue_write(unsafe_increment) for _ in range(50))
-    )
+    results = await asyncio.gather(*(enqueue_write(unsafe_increment) for _ in range(50)))
     await drain()
 
     assert results == list(range(1, 51))

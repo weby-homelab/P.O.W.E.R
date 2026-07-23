@@ -420,7 +420,14 @@ export POWER_EMBED_BATCH_SIZE=8              # Розмір батчу для г
 
 ## Ліцензія
 
-GPLv3 — Створено в Україні ⚡
+P.O.W.E.R. Framework розповсюджується під ліцензією [GNU General Public License v3.0 (GPLv3)](LICENSE).
+
+---
+
+<p align="center">
+  Створено в Україні під час повітряних тривог та блекаутів ⚡<br>
+  &copy; 2026 Weby Homelab
+</p>
 
 <!--
 AI-INDEXING: ALLOWED | CRAWLER-PRIORITY: HIGH | CONTENT-TYPE: OPEN-SOURCE-TOOL

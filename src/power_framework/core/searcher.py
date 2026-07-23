@@ -143,9 +143,7 @@ def normalize_search_mode(mode: str) -> str:
         )
     if normalized not in CANONICAL_SEARCH_MODES:
         supported = ", ".join(sorted(CANONICAL_SEARCH_MODES | set(SEARCH_MODE_ALIASES)))
-        raise ValueError(
-            f"Unsupported search mode '{mode}'. Supported modes: {supported}"
-        )
+        raise ValueError(f"Unsupported search mode '{mode}'. Supported modes: {supported}")
     return normalized
 
 
@@ -376,9 +374,7 @@ def _sync_vault_to_db(
 
     to_delete = [rel_path for rel_path in db_files if rel_path not in disk_files]
     if to_delete:
-        cursor.executemany(
-            "DELETE FROM fts_notes WHERE rel_path = ?", [(r,) for r in to_delete]
-        )
+        cursor.executemany("DELETE FROM fts_notes WHERE rel_path = ?", [(r,) for r in to_delete])
         cursor.executemany(
             "DELETE FROM file_metadata WHERE rel_path = ?", [(r,) for r in to_delete]
         )
@@ -388,9 +384,7 @@ def _sync_vault_to_db(
         cursor.executemany(
             "DELETE FROM chunk_embeddings WHERE rel_path = ?", [(r,) for r in to_delete]
         )
-        cursor.executemany(
-            "DELETE FROM tf_vectors WHERE rel_path = ?", [(r,) for r in to_delete]
-        )
+        cursor.executemany("DELETE FROM tf_vectors WHERE rel_path = ?", [(r,) for r in to_delete])
 
     embedder = get_embedding_manager() if sync_embeddings else None
 
@@ -401,12 +395,8 @@ def _sync_vault_to_db(
     # silently empty. Otherwise semantic search returns [] for valid queries.
     if sync_embeddings and embedder is not None:
         try:
-            existing_chunks = cursor.execute(
-                "SELECT COUNT(*) FROM chunk_embeddings"
-            ).fetchone()[0]
-            existing_meta = cursor.execute(
-                "SELECT COUNT(*) FROM file_metadata"
-            ).fetchone()[0]
+            existing_chunks = cursor.execute("SELECT COUNT(*) FROM chunk_embeddings").fetchone()[0]
+            existing_meta = cursor.execute("SELECT COUNT(*) FROM file_metadata").fetchone()[0]
             if existing_chunks == 0 and existing_meta > 0:
                 logger.warning(
                     "Embedding tables empty but %d files indexed; forcing re-embed",
@@ -420,9 +410,7 @@ def _sync_vault_to_db(
 
     # v2.2.0: collect changed files first, then embed in batches. This avoids
     # holding the embedding model AND all vectors in memory at once.
-    changed: list[tuple[str, str, OKFMetadata, float]] = (
-        []
-    )  # (rel_path, content, metadata, mtime)
+    changed: list[tuple[str, str, OKFMetadata, float]] = []  # (rel_path, content, metadata, mtime)
     for idx, (rel_path, mtime) in enumerate(disk_files.items()):
         if idx % 50 == 0:
             logger.info("Sync scan: %d/%d (%s)", idx, len(disk_files), rel_path)
@@ -432,15 +420,9 @@ def _sync_vault_to_db(
                 content = read_file_content(filepath)
                 metadata = validate_metadata(content)
                 if metadata is None:
-                    cursor.execute(
-                        "DELETE FROM fts_notes WHERE rel_path = ?", (rel_path,)
-                    )
-                    cursor.execute(
-                        "DELETE FROM file_metadata WHERE rel_path = ?", (rel_path,)
-                    )
-                    cursor.execute(
-                        "DELETE FROM doc_embeddings WHERE rel_path = ?", (rel_path,)
-                    )
+                    cursor.execute("DELETE FROM fts_notes WHERE rel_path = ?", (rel_path,))
+                    cursor.execute("DELETE FROM file_metadata WHERE rel_path = ?", (rel_path,))
+                    cursor.execute("DELETE FROM doc_embeddings WHERE rel_path = ?", (rel_path,))
                     continue
                 changed.append((rel_path, content, metadata, mtime))
             except Exception as e:
@@ -498,9 +480,7 @@ def _sync_vault_to_db(
     # per chunk). Embedding is done per-queue in fixed-size batches so peak RAM
     # stays bounded regardless of vault size.
     doc_items: list[tuple[str, str, float]] = []  # (rel_path, full_text, mtime)
-    chunk_items: list[tuple[str, str, str, float]] = (
-        []
-    )  # (chunk_id, rel_path, text, mtime)
+    chunk_items: list[tuple[str, str, str, float]] = []  # (chunk_id, rel_path, text, mtime)
     chunker = SemanticChunker()
     for rel_path, content, metadata, mtime in changed:
         try:
@@ -509,9 +489,7 @@ def _sync_vault_to_db(
             )
             doc_items.append((rel_path, full_text, mtime))
 
-            cursor.execute(
-                "DELETE FROM chunk_embeddings WHERE rel_path = ?", (rel_path,)
-            )
+            cursor.execute("DELETE FROM chunk_embeddings WHERE rel_path = ?", (rel_path,))
             # B6 (POWER 3.0): short notes (<200 tokens) get a single whole-document
             # chunk instead of semantic splitting. Splitting a tiny note yields
             # either 0 chunks (lost from dense retrieval) or fragments that lose
@@ -527,9 +505,7 @@ def _sync_vault_to_db(
                     content, title=metadata.title, description=metadata.description
                 )
             for i, chunk_text in enumerate(chunks):
-                chunk_items.append(
-                    (f"{rel_path}::chunk_{i}", rel_path, chunk_text, mtime)
-                )
+                chunk_items.append((f"{rel_path}::chunk_{i}", rel_path, chunk_text, mtime))
         except Exception as e:  # noqa: PERF203
             logger.warning("Chunk prep failed for %s: %s", rel_path, e)
             continue
@@ -875,9 +851,7 @@ def _rrf_merge(
         rrf_scores[result.rel_path] = 1.0 / (k + rank + 1)
 
     for rank, result in enumerate(vector_results):
-        rrf_scores[result.rel_path] = rrf_scores.get(result.rel_path, 0.0) + 1.0 / (
-            k + rank + 1
-        )
+        rrf_scores[result.rel_path] = rrf_scores.get(result.rel_path, 0.0) + 1.0 / (k + rank + 1)
 
     doc_map: dict[str, SearchResult] = {}
     for r in fts_results + vector_results:
@@ -1100,9 +1074,7 @@ def search_vault(
         vec_all: list[SearchResult] = []
         for variant in variants:
             fts_all.extend(_fts_search(vault_dir, variant, max_results=max_results * 2))
-            vec_all.extend(
-                _vector_search(vault_dir, variant, max_results=max_results * 2)
-            )
+            vec_all.extend(_vector_search(vault_dir, variant, max_results=max_results * 2))
 
         # Deduplicate FTS by rel_path (keeping max score) and sort
         fts_map: dict[str, SearchResult] = {}
@@ -1129,9 +1101,7 @@ def search_vault(
         elif mode == "semantic":
             results = _semantic_search(vault_dir, variant, max_results=max_results)
         elif mode in ("reranked", "hybrid_reranked"):
-            results = _hybrid_reranked_search(
-                vault_dir, variant, max_results=max_results
-            )
+            results = _hybrid_reranked_search(vault_dir, variant, max_results=max_results)
             # R5 (POWER 3.0): dense fallback ONLY when FTS/rerank yields too few
             # hits — keeps the canonical path cheap (no model load) for the common
             # case, but never silently returns a short list when the vault clearly
@@ -1205,9 +1175,7 @@ def _hybrid_reranked_search(
     return (reranked + tail)[:max_results]
 
 
-def _merge_by_rel_path(
-    target: list[SearchResult], incoming: list[SearchResult]
-) -> None:
+def _merge_by_rel_path(target: list[SearchResult], incoming: list[SearchResult]) -> None:
     """Merge ``incoming`` into ``target``, keeping the highest score per rel_path."""
     seen: dict[str, float] = {r.rel_path: r.score for r in target}
     for r in incoming:
@@ -1291,9 +1259,7 @@ def format_untrusted_search_envelope(
             source_path.relative_to(root)
             content_hash = hashlib.sha256(source_path.read_bytes()).hexdigest()
         except (FileNotFoundError, OSError, ValueError):
-            logger.warning(
-                "Unable to create provenance hash for search result %s", result.rel_path
-            )
+            logger.warning("Unable to create provenance hash for search result %s", result.rel_path)
 
         identifier_input = f"{result.rel_path}\0{content_hash or 'unavailable'}"
         result_id = hashlib.sha256(identifier_input.encode("utf-8")).hexdigest()[:16]

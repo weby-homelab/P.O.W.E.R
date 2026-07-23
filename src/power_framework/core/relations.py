@@ -194,11 +194,7 @@ def suggest_related(
         checked: set[tuple[str, str]] = set()
         for i in range(len(paths)):
             for j in range(i + 1, len(paths)):
-                pair = (
-                    (paths[i], paths[j])
-                    if paths[i] < paths[j]
-                    else (paths[j], paths[i])
-                )
+                pair = (paths[i], paths[j]) if paths[i] < paths[j] else (paths[j], paths[i])
                 if pair in checked:
                     continue
                 checked.add(pair)
@@ -333,9 +329,7 @@ class KnowledgeGraph:
             for src, tgt, _rel, _conf, _depth in reachable_edges:
                 included_nodes.add(src)
                 included_nodes.add(tgt)
-            edges = [
-                (src, tgt, rel, conf) for src, tgt, rel, conf, _depth in reachable_edges
-            ]
+            edges = [(src, tgt, rel, conf) for src, tgt, rel, conf, _depth in reachable_edges]
         else:
             edges = self._edges
             included_nodes = self._nodes
@@ -477,14 +471,10 @@ def suggest_related_v2(
     def _emit(src: str, tgt: str) -> None:
         if src == tgt:
             return
-        explicit = tgt in explicit_links.get(src, set()) or src in explicit_links.get(
-            tgt, set()
-        )
+        explicit = tgt in explicit_links.get(src, set()) or src in explicit_links.get(tgt, set())
         kw_a, tags_a, _ = notes[src]
         kw_b, tags_b, _ = notes[tgt]
-        score = _compute_overlap_score_v2(
-            kw_a, tags_a, kw_b, tags_b, explicit_link=explicit
-        )
+        score = _compute_overlap_score_v2(kw_a, tags_a, kw_b, tags_b, explicit_link=explicit)
         if score >= score_threshold:
             reason = (
                 "Explicit OKF 'related' link"
@@ -541,17 +531,13 @@ class WeightedKnowledgeGraph:
         self._adj.setdefault(target, []).append((source, float(weight)))
 
     @classmethod
-    def from_suggestions(
-        cls, suggestions: list[RelationSuggestion]
-    ) -> WeightedKnowledgeGraph:
+    def from_suggestions(cls, suggestions: list[RelationSuggestion]) -> WeightedKnowledgeGraph:
         g = cls()
         for s in suggestions:
             g.add_weighted_relation(s.source_path, s.target_path, s.score)
         return g
 
-    def weighted_bfs(
-        self, start: str, max_hops: int = 2
-    ) -> list[tuple[str, float, int]]:
+    def weighted_bfs(self, start: str, max_hops: int = 2) -> list[tuple[str, float, int]]:
         """BFS returning (node, accumulated_weight, depth) within max_hops.
 
         ``accumulated_weight`` is the product of edge weights along the path
@@ -618,17 +604,13 @@ def suggest_related_semantic(
         logger.warning(
             "suggest_related_semantic called without target_path; using keyword fallback."
         )
-        return suggest_related(
-            vault_dir, target_path=target_path, max_results=max_results
-        )
+        return suggest_related(vault_dir, target_path=target_path, max_results=max_results)
 
     try:
         manager = get_embedding_manager()
     except Exception as e:
         logger.warning("Embedding backend unavailable (%s); keyword fallback.", e)
-        return suggest_related(
-            vault_dir, target_path=target_path, max_results=max_results
-        )
+        return suggest_related(vault_dir, target_path=target_path, max_results=max_results)
 
     target_text = ""
     notes: dict[str, str] = {}
@@ -656,9 +638,7 @@ def suggest_related_semantic(
         cand_vecs = {p: manager.embed(c[:2000]) for p, c in notes.items()}
     except Exception as e:
         logger.warning("Embedding failed (%s); keyword fallback.", e)
-        return suggest_related(
-            vault_dir, target_path=target_path, max_results=max_results
-        )
+        return suggest_related(vault_dir, target_path=target_path, max_results=max_results)
 
     suggestions: list[RelationSuggestion] = []
     for rel_path, vec in cand_vecs.items():

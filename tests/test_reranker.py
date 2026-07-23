@@ -78,9 +78,7 @@ class TestRerankerManager:
         manager = RerankerManager()
         assert manager._model is None
 
-    def test_jina_requires_explicit_noncommercial_opt_in(
-        self, monkeypatch: pytest.MonkeyPatch
-    ):
+    def test_jina_requires_explicit_noncommercial_opt_in(self, monkeypatch: pytest.MonkeyPatch):
         monkeypatch.delenv(ALLOW_NONCOMMERCIAL_MODELS_ENV, raising=False)
         manager = RerankerManager()
 

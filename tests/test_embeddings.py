@@ -57,16 +57,11 @@ class TestEmbeddingManager:
         vec2 = manager.embed("Rocket science")
         assert vec1 != vec2
 
-    def test_canonical_identity_contains_immutable_revision(
-        self, monkeypatch: pytest.MonkeyPatch
-    ):
+    def test_canonical_identity_contains_immutable_revision(self, monkeypatch: pytest.MonkeyPatch):
         monkeypatch.setenv("POWER_EMBED_PROVIDER", "bge-m3")
         provider, model = embeddings.configured_embedding_identity()
         assert provider == "BGEM3OnnxManager"
-        assert (
-            model
-            == f"{embeddings.BGE_M3_PINNED_REPO}@{embeddings.BGE_M3_ONNX_REVISION}"
-        )
+        assert model == f"{embeddings.BGE_M3_PINNED_REPO}@{embeddings.BGE_M3_ONNX_REVISION}"
 
     def test_sha256_verification_fails_closed(self, tmp_path: Path):
         artifact = tmp_path / "model.onnx"

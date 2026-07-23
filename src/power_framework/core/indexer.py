@@ -17,9 +17,7 @@ from .parser import read_file_content, validate_metadata
 from .utils import atomic_write
 
 
-def truncate_for_catalog(
-    description: str, max_length: int = MAX_DESCRIPTION_LENGTH
-) -> str:
+def truncate_for_catalog(description: str, max_length: int = MAX_DESCRIPTION_LENGTH) -> str:
     """Truncate a note description to ``max_length`` for catalog (index.md) rendering only.
 
     The stored note keeps its full description; truncation is applied solely when
@@ -189,12 +187,8 @@ def generate_main_index_content(folder_notes: dict[str, list[dict]]) -> str:
     lines.append("## Agent Protocol")
     lines.append("")
     lines.append("1. **Read this file** — identify the relevant category.")
-    lines.append(
-        "2. **Read the sub-index** — load `folder/_index.md` for detailed entries."
-    )
-    lines.append(
-        "3. **Read specific notes** — only when the sub-index indicates relevance."
-    )
+    lines.append("2. **Read the sub-index** — load `folder/_index.md` for detailed entries.")
+    lines.append("3. **Read specific notes** — only when the sub-index indicates relevance.")
     lines.append("4. **NEVER glob all `.md` files** — use sub-indexes as a map.")
     lines.append("")
 
@@ -230,9 +224,7 @@ def generate_sub_index_content(folder: str, notes: list[dict]) -> str:
             lines.append(f"## {note['title']}")
             lines.append(f"- **Path:** `{note['rel_path']}`")
             lines.append(f"- **Type:** {note['note_type']}")
-            lines.append(
-                f"- **Description:** {truncate_for_catalog(note['description'])}"
-            )
+            lines.append(f"- **Description:** {truncate_for_catalog(note['description'])}")
             if note.get("tags"):
                 tags_str = ", ".join(note["tags"])
                 lines.append(f"- **Tags:** [{tags_str}]")

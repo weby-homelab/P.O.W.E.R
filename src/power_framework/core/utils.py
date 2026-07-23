@@ -135,9 +135,7 @@ def resolve_path_in_vault(
         parent = candidate.parent.resolve(strict=True)
         parent.relative_to(root)
     except (FileNotFoundError, ValueError) as exc:
-        raise ValueError(
-            "Target parent is outside the vault or does not exist"
-        ) from exc
+        raise ValueError("Target parent is outside the vault or does not exist") from exc
 
     target = parent / candidate.name
     if target.is_symlink():
@@ -158,23 +156,15 @@ def atomic_write_in_vault(
     file operation is performed through that directory descriptor. This keeps a
     symlink replacement from redirecting the write outside the canonical root.
     """
-    target = resolve_path_in_vault(
-        vault_root, untrusted_relative_path, allowed_directories
-    )
-    directory_flags = (
-        os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_NOFOLLOW", 0)
-    )
+    target = resolve_path_in_vault(vault_root, untrusted_relative_path, allowed_directories)
+    directory_flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_NOFOLLOW", 0)
     directory_fd = os.open(target.parent, directory_flags)
     temporary_name = f".{target.name}.{secrets.token_hex(16)}.tmp"
     temporary_fd: int | None = None
 
     try:
-        temporary_flags = (
-            os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0)
-        )
-        temporary_fd = os.open(
-            temporary_name, temporary_flags, 0o600, dir_fd=directory_fd
-        )
+        temporary_flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0)
+        temporary_fd = os.open(temporary_name, temporary_flags, 0o600, dir_fd=directory_fd)
         with os.fdopen(temporary_fd, "w", encoding=encoding) as temporary_file:
             temporary_fd = None
             temporary_file.write(content)

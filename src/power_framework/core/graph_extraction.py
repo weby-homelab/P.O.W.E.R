@@ -66,7 +66,8 @@ _RELATION_CUES: list[tuple[str, str]] = [
 _SENT_SPLIT = re.compile(r"[.!?\n;]+")
 _NOISE = re.compile(r"[^\w\s'’\-]", flags=re.UNICODE)  # noqa: RUF001
 _WORD = re.compile(
-    r"[A-Za-zА-Яа-яЄєІіЇґ0-9][\w'’\-]*", flags=re.UNICODE  # noqa: RUF001
+    r"[A-Za-zА-Яа-яЄєІіЇґ0-9][\w'’\-]*",  # noqa: RUF001
+    flags=re.UNICODE,
 )
 
 
@@ -122,9 +123,7 @@ def extract_triplets(content: str, note_path: str | None = None) -> list[Triplet
     return triplets
 
 
-def store_triplets(
-    conn: sqlite3.Connection, source_path: str, triplets: list[Triplet]
-) -> int:
+def store_triplets(conn: sqlite3.Connection, source_path: str, triplets: list[Triplet]) -> int:
     """Persist triplets into the ``relations`` table. Returns rows written."""
     if not triplets:
         return 0

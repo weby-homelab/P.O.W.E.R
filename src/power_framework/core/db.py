@@ -82,7 +82,5 @@ def _init_db(conn: sqlite3.Connection) -> None:
             created_at TEXT NOT NULL
         )
     """)
-    conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_relations_source ON relations(source_path)"
-    )
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_relations_source ON relations(source_path)")
     conn.commit()

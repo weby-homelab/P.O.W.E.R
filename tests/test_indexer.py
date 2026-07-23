@@ -309,9 +309,7 @@ class TestTruncateForCatalog:
     def test_custom_max_length(self):
         assert len(truncate_for_catalog("A" * 200, max_length=100)) == 100
 
-    def test_long_description_preserved_in_note_but_truncated_in_catalog(
-        self, sample_vault: Path
-    ):
+    def test_long_description_preserved_in_note_but_truncated_in_catalog(self, sample_vault: Path):
         """Integration: a note with a >150 char description is stored verbatim,
         but the rendered _index.md truncates it to MAX_DESCRIPTION_LENGTH."""
         from power_framework.core.models import MAX_DESCRIPTION_LENGTH

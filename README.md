@@ -421,7 +421,9 @@ The canonical default provider is **`bge-m3`** via direct ONNX Runtime + `tokeni
 
 ## License
 
-GPLv3 — Built in Ukraine ⚡
+P.O.W.E.R. Framework is licensed under the [GNU General Public License v3.0 (GPLv3)](LICENSE).
+
+---
 
 <p align="center">
   Built in Ukraine under air raid sirens &amp; blackouts ⚡<br>

@@ -382,9 +382,7 @@ def load_or_build_qrels(
             pass
     qrels = build_qrels(vault, overrides=overrides)
     QRELS_CACHE.write_text(
-        json.dumps(
-            {"vault": str(Path(vault).resolve()), "qrels": qrels}, ensure_ascii=False
-        ),
+        json.dumps({"vault": str(Path(vault).resolve()), "qrels": qrels}, ensure_ascii=False),
         encoding="utf-8",
     )
     return qrels
@@ -469,9 +467,7 @@ def evaluate(
 
     # Compute ranx metrics for secondary info (recall, mrr)
     ranx = _ensure_ranx()
-    ranx_qrels = {
-        q: {k: min(v, 1) for k, v in docs.items()} for q, docs in gt_qrels.items()
-    }
+    ranx_qrels = {q: {k: min(v, 1) for k, v in docs.items()} for q, docs in gt_qrels.items()}
     eval_queries = [q for q in queries if ranx_qrels.get(q)]
     if not eval_queries:
         print(
@@ -546,9 +542,7 @@ def _evaluate_lexical(
     contents: dict[str, str] = {}
     for f in _iter_md_files(Path(vault)):
         try:
-            contents[_rel(f, Path(vault))] = f.read_text(
-                encoding="utf-8", errors="ignore"
-            ).lower()
+            contents[_rel(f, Path(vault))] = f.read_text(encoding="utf-8", errors="ignore").lower()
         except OSError:  # noqa: PERF203
             continue
 
@@ -613,12 +607,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="POWER search-quality gate.")
     parser.add_argument("--vault", default="/root/gemma/brain", type=str)
     parser.add_argument("--mode", default="reranked", type=str)
-    parser.add_argument(
-        "--gate", default=0.50, type=float, help="ndcg@5 secondary gate."
-    )
-    parser.add_argument(
-        "--udcg-gate", default=0.45, type=float, help="UDCG@5 primary gate."
-    )
+    parser.add_argument("--gate", default=0.50, type=float, help="ndcg@5 secondary gate.")
+    parser.add_argument("--udcg-gate", default=0.45, type=float, help="UDCG@5 primary gate.")
     parser.add_argument("--max-results", default=20, type=int)
     parser.add_argument(
         "--queries",

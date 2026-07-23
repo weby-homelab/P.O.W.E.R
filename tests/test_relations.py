@@ -181,9 +181,7 @@ class TestSemanticSuggestions:
         assert _cosine([1.0, 0.0], [0.0, 1.0]) == 0.0
         assert _cosine([], [1.0]) == 0.0
 
-    def test_semantic_ranks_closest_note(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ):
+    def test_semantic_ranks_closest_note(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         # Build a vault with two notes + a target whose text overlaps note A.
         (tmp_path / "01_Projects").mkdir()
         target = tmp_path / "01_Projects" / "Target.md"
@@ -238,14 +236,10 @@ class TestSemanticSuggestions:
         def _boom():
             raise RuntimeError("no embedding backend")
 
-        monkeypatch.setattr(
-            "power_framework.core.embeddings.get_embedding_manager", _boom
-        )
+        monkeypatch.setattr("power_framework.core.embeddings.get_embedding_manager", _boom)
 
         from power_framework.core.relations import suggest_related_semantic
 
         # Must not raise; degrades to keyword suggestions.
-        suggestions = suggest_related_semantic(
-            tmp_path, target_path="01_Projects/Target.md"
-        )
+        suggestions = suggest_related_semantic(tmp_path, target_path="01_Projects/Target.md")
         assert isinstance(suggestions, list)

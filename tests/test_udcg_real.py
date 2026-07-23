@@ -123,9 +123,7 @@ class TestLoadSemanticGt:
         qrels = _load_semantic_gt(SEMANTIC_GT_PATH)
         ua_queries = [q for q in qrels if any(ord(c) > 0x0400 for c in q)]
         assert len(ua_queries) > 0, "No Ukrainian queries found in semantic GT"
-        en_queries = [
-            q for q in qrels if all(ord(c) < 0x0400 or ord(c) > 0x04FF for c in q)
-        ]
+        en_queries = [q for q in qrels if all(ord(c) < 0x0400 or ord(c) > 0x04FF for c in q)]
         assert len(en_queries) > 0, "No English queries found in semantic GT"
 
 
