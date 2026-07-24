@@ -18,7 +18,7 @@ mypy src/power_framework/  # type check
 - line-length: 100. Ignore: E501, S101.
 - 4 spaces, no tabs. snake_case for functions/vars, PascalCase for classes.
 - Type hints on all public signatures. Use `from __future__ import annotations` in new files.
-- `async def` for all I/O-bound public APIs. Precept `async` over `ThreadPoolExecutor` thread-pool calls.
+- `async def` for all I/O-bound public APIs. Prefer `asyncio` over `ThreadPoolExecutor` for thread-pool calls.
 - Named exports only. No `from module import *`.
 - // CORRECT
   async def fetch_vault(path: str, timeout: int = 30) -> dict[str, Any]:
@@ -41,7 +41,7 @@ scripts/           # utility scripts (excluded from ruff T20/S310)
 
 Rules:
 - `core/` must NOT import from `mcp/`. Data flows one direction: CLI/MCP → core.
-- Never add `I/O` in hot paths (search, lint, index). Batch reads.
+- Never add I/O in hot paths (search, lint, index). Batch reads.
 - Keep MCP tools stateless — vault state lives in the filesystem, not in memory.
 
 ## Testing
@@ -53,7 +53,7 @@ Rules:
 
 ## Git
 
-- GPG-sign all commits (key `2D49E810C7F2527E`, user `weby-homelab`).
+- GPG-sign all commits with project GPG key.
 - Conventional commits: `feat:`, `fix:`, `refactor:`, `test:`, `chore:`, `docs:`.
 - Branch → PR → Merge (squash). No direct pushes to `main`.
 - Clean up merged branches locally and on remote.
