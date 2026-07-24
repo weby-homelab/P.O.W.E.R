@@ -1,8 +1,8 @@
 ---
 type: Resource
 title: "AI Agent Migration Guide: Migrate Any Obsidian Vault to P.O.W.E.R. (v3.2.1)"
-description: "Step-by-step protocol for any LLM-based AI agent to autonomously migrate an Obsidian vault to P.O.W.E.R. OKF-compliant structure under v3.2.1."
-tags: [power, migration, guide, ai-agents, mcp, bge-m3, graphrag]
+description: "Step-by-step protocol for any LLM-based AI agent to autonomously migrate an Obsidian vault to P.O.W.E.R. OKF-compliant structure under v3.2.1 supporting P.A.R.A., C.O.D.E., GTD, Zettelkasten, LYT, Johnny.Decimal, and Custom methodologies."
+tags: [power, migration, guide, ai-agents, mcp, bge-m3, graphrag, methodologies]
 timestamp: 2026-07-24T16:00:00
 ---
 
@@ -10,7 +10,7 @@ timestamp: 2026-07-24T16:00:00
 
 **Target audience:** AI agents (Antigravity, OpenCode, Claude Code CLI, Gemini 2.0, DeepSeek-R1, Devin) with MCP access to P.O.W.E.R.
 
-**Goal:** Transform any unstructured Obsidian vault into a P.O.W.E.R.-compliant knowledge base with validated OKF metadata, P.A.R.A. folder structure, and hierarchical indexes — fully autonomously.
+**Goal:** Transform any unstructured or existing Obsidian vault into a P.O.W.E.R.-compliant knowledge base with validated OKF metadata, any chosen organizational methodology (P.A.R.A., C.O.D.E., GTD, Zettelkasten, LYT, Johnny.Decimal, or custom/hybrid), and hierarchical indexes — fully autonomously.
 
 ---
 
@@ -19,8 +19,9 @@ timestamp: 2026-07-24T16:00:00
 This protocol enables any LLM-based AI agent to migrate an existing Obsidian vault by combining:
 
 - **MCP tools** — `ingest_note`, `lint_vault`, `generate_index`, `read_sub_index`, `search_vault_tool`
-- **Filesystem access** — reading existing `.md` files, moving/cleaning up old files
-- **LLM intelligence** — classifying notes into P.A.R.A. categories, extracting titles, generating descriptions
+- **Filesystem access** — reading existing `.md` files, moving files, updating link paths
+- **LLM intelligence** — classifying notes across methodologies (P.A.R.A., C.O.D.E., GTD, Zettelkasten, LYT, Johnny.Decimal), extracting titles, generating descriptions
+- **Methodology Flexibility** — P.O.W.E.R. v3.2.1 is not restricted to P.A.R.A. alone. The framework fully decouples physical folder structure from note metadata: search indexing (SQLite FTS5 + BGE-M3 1024d ONNX + Reranker v2 M3 + GraphRAG) and OKF validation operate identically across all templated or custom organization schemes.
 
 The agent follows 6 phases. Each phase has clear success criteria.
 
@@ -28,7 +29,7 @@ The agent follows 6 phases. Each phase has clear success criteria.
 
 ## Phase 1: Discovery
 
-**Goal:** Understand the vault's current state.
+**Goal:** Understand the vault's current state and detect its existing or intended methodology.
 
 ### Steps
 
@@ -37,13 +38,16 @@ The agent follows 6 phases. Each phase has clear success criteria.
 2. **Read each `.md` file** — capture full content. Note:
     - Does it already have YAML frontmatter?
     - Does it have `type`, `title`, `description` fields?
-    - What is the current folder structure?
+    - What is the current folder structure and naming convention?
 
-3. **Identify existing patterns** — look for:
-    - Tags (`#tag` inline or in frontmatter `tags:`)
-    - Wikilinks (`[[Note Name]]`)
-    - Embedded files (`![[image.png]]`)
-    - Folder names that hint at categories (e.g., "Projects", "Archives")
+3. **Identify existing patterns & DETECT VAULT METHODOLOGY**:
+    - **P.A.R.A.** — folders `01_Projects`, `02_Areas`, `03_Resources`, `04_Archive`.
+    - **C.O.D.E.** — workflow folders `01_Capture`, `02_Organize`, `03_Distill`, `04_Express`.
+    - **GTD (Getting Things Done)** — folders `00_Inbox`, `01_Next_Actions`, `02_Waiting_For`, `03_Someday`, `04_Projects`.
+    - **Zettelkasten** — UID presence in filenames (`202607242115_...`), folders `fleeting`, `literature`, `permanent`, `index`.
+    - **LYT (Linking Your Thinking)** — content maps `Home.md`, `*_MOC.md`, `MOCs/` folder.
+    - **Johnny.Decimal** — decimal folder index (`10-19_...`, `20-29_...`).
+    - **Unstructured / Hybrid** — flat folder structure or arbitrary directory tree.
 
 4. **Run `lint_vault(vault_path)`** — baseline health check. Record how many notes are missing metadata and broken links.
 
@@ -53,32 +57,33 @@ The agent follows 6 phases. Each phase has clear success criteria.
    ```
    *Never proceed with destructive operations without a verified backup.*
 
-**Success criteria:** You have a complete inventory of all notes, baseline lint metrics, and an intact raw backup archive.
+**Success criteria:** You have a complete inventory of all notes, detected vault methodology, baseline lint metrics, and an intact raw backup archive.
 
 ---
 
-## Phase 2: Classification
+## Phase 2: Classification & Methodology Mapping
 
-**Goal:** Analyze each note and determine its P.A.R.A. category + OKF metadata.
+**Goal:** Analyze each note, determine its OKF metadata (`type`, `title`, `description`, `tags`), and map it to the selected methodology.
 
-### Rules
+### Methodology Support & OKF Type Mapping
 
-Every note must be assigned exactly one `type` from:
+P.O.W.E.R. 3.2.1 is methodology-agnostic. Every note is assigned a valid `type` from the OKF `NoteType` enum (or extended semantic types in custom setups). Below is the canonical mapping for supported templates:
 
-| Type           | P.A.R.A. Folder  | When to use                                     |
-| -------------- | ---------------- | ----------------------------------------------- |
-| `Project`      | `01_Projects/`   | Active work with a deadline or deliverable      |
-| `Area`         | `02_Areas/`      | Ongoing responsibility without a fixed deadline |
-| `Resource`     | `03_Resources/`  | Reference material, guides, external links      |
-| `Archive`      | `04_Archive/`    | Completed or obsolete projects                  |
-| `Daily Log`    | `06_Daily_Logs/` | Temporal entries, session logs, journals        |
-| `System Guide` | `PROTOCOLS/`     | AI agent instructions, operational protocols    |
+| Methodology | Primary Focus | Folder Skeleton | Initial Mapping to OKF `NoteType` |
+| :--- | :--- | :--- | :--- |
+| **P.A.R.A.** (Default) | Actions & Deadlines | `01_Projects`, `02_Areas`, `03_Resources`, `04_Archive` | `Project`, `Area`, `Resource`, `Archive`, `Daily Log`, `System Guide` |
+| **C.O.D.E.** | Distillation & Content Pipeline | `01_Capture`, `02_Organize`, `03_Distill`, `04_Express` | `Capture` (`Resource`), `Organize` (`Area`/`Project`), `Distill` (`Resource`), `Express` (`Project`/`Resource`) |
+| **GTD** | Task Processing & Inbox Zero | `00_Inbox`, `01_Next_Actions`, `02_Waiting_For`, `03_Someday`, `04_Projects` | `Resource` (Inbox/Ref), `Project` (Next/Projects), `Area` (Waiting), `Archive` (Someday) |
+| **Zettelkasten** | Atomic UID Concept Graph | `fleeting/`, `literature/`, `permanent/`, `index/` | `Resource` (Fleeting/Lit), `Area`/`Resource` (Permanent), `System Guide` (Index/Hubs) |
+| **LYT** | Maps of Content (MOCs) | `Home.md`, `MOCs/`, `Notes/`, `Archives/` | `System Guide` (Home), `Area` (MOCs), `Resource` (Notes), `Archive` (Archives) |
+| **Johnny.Decimal** | Strict Decimal Index | `10-19_...`, `20-29_...`, `30-39_...` | `Area` (Category index), `Project` (Sub-category), `Resource` (Leaf notes) |
+| **Custom / Hybrid** | Arbitrary Tree | Custom (User/Agent choice) | Assign `type:` based on semantic content |
 
 ### For each note, extract:
 
 1. **`title`** — the note's H1 heading or filename (1-200 chars)
 2. **`description`** — one-line summary of what this note is about (1-150 chars)
-3. **`type`** — the P.A.R.A. category (see table above)
+3. **`type`** — the corresponding OKF `NoteType` (see table above)
 4. **`tags`** — relevant keywords (optional, list of strings)
 5. **`resource`** — if the note references an external URL (optional)
 6. **`owner`** — owner or responsible developer/agent (optional)
@@ -87,39 +92,33 @@ Every note must be assigned exactly one `type` from:
 
 ### Classification heuristics
 
-- Use folder name as a hint: `old_projects/` → likely `Archive` or `Project`
-- Use content analysis: if it reads like a journal → `Daily Log`; like reference → `Resource`
-- Use internal links: if linked from multiple other notes → likely active → `Area` or `Project`
-- When uncertain, default to `Resource`
+- **Folder & Methodology hints:** Use folder hints (e.g., `01_Capture/` in C.O.D.E. → `Resource`, `permanent/` in Zettelkasten → `Area`/`Resource`).
+- **Content Analysis:** Journal entries → `Daily Log`; AI operational rules → `System Guide`; reference guides → `Resource`.
+- **Link Graph Density:** Notes with high incoming wikilinks (MOCs / Indexes) → `Area` or `System Guide`.
+- **Default fallback:** When uncertain, assign `Resource`.
 
-**Success criteria:** Every note has a draft `(type, title, description, tags)` tuple ready.
+**Success criteria:** Every note has a draft `(type, title, description, tags, target_path)` tuple ready.
 
 ---
 
-## Phase 3: Migration
+## Phase 3: Migration & Skeleton Generation
 
-**Goal:** Create each note in the correct P.A.R.A. folder with validated OKF frontmatter.
+**Goal:** Create each note in the designated methodology folder with validated OKF frontmatter and rebuild indexes.
 
-### Step 3a: Prepare the vault skeleton (if needed)
+### Step 3a: Prepare the vault skeleton
 
-If the vault doesn't already have P.A.R.A. folders, run:
+Initialize the vault with the desired organizational template via CLI:
 
+```bash
+power init /path/to/vault --template para         # Classic P.A.R.A. (default)
+power init /path/to/vault --template code         # Workflow C.O.D.E. (Capture, Organize, Distill, Express)
+power init /path/to/vault --template gtd          # GTD (Inbox, Next Actions, Waiting For, Someday)
+power init /path/to/vault --template zettelkasten # Zettelkasten (fleeting, literature, permanent, index)
+power init /path/to/vault --template lyt          # LYT (Home, MOCs, Notes, Archives)
+power init /path/to/vault --template johnny-decimal # Johnny.Decimal decimal categories
 ```
-power init /path/to/vault
-```
 
-Or have the agent create the folder structure manually:
-
-```
-00_Inbox/
-01_Projects/
-02_Areas/
-03_Resources/
-04_Archive/
-05_Templates/
-06_Daily_Logs/
-PROTOCOLS/
-```
+Or allow the agent to create a custom/hybrid folder tree based on user requirements.
 
 ### Step 3b: Ingest each note
 
@@ -127,7 +126,7 @@ For every classified note, call the MCP tool `ingest_note`:
 
 ```jsonc
 {
-    "name": "01_Projects/My-Project", // P.A.R.A. path + filename (no .md)
+    "name": "01_Projects/My-Project", // Methodology path + filename (no .md)
     "note_type": "Project", // From NoteType enum
     "title": "My Project", // Human title
     "description": "Building the next big thing", // 1-150 chars
@@ -137,10 +136,32 @@ For every classified note, call the MCP tool `ingest_note`:
 }
 ```
 
+For Zettelkasten:
+```jsonc
+{
+    "name": "permanent/202607242115-my-atomic-idea",
+    "note_type": "Resource",
+    "title": "Atomic Concept of Vector Indexing",
+    "description": "Explaining ONNX vector indexing in Zettelkasten format",
+    "content": "<markdown content>"
+}
+```
+
+For C.O.D.E.:
+```jsonc
+{
+    "name": "01_Capture/Raw-Idea-Note",
+    "note_type": "Resource",
+    "title": "Raw Idea Note",
+    "description": "Captured raw note for future distillation",
+    "content": "<markdown content>"
+}
+```
+
 **Important rules:**
 
-- `name` includes the P.A.R.A. folder prefix + the note's filename (underscores, no spaces)
-- `note_type` must match the folder: `01_Projects/` → `type: Project`
+- `name` includes the target methodology folder path + filename (hyphens or underscores, no spaces)
+- `note_type` must match OKF enum (`Project`, `Area`, `Resource`, `Archive`, `Daily Log`, `System Guide`)
 - `content` is the **full original markdown body** — strip any old YAML frontmatter first
 - The `ingest_note` tool automatically:
     - Validates all metadata via Pydantic v2
@@ -476,17 +497,38 @@ Agent: Migration and publication completed successfully. Vault is P.O.W.E.R.-com
 
 ## Appendices
 
-### A. Folder-Type Mapping
+### A. Folder-Type Mapping for All Methodologies
 
-| Folder           | `note_type`    | Typical Content                                     |
-| ---------------- | -------------- | --------------------------------------------------- |
-| `00_Inbox/`      | Any            | Unprocessed drafts (agent should classify and move) |
-| `01_Projects/`   | `Project`      | Active projects with deliverables                   |
-| `02_Areas/`      | `Area`         | Ongoing responsibilities                            |
-| `03_Resources/`  | `Resource`     | References, guides, external links                  |
-| `04_Archive/`    | `Archive`      | Completed/dead projects                             |
-| `06_Daily_Logs/` | `Daily Log`    | Temporal journal entries                            |
-| `PROTOCOLS/`     | `System Guide` | Agent instructions, rules                           |
+| Methodology | Folder / Skeleton | `note_type` | Typical Content |
+| :--- | :--- | :--- | :--- |
+| **P.A.R.A.** | `00_Inbox/` | Any | Unprocessed drafts (classified and moved) |
+| | `01_Projects/` | `Project` | Active projects with deadlines & deliverables |
+| | `02_Areas/` | `Area` | Ongoing areas of responsibility |
+| | `03_Resources/` | `Resource` | Reference material, guides, external links |
+| | `04_Archive/` | `Archive` | Completed or obsolete material |
+| | `06_Daily_Logs/` | `Daily Log` | Temporal journal entries & session logs |
+| | `PROTOCOLS/` | `System Guide` | AI agent instructions & system rules |
+| **C.O.D.E.** | `01_Capture/` | `Resource` | Incoming clippings, bookmarks & raw ideas |
+| | `02_Organize/` | `Area` / `Project` | Notes organized by area or active project |
+| | `03_Distill/` | `Resource` | Distilled summaries & core insights |
+| | `04_Express/` | `Project` / `Resource` | Published articles, reports & outputs |
+| **GTD** | `00_Inbox/` | `Resource` | Raw incoming tasks & notes |
+| | `01_Next_Actions/` | `Project` | Specific immediate actionable items |
+| | `02_Waiting_For/` | `Area` | Delegated / pending response tasks |
+| | `03_Someday/` | `Archive` / `Resource` | Future / optional ideas & aspirations |
+| | `04_Projects/` | `Project` | Multi-step goal-oriented projects |
+| **Zettelkasten** | `fleeting/` | `Resource` | Temporary quick thoughts |
+| | `literature/` | `Resource` | Book / source reading notes |
+| | `permanent/` | `Area` / `Resource` | Atomic conceptual notes with UID prefixes |
+| | `index/` | `System Guide` | Navigation hubs, MOCs & structured indexes |
+| **LYT** | `Home.md` | `System Guide` | Home entry point navigation hub |
+| | `MOCs/` | `Area` | Maps of Content (topic maps) |
+| | `Notes/` | `Resource` | Atomic thematic notes |
+| | `Archives/` | `Archive` | Outdated MOC maps & notes |
+| **Johnny.Decimal** | `10-19_Admin/` | `Area` | Administrative & organizational documents |
+| | `20-29_Engineering/`| `Area` / `Project` | Engineering specs & development |
+| | `30-39_Ops/` | `Area` | Operations instructions & monitoring |
+| **Custom / Hybrid** | Custom tree | `type:` from OKF enum | `type:` assigned based on semantic content |
 
 ### B. Required MCP Tools
 
