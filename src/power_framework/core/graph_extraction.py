@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import logging
 import re
-import sqlite3  # noqa: TC003 (used at runtime via sqlite3.connect)
+import sqlite3
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
