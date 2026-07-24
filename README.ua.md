@@ -127,6 +127,13 @@ pip install --user --break-system-packages -e ".[dev]"
 - **[English: AI Agent Migration Guide](https://github.com/weby-homelab/power-framework/blob/main/docs/migration-guide.md)** — 5-phase protocol with MCP tools, classification heuristics, and troubleshooting
 - **[Українська: Ґайд міграції для AI-агента](https://github.com/weby-homelab/power-framework/blob/main/docs/migration-guide.ua.md)** — покроковий протокол з MCP-інструментами, евристиками класифікації та вирішенням проблем
 
+### Чому P.O.W.E.R. 3.2.1
+
+Детальний опис та технічна порівняльна матриця з іншими фреймворками:
+
+- **[English: Why P.O.W.E.R. 3.2.1](https://github.com/weby-homelab/power-framework/blob/main/WHY_POWER_3.2.1.en.md)** — comparison matrix, 5 super features, token economy, P.A.R.A. flexibility FAQ
+- **[Українська: Чому P.O.W.E.R. 3.2.1](https://github.com/weby-homelab/power-framework/blob/main/WHY_POWER_3.2.1.md)** — огляд, порівняльна таблиця, 5 супер фішок, економія токенів, FAQ по гнучкості P.A.R.A.
+
 ## Для кого це
 
 - **Користувачі баз знань**, які хочуть щоб AI-агенти розуміли та підтримували їх базу знань
