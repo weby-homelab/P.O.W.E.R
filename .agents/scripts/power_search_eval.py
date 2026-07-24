@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-P.O.W.E.R. 2.0.3 Search Quality Evaluation Script
+P.O.W.E.R. 3.2.1 Search Quality Evaluation Script
 Measures: Recall@K, MRR@K, nDCG@K, Precision@K across all 3 search modes
 """
 
@@ -382,7 +382,7 @@ def evaluate_mode(mode: str, test_cases: list) -> dict:
 
 def main():
     print("=" * 60)
-    print("  P.O.W.E.R. 2.0.3 — Search Quality Evaluation")
+    print("  P.O.W.E.R. 3.2.1 — Search Quality Evaluation")
     print(f"  Vault: {VAULT_PATH}")
     print(f"  Test cases: {len(TEST_CASES)}")
     print(f"  Modes: {MODES}")

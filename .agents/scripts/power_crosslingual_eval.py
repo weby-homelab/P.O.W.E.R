@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-P.O.W.E.R. 2.0.3 — Cross-Lingual Search Quality Evaluation
+P.O.W.E.R. 3.2.1 — Cross-Lingual Search Quality Evaluation
 Tests: UA→UA, EN→UA, UA→EN, Mixed→Mixed scenarios
 Metrics: MRR, MAP@K, MAR@K, nDCG@K, Latency
 """
@@ -306,7 +306,7 @@ def scenario_aggregate(all_results, scenario_ids, mode):
 
 def main():
     print("=" * 60)
-    print("  P.O.W.E.R. 2.0.3 — Cross-Lingual Search Evaluation")
+    print("  P.O.W.E.R. 3.2.1 — Cross-Lingual Search Evaluation")
     print(f"  Vault: {VAULT_PATH}")
     print(f"  Test cases: {len(TEST_CASES)} (UA→UA, EN→UA, UA→EN, Mixed)")
     print(f"  Modes: {MODES}")

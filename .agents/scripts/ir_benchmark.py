@@ -1,7 +1,7 @@
 """Real IR benchmark for power-framework search on a generated 541+ vault.
 
 Computes MRR, MAP@K, MAR@K, nDCG@K and latency for modes:
-  fts, vector, hybrid, hybrid_reranked (Jina v2), semantic
+  fts, vector, hybrid, hybrid_reranked (BGEM3Reranker / bge-reranker-v2-m3), semantic
 
 Usage: python ir_benchmark.py
 """
