@@ -135,6 +135,30 @@ Detailed breakdown and technical comparison matrix with competing frameworks:
 - **[English: Why P.O.W.E.R. 3.2.1](https://github.com/weby-homelab/power-framework/blob/main/WHY_POWER_3.2.1.en.md)** — comparison matrix, 5 super features, token economy, P.A.R.A. flexibility FAQ
 - **[Українська: Чому P.O.W.E.R. 3.2.1](https://github.com/weby-homelab/power-framework/blob/main/WHY_POWER_3.2.1.md)** — огляд, порівняльна таблиця, 5 супер фішок, економія токенів
 
+## 🗂️ Methodology Support: Choose What Works for You
+
+P.O.W.E.R. is not locked to a single methodology. Initialize a vault with any popular knowledge organization system in one command:
+
+```bash
+power init /path/to/vault --template para          # P.A.R.A. — project/deadline focus
+power init /path/to/vault --template code          # C.O.D.E. — content synthesis lifecycle
+power init /path/to/vault --template gtd           # GTD — inbox processing & task flow
+power init /path/to/vault --template zettelkasten  # Zettelkasten — atomic UID idea graph
+power init /path/to/vault --template lyt           # LYT — Maps of Content (MOCs)
+power init /path/to/vault --template johnny-decimal # Johnny.Decimal — strict numeric hierarchy
+```
+
+| Methodology      | Primary Focus               | Default Folder Structure                                    | Core Metric             |
+| :--------------- | :-------------------------- | :---------------------------------------------------------- | :---------------------- |
+| **P.A.R.A.**     | Actions & Deadlines         | `01_Projects`, `02_Areas`, `03_Resources`, `04_Archive`    | Project completion rate |
+| **C.O.D.E.**     | Content Distillation        | `01_Capture`, `02_Organize`, `03_Distill`, `04_Express`    | Idea generation speed   |
+| **GTD**          | Task Processing             | `00_Inbox`, `01_Next_Actions`, `02_Waiting_For`, `03_Someday` | Inbox Zero & Flow    |
+| **Zettelkasten** | Atomic Idea Graph           | `fleeting/`, `literature/`, `permanent/`, `index/`         | Link density & UIDs     |
+| **LYT**          | Maps of Content (MOC)       | `Home.md`, `MOCs/`, `Notes/`, `Archives/`                  | MOC coverage            |
+| **Johnny.Decimal** | Strict Decimal Index      | `10-19_Admin/`, `20-29_Engineering/`, `30-39_Ops/`         | Decimal addressability  |
+
+OKF metadata validation, BGE-M3 vector search, the linter, and all 12 MCP tools work **regardless of the chosen methodology**.
+
 ## Who Is This For
 
 - **Knowledge workers** who want AI agents to understand and maintain their knowledge base
