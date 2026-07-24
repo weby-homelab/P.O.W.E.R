@@ -65,10 +65,6 @@ _RELATION_CUES: list[tuple[str, str]] = [
 
 _SENT_SPLIT = re.compile(r"[.!?\n;]+")
 _NOISE = re.compile(r"[^\w\s'’\-]", flags=re.UNICODE)  # noqa: RUF001
-_WORD = re.compile(
-    r"[A-Za-zА-Яа-яЄєІіЇґ0-9][\w'’\-]*",  # noqa: RUF001
-    flags=re.UNICODE,
-)
 
 
 def _clean_phrase(text: str, limit: int = 80) -> str:
@@ -148,8 +144,6 @@ def store_note_triplets(vault_dir: Path | str, rel_path: str, content: str) -> i
     Convenience used by ``synthesize_session`` so every synthesized note grows
     the auto knowledge graph without manual ``related:`` YAML.
     """
-    import sqlite3
-
     from .db import _init_db
     from .searcher import _db_path
 

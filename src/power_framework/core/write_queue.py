@@ -71,6 +71,11 @@ def ensure_write_worker() -> None:
         _worker_task = loop.create_task(_worker())
 
 
+def get_write_worker_task() -> asyncio.Task[Any] | None:
+    """Return the active single-writer background task, if any."""
+    return _worker_task
+
+
 async def run_blocking(sync_fn: Callable[[], T]) -> T:
     """Run a blocking operation without leaving an executor thread behind.
 
