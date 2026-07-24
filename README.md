@@ -128,6 +128,13 @@ Step-by-step protocol for any AI agent (Antigravity, OpenCode, Claude Code CLI, 
 - **[English: AI Agent Migration Guide](https://github.com/weby-homelab/power-framework/blob/main/docs/migration-guide.md)** — 5-phase protocol with MCP tools, classification heuristics, and troubleshooting
 - **[Українська: Ґайд міграції для AI-агента](https://github.com/weby-homelab/power-framework/blob/main/docs/migration-guide.ua.md)** — покроковий протокол для будь-якого AI-агента
 
+### Why P.O.W.E.R. 3.2.1
+
+Detailed breakdown and technical comparison matrix with competing frameworks:
+
+- **[English: Why P.O.W.E.R. 3.2.1](https://github.com/weby-homelab/power-framework/blob/main/WHY_POWER_3.2.1.en.md)** — comparison matrix, 5 super features, token economy, P.A.R.A. flexibility FAQ
+- **[Українська: Чому P.O.W.E.R. 3.2.1](https://github.com/weby-homelab/power-framework/blob/main/WHY_POWER_3.2.1.md)** — огляд, порівняльна таблиця, 5 супер фішок, економія токенів
+
 ## Who Is This For
 
 - **Knowledge workers** who want AI agents to understand and maintain their knowledge base
