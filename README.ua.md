@@ -131,8 +131,7 @@ pip install --user --break-system-packages -e ".[dev]"
 
 Детальний опис та технічна порівняльна матриця з іншими фреймворками:
 
-- **[English: Why P.O.W.E.R. 3.2.1](https://github.com/weby-homelab/power-framework/blob/main/WHY_POWER_3.2.1.en.md)** — comparison matrix, 5 super features, token economy, P.A.R.A. flexibility FAQ
-- **[Українська: Чому P.O.W.E.R. 3.2.1](https://github.com/weby-homelab/power-framework/blob/main/WHY_POWER_3.2.1.md)** — огляд, порівняльна таблиця, 5 супер фішок, економія токенів, FAQ по гнучкості P.A.R.A.
+- **[Чому P.O.W.E.R. 3.2.1](https://github.com/weby-homelab/power-framework/blob/main/WHY_POWER_3.2.1.md)** — огляд, порівняльна таблиця, 5 супер фішок, економія токенів, FAQ по гнучкості P.A.R.A.
 
 ## 🗂️ Підтримка Методологій: Оберіть Свою Систему
 
