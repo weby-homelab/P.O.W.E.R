@@ -163,7 +163,7 @@ power init /path/to/vault --template johnny-decimal # Johnny.Decimal — strict 
 | **C.O.D.E.**     | Content Distillation        | `01_Capture`, `02_Organize`, `03_Distill`, `04_Express`     | Idea generation speed   |
 | **GTD**          | Task Processing             | `00_Inbox`, `01_Next_Actions`, `02_Waiting_For`, `03_Someday` | Inbox Zero & Flow    |
 | **Zettelkasten** | Atomic Idea Graph           | `fleeting/`, `literature/`, `permanent/`, `index/`          | Link density & UIDs     |
-| **LYT**          | Maps of Content (MOC)      | `Home.md`, `MOCs/`, `Notes/`, `Archives/`                   | MOC coverage            |
+| **LYT**          | Maps of Content (MOC)       | `Home.md`, `MOCs/`, `Notes/`, `Archives/`                   | MOC coverage            |
 | **Johnny.Decimal** | Strict Decimal Index      | `10-19_Admin/`, `20-29_Engineering/`, `30-39_Ops/`         | Decimal addressability  |
 
 OKF metadata validation, BGE-M3 vector search, the linter, and all 12 MCP tools work **regardless of the chosen methodology** — no compromises!
