@@ -1,7 +1,7 @@
 ---
 type: Resource
 title: "AI Agent Migration Guide: Migrate Any Obsidian Vault to P.O.W.E.R. (v3.2.1)"
-description: "Step-by-step protocol for any LLM-based AI agent to autonomously migrate an Obsidian vault to P.O.W.E.R. OKF-compliant structure under v3.2.1 supporting P.A.R.A., C.O.D.E., GTD, Zettelkasten, LYT, Johnny.Decimal, and Custom methodologies."
+description: "Step-by-step protocol for any LLM-based AI agent to autonomously migrate an Obsidian vault to P.O.W.E.R. (v3.2.1) OKF-compliant structure with full methodology independence (P.A.R.A., C.O.D.E., GTD, Zettelkasten, LYT, Johnny.Decimal, Custom)."
 tags: [power, migration, guide, ai-agents, mcp, bge-m3, graphrag, methodologies]
 timestamp: 2026-07-24T16:00:00
 ---
@@ -21,7 +21,7 @@ This protocol enables any LLM-based AI agent to migrate an existing Obsidian vau
 - **MCP tools** — `ingest_note`, `lint_vault`, `generate_index`, `read_sub_index`, `search_vault_tool`
 - **Filesystem access** — reading existing `.md` files, moving files, updating link paths
 - **LLM intelligence** — classifying notes across methodologies (P.A.R.A., C.O.D.E., GTD, Zettelkasten, LYT, Johnny.Decimal), extracting titles, generating descriptions
-- **Methodology Flexibility** — P.O.W.E.R. v3.2.1 is not restricted to P.A.R.A. alone. The framework fully decouples physical folder structure from note metadata: search indexing (SQLite FTS5 + BGE-M3 1024d ONNX + Reranker v2 M3 + GraphRAG) and OKF validation operate identically across all templated or custom organization schemes.
+- **Methodology Independence** — P.O.W.E.R. v3.2.1 is designed as a methodology-agnostic knowledge engine. The framework fully decouples physical folder structures from note metadata: search indexing (SQLite FTS5 + BGE-M3 1024d ONNX + Reranker v2 M3 + GraphRAG) and OKF validation operate seamlessly across any chosen methodology or custom folder tree.
 
 The agent follows 6 phases. Each phase has clear success criteria.
 
@@ -71,7 +71,7 @@ P.O.W.E.R. 3.2.1 is methodology-agnostic. Every note is assigned a valid `type` 
 
 | Methodology | Primary Focus | Folder Skeleton | Initial Mapping to OKF `NoteType` |
 | :--- | :--- | :--- | :--- |
-| **P.A.R.A.** (Default) | Actions & Deadlines | `01_Projects`, `02_Areas`, `03_Resources`, `04_Archive` | `Project`, `Area`, `Resource`, `Archive`, `Daily Log`, `System Guide` |
+| **P.A.R.A.** | Actions & Deadlines | `01_Projects`, `02_Areas`, `03_Resources`, `04_Archive` | `Project`, `Area`, `Resource`, `Archive`, `Daily Log`, `System Guide` |
 | **C.O.D.E.** | Distillation & Content Pipeline | `01_Capture`, `02_Organize`, `03_Distill`, `04_Express` | `Capture` (`Resource`), `Organize` (`Area`/`Project`), `Distill` (`Resource`), `Express` (`Project`/`Resource`) |
 | **GTD** | Task Processing & Inbox Zero | `00_Inbox`, `01_Next_Actions`, `02_Waiting_For`, `03_Someday`, `04_Projects` | `Resource` (Inbox/Ref), `Project` (Next/Projects), `Area` (Waiting), `Archive` (Someday) |
 | **Zettelkasten** | Atomic UID Concept Graph | `fleeting/`, `literature/`, `permanent/`, `index/` | `Resource` (Fleeting/Lit), `Area`/`Resource` (Permanent), `System Guide` (Index/Hubs) |
@@ -110,12 +110,12 @@ P.O.W.E.R. 3.2.1 is methodology-agnostic. Every note is assigned a valid `type` 
 Initialize the vault with the desired organizational template via CLI:
 
 ```bash
-power init /path/to/vault --template para         # Classic P.A.R.A. (default)
-power init /path/to/vault --template code         # Workflow C.O.D.E. (Capture, Organize, Distill, Express)
-power init /path/to/vault --template gtd          # GTD (Inbox, Next Actions, Waiting For, Someday)
-power init /path/to/vault --template zettelkasten # Zettelkasten (fleeting, literature, permanent, index)
-power init /path/to/vault --template lyt          # LYT (Home, MOCs, Notes, Archives)
-power init /path/to/vault --template johnny-decimal # Johnny.Decimal decimal categories
+power init /path/to/vault --template para         # P.A.R.A. template (Projects, Areas, Resources, Archive)
+power init /path/to/vault --template code         # C.O.D.E. template (Capture, Organize, Distill, Express)
+power init /path/to/vault --template gtd          # GTD template (Inbox, Next Actions, Waiting For, Someday)
+power init /path/to/vault --template zettelkasten # Zettelkasten template (fleeting, literature, permanent, index)
+power init /path/to/vault --template lyt          # LYT template (Home, MOCs, Notes, Archives)
+power init /path/to/vault --template johnny-decimal # Johnny.Decimal template (decimal category folders)
 ```
 
 Or allow the agent to create a custom/hybrid folder tree based on user requirements.
@@ -172,7 +172,7 @@ For C.O.D.E.:
 
 ### Step 3c: Batch efficiency
 
-For large vaults (>50 notes), group ingests by category. Ingest all `Resource` notes first, then `Area`, then `Project`, etc. This keeps the index regenerations predictable.
+For large vaults (>50 notes), group ingests by category. This keeps the index regenerations predictable.
 
 ### Step 3d: Vector Embedding Indexing (`power sync`)
 
@@ -183,7 +183,7 @@ power sync /path/to/vault
 ```
 *Note:* Running `power sync` chunks documents, extracts GraphRAG entity connections, and generates 1024d dense embeddings into `.power_search.db`.
 
-**Success criteria:** All notes are recreated in P.A.R.A. folders with valid OKF frontmatter. Navigation indexes and vector embedding databases (`.power_search.db`) are synchronized.
+**Success criteria:** All notes are created in the target methodology folders with valid OKF frontmatter. Navigation indexes and vector embedding databases (`.power_search.db`) are synchronized.
 
 ---
 
@@ -203,7 +203,7 @@ power sync /path/to/vault
 
 2. **Spot-check a few files** — read 3-5 random notes to verify frontmatter is correct and content is intact.
 
-3. **Test hierarchical indexing** — call `read_sub_index(category="01_Projects", vault_path=...)` and verify it returns a valid sub-index.
+3. **Test hierarchical indexing** — call `read_sub_index(category="<methodology_folder>", vault_path=...)` (e.g. `01_Projects`, `permanent`, or `01_Capture`) and verify it returns a valid sub-index.
 
 4. **Verify Vector & Reranked Search** — call `search_vault_tool(query="test", search_mode="reranked", vault_path=...)` and verify results return without `power sync` warnings.
 
@@ -217,14 +217,14 @@ power sync /path/to/vault
 
 ### Steps
 
-1. List remaining files outside P.A.R.A. folders
+1. List remaining files outside target methodology folders
 2. For each:
-    - If it was successfully migrated (content now exists in a P.A.R.A. folder), delete it
+    - If it was successfully migrated (content now exists in a target methodology folder), delete it
     - If it wasn't migrated, investigate and classify it
 3. After all deletions, run `generate_index(vault_path)` to refresh
 4. Run final `lint_vault(vault_path)` to confirm
 
-**⚠️ Warning:** Only delete files after **full verification**. Prefer moving to `04_Archive/` over deletion for safety.
+**⚠️ Warning:** Only delete files after **full verification**. Prefer moving to archive folders (e.g., `04_Archive/` or `Archives/`) over deletion for safety.
 
 ---
 
@@ -312,24 +312,27 @@ node_modules/
 ### Step 6c: Configure AI Agent Instructions and Rules
 
 Provide project rules and context to your agent using system rule files (e.g., `.clinerules`, `.cursorrules`, `.windsurfrules`) or an instructions array in the agent's client configuration.
+### Step 6c: Configure AI Agent Instructions and Rules
+
+Provide project rules and context to your agent using system rule files (e.g., `.clinerules`, `.cursorrules`, `.windsurfrules`) or an instructions array in the agent's client configuration.
 Recommended instruction file structure:
 
 - **`RULES.md` / `INSTRUCTIONS.md`** — General agent behavior and guidelines.
 - **`MASTER-LESSONS-LEARNED.md`** — A log of lessons learned and edge-cases to prevent repeat errors.
-- **`power/SKILL.md`** — Guidelines for adhering to the P.A.R.A. methodology.
+- **`power/SKILL.md`** — Guidelines for adhering to vault knowledge methodologies.
 
 ---
 
 ### Step 6d: Fixing Internal Wikilinks
 
-Since files are moved into P.A.R.A. folders (`01_Projects/`, `02_Areas/`, etc.), old direct wikilinks become broken. The AI agent must verify and update references like `[[Note Name]]` to the relative path format `[[P.A.R.A. folder/Note Name|Alias]]`.
+Since files are moved into target methodology folders (e.g., `01_Projects/`, `01_Capture/`, `permanent/`, etc.), old direct wikilinks may require updating. The AI agent must verify and update references like `[[Note Name]]` to the relative path format `[[Methodology Folder/Note Name|Alias]]`.
 The P.O.W.E.R. Linter automatically checks for broken links, and corrections can be made using a link repair script or code editing tools.
 
 ---
 
 ### Step 6e: Automating Index Updates (`_index.md`)
 
-The `_index.md` file in each P.A.R.A. folder serves as a navigation map and is generated automatically using the `power index` command.
+The `_index.md` file in each target methodology category folder serves as a navigation map and is generated automatically using the `power index` command.
 _Agent Rule:_ After any change to the note structure (adding, moving, or deleting files), always regenerate the indexes using the MCP tool `generate_index` or the CLI `power index`.
 
 ---
@@ -444,19 +447,22 @@ Here is what a complete migration looks like from the agent's perspective:
 ```
 Agent: Scanning vault at /Users/alice/obsidian...
 Agent: Found 47 .md files, 12 folders
+Agent: Detected multi-methodology vault structure (Zettelkasten + C.O.D.E. + P.A.R.A.)
 Agent: 31 have frontmatter, 16 are raw markdown
-Agent: Running classification on all notes...
+Agent: Running classification on all notes into OKF NoteTypes...
 
-Note "Daily Thoughts 2026-06-15" → Daily Log
-Note "Project Alpha Requirements" → Project
-Note "Docker Cheatsheet" → Resource
-Note "Old Meeting Notes 2024" → Archive
+Note "Daily Thoughts 2026-06-15" → Daily Log (06_Daily_Logs/)
+Note "Project Alpha Requirements" → Project (01_Projects/)
+Note "Raw Idea Note" → Resource (01_Capture/)
+Note "202607242115-vector-indexing" → Resource (permanent/)
+Note "Docker Cheatsheet" → Resource (03_Resources/)
+Note "Old Meeting Notes 2024" → Archive (04_Archive/)
 ...
 
-Agent: Migrating via ingest_note MCP tool...
+Agent: Migrating via ingest_note MCP tool into target methodology folders...
   ✅ 01_Projects/Project-Alpha-Requirements.md
-  ✅ 01_Projects/Project-Beta-Plan.md
-  ✅ 02_Areas/Health-Routine.md
+  ✅ 01_Capture/Raw-Idea-Note.md
+  ✅ permanent/202607242115-vector-indexing.md
   ✅ 03_Resources/Docker-Cheatsheet.md
   ✅ 04_Archive/Old-Meeting-Notes-2024.md
   ✅ 06_Daily_Logs/2026-06-15_Daily-Thoughts.md
