@@ -265,6 +265,43 @@ The framework combines four complementary methodologies:
 - **W** — **LLM-Wiki** (A. Karpathy's philosophy) — Transforms the knowledge base into a hierarchical, AI-readable catalog. By generating top-level `index.md` maps and folder-level `_index.md` sub-catalogs, it provides token-efficient navigation that slashes AI agent context usage by 75% to 94%.
 - **E.R.** — **Execution Rules** — Integrates operational rules and guidelines specifically formatted for AI agents (like `RULES.md`, `PROMPTS.md`, and system-level guidelines), enforcing safe, non-destructive editing boundaries and dictating how human and AI actors interact with the system. GPG-signed commits, PR-only workflow, cron-based sync, branch cleanup.
 
+### 🧠 Second Brain vs P.O.W.E.R. Framework Relationship & Collaboration
+
+**Second Brain (Obsidian Vault)** and **P.O.W.E.R. Framework** form an integrated Knowledge Management System where **Second Brain is the passive data store**, and **P.O.W.E.R. Framework is the active AI engine**.
+
+```mermaid
+graph TD
+    A[🤖 AI Agents: Antigravity / OpenCode / Codex] <-->|MCP Protocol / Skills / CLI| B[⚡ P.O.W.E.R. Framework Engine]
+    B <-->|1. Hybrid Search BM25 + BGE-M3 + Reranker| C[(🧠 Obsidian Second Brain Vault)]
+    B <-->|2. OKF Frontmatter Linter & Healer| C
+    B <-->|3. Indexer & Graph Builder| C
+    B <-->|4. ROT Audit & Maintenance| C
+```
+
+#### 1. Second Brain (Obsidian Vault) — *Passive Memory Store*
+- **What it is:** A file-system knowledge base (`/root/geminicli/brain`) composed of standard Markdown files (`.md`).
+- **Structure:**
+  - **P.A.R.A. directories:** `00_Inbox/`, `01_Projects/`, `02_Areas/`, `03_Resources/`, `04_Archive/`, `06_Daily_Logs/`.
+  - **OKF Overlay (Open Knowledge Format):** Standardized YAML frontmatter for every note (type, title, description, tags, timestamp).
+- **Purpose:** Stores persistent memory, lessons learned, architectural decision records (ADRs), execution plans, and session logs.
+
+#### 2. P.O.W.E.R. Framework — *Active Engine & AI Toolkit*
+- **What it is:** The Python engine and MCP server (`power-framework`) engineered specifically for AI agents (Antigravity, OpenCode, Codex) to interact safely and intelligently with the Second Brain.
+- **Key Capabilities:**
+  1. **Hybrid Retrieval (RAG):** Combines SQLite FTS5 (BM25) full-text search, offline dense vector embeddings (**BGE-M3** 1024d), and **BGE Reranker v2 M3** cross-encoder reranking via Reciprocal Rank Fusion (RRF). Provides sub-second precision without overwhelming LLM context windows.
+  2. **Vault Health & Linting (`power lint`):** Scans for missing OKF metadata, broken wiki-links, orphan notes, and stale content.
+  3. **Hierarchical Indexing & GraphRAG (`power index`):** Scans folder structures to automatically generate navigation maps (`index.md`), per-folder sub-catalogs (`_index.md`), and Mermaid graph relations.
+  4. **Auto-Healing & Audit (`power heal` / `power audit`):** Fixes invalid frontmatter schemas, formats dates/tags, and detects redundant/outdated/trivial notes (ROT Scoring).
+
+#### 3. Collaboration Matrix
+
+| Scenario | Role of Second Brain | Role of P.O.W.E.R. Framework |
+| :--- | :--- | :--- |
+| **Session Booting** | Stores guidelines & `MASTER-LESSONS-LEARNED.md`. | Retrieves relevant lessons and context for the AI agent via `search_vault_tool` MCP. |
+| **Session Ingestion (`ingest`)** | Receives new notes under `06_Daily_Logs/YYYY-MM-DD_name.md`. | Validates OKF frontmatter, checks uniqueness, and appends change entries to `log.md`. |
+| **Structure Maintenance** | Stores entity relations and project links. | Runs `power index` to rebuild navigation maps and graph relation triplets. |
+| **Quality Control (CI/CD)** | Serves as the single source of truth across fleet hosts (PRXMX, WS, HTZNR). | Executes `power lint` ensuring zero errors before GPG-signed commits and releases. |
+
 ### Visual Framework Diagram
 
 ```mermaid
@@ -406,7 +443,7 @@ For detailed analysis and benchmarks of the P.O.W.E.R. framework:
 
 ## Low-RAM Deployment (8–12 GB)
 
-`power sync` builds dense vector embeddings for the knowledge vault. Threading and batching limits are fully configurable; test them on target hardware before relying on RAM or latency guarantees. Key configuration knobs (see [`OOM_RECOVERY_PROTOCOL.md`](OOM_RECOVERY_PROTOCOL.md)):
+`power sync` builds dense vector embeddings for the knowledge vault. Threading and batching limits are fully configurable; test them on target hardware before relying on RAM or latency guarantees. Key configuration knobs:
 
 ```bash
 export POWER_EMBED_PROVIDER=bge-m3           # Default provider (aapot/bge-m3-onnx)
